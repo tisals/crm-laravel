@@ -1,0 +1,113 @@
+name: CI
+
+on:
+  push:
+    branches: [ main, master ]
+  pull_request:
+    branches: [ main, master ]
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    services:
+      # SQLite does not need a service, tests use :memory:
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+
+    - name: Setup PHP
+      uses: shivammathur/setup-php@v2
+      with:
+        php-version: '8.2'
+        extensions: mbstring, sqlite3, pdo_sqlite, bcmath
+        coverage: none
+
+    - name: Setup Node
+      uses: actions/setup-node@v4
+      with:
+        node-version: '20'
+        cache: 'npm'
+
+    - name: Copy .env
+      run: cp .env.example .env
+
+    - name: Install Composer dependencies
+      run: composer install --no-interaction --prefer-dist --optimize-autoloader
+
+    - name: Install NPM dependencies
+      run: npm ci
+
+    - name: Build assets
+      run: npm run build
+
+    - name: Generate app key
+      run: php artisan key:generate --ansi
+
+    - name: Create SQLite database
+      run: |
+        mkdir -p database
+        touch database/database.sqlite
+
+    - name: Run migrations
+      env:
+        DB_CONNECTION: sqlite
+        DB_DATABASE: ':memory:'
+      run: php artisan migrate --force --ansi
+
+    - name: Run tests
+      env:
+        DB_CONNECTION: sqlite
+        DB_DATABASE: ':memory:'
+      run: php artisan test --ansi
+
+    # --------------------------------------------------
+    # EasyPanel deploy trigger (only on main/master push)
+    # --------------------------------------------------
+    - name: Trigger EasyPanel deploy
+      if: github.ref == 'refs/heads/main' && github.event_name == 'push'
+      run: |
+        # Uncomment and set EASY_PANEL_WEBHOOK secret in repo settings
+        # curl -X POST "${{ secrets.EASY_PANEL_WEBHOOK }}" \
+        #   -H "Content-Type: application/json" \
+        #   -d '{"repository":"${{ github.repository }}","ref":"${{ github.ref }}"}'
+        echo "EasyPanel deploy webhook commented out. Set EASY_PANEL_WEBHOOK secret to enable."
+
+    # --------------------------------------------------
+    # PR comment when tests pass
+    # --------------------------------------------------
+    - name: Comment PR (tests passed)
+      if: github.event_name == 'pull_request' && success()
+      uses: actions/github-script@v7
+      with:
+        script: |
+          const { data: comments } = await github.rest.issues.listComments({
+            issue_number: context.issue.number,
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+          });
+          const botComment = comments.find(comment => 
+            comment.user.type === 'Bot' && 
+            comment.body.includes('✅ Tests passed')
+          );
+          const body = `## ✅ Tests passed\n\nAll PHPUnit tests passed successfully. This branch is ready for **EasyPanel** auto-deploy.\n\n| Metric | Value |\n|--------|-------|\n| Status | Passing |\n| Commit | ${{ github.sha }} |\n| Branch | ${{ github.head_ref }} |\n\n_EasyPanel will deploy automatically when this PR is merged into \\\`main\\\`._`;
+          if (botComment) {
+            await github.rest.issues.updateComment({
+              comment_id: botComment.id,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: body,
+            });
+          } else {
+            await github.rest.issues.createComment({
+              issue_number: context.issue.number,
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              body: body,
+            });
+          }

@@ -1,0 +1,6 @@
+vendor/
+node_modules/
+.git/
+.DS_Store
+*.log
+docker-compose*.yml
