@@ -25,20 +25,27 @@ use App\Http\Controllers\API\MovimientoController;
 use App\Http\Controllers\API\BrandPermissionController;
 use App\Http\Controllers\API\ContactoAccionController;
 use App\Http\Controllers\API\CotizacionController;
+use App\Http\Controllers\API\PlanController;
+use App\Http\Controllers\API\SailusEntidadController;
+use App\Http\Controllers\API\SailusWebhookController;
 use App\Infrastructure\Auth\ValidateApiKeyMiddleware;
 
 Route::prefix('v1')->group(function () {
     // Public endpoints
     Route::get('/health', fn () => response()->json(['status' => 'ok']));
+    Route::get('/plans', [PlanController::class, 'index']);
+    Route::post('/webhook/registration', [SailusWebhookController::class, 'registration'])
+        ->middleware('auth:sanctum')
+        ->name('webhook.registration');
 
     // Auth (con rate limiting específico para login)
     Route::post('/auth/login', [AuthController::class, 'login'])
         ->middleware('throttle:auth')
         ->name('auth.login');
 
-    // API Key validation (uses X-API-Key header, not Sanctum) + Rate Limiting
+    // API Key validation (uses X-API-Key header, not Sanctum)
     Route::get('/auth/validate-key', [AuthController::class, 'validateKey'])
-        ->middleware([ValidateApiKeyMiddleware::class, 'throttle:api'])
+        ->middleware(ValidateApiKeyMiddleware::class)
         ->name('auth.validate-key');
 
     // Brands endpoint (consumido por SAIlus)
@@ -242,6 +249,12 @@ Route::prefix('v1')->group(function () {
         Route::middleware('rbac')->group(function () {
             Route::get('/proveedores/{proveedor}/cuentas', [CuentaController::class, 'index'])->name('proveedores.cuentas.index');
         });
+
+        // Sailus integration - Entidad by ID
+        Route::get('/sailus/entidad/{id}', [SailusEntidadController::class, 'show']);
+
+        // Servicios by entidad
+        Route::get('/servicios/entidad/{entidadId}', [ServicioController::class, 'byEntidad']);
 
         // Movimientos
         Route::middleware('rbac')->group(function () {

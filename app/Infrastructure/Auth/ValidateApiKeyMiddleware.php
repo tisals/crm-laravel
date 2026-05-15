@@ -3,6 +3,7 @@
 namespace App\Infrastructure\Auth;
 
 use App\Application\UseCases\ValidateApiKeyUseCase;
+use App\Models\Entidad;
 use Closure;
 use Illuminate\Http\Request;
 use Symfony\Component\HttpFoundation\Response;
@@ -17,40 +18,49 @@ class ValidateApiKeyMiddleware
     {
         $apiKey = $request->header('X-API-Key');
 
-        // Extraer dominio del Origin o Referer
-        $originDomain = $this->extractDomain($request);
-
-        $result = $this->validateApiKeyUseCase->execute($apiKey, $originDomain);
-
-        if (!$result['valid']) {
+        if (!$apiKey) {
             return response()->json([
-                'success' => false,
-                'error' => $result['error'],
+                'valid' => false,
+                'error' => 'API key no proporcionada',
             ], 401);
         }
 
-        // Agregar info de la organización al request para uso posterior
-        $request->attributes->set('organization_id', $result['organization_id']);
-        $request->attributes->set('organization_name', $result['organization_name'] ?? null);
+        $result = $this->validateApiKeyUseCase->execute($apiKey);
+
+        if (!$result) {
+            return response()->json([
+                'valid' => false,
+                'error' => 'API key inválida',
+            ], 401);
+        }
+
+        // Extraer dominio del Origin/Referer para validación adicional
+        $originDomain = $this->extractDomain($request);
+        if ($originDomain) {
+            $entidad = Entidad::where('dominio', $apiKey)->first();
+            if ($entidad && !$entidad->isDomainAllowed($originDomain)) {
+                return response()->json([
+                    'valid' => false,
+                    'error' => 'Dominio no autorizado',
+                ], 401);
+            }
+        }
+
+        // Agregar info de la organización al request
+        $request->attributes->set('organization_id', $result['bot_id']);
+        $request->attributes->set('organization_name', $result['name']);
 
         return $next($request);
     }
 
-    /**
-     * Extraer dominio del request (Origin o Referer header).
-     */
     private function extractDomain(Request $request): ?string
     {
-        //优先用 Origin header (más seguro para CORS)
         $origin = $request->header('Origin');
-        
         if ($origin) {
             return $this->parseDomain($origin);
         }
 
-        // Fallback a Referer
         $referer = $request->header('Referer');
-        
         if ($referer) {
             return $this->parseDomain($referer);
         }
@@ -58,14 +68,9 @@ class ValidateApiKeyMiddleware
         return null;
     }
 
-    /**
-     * Parsear dominio de una URL.
-     */
     private function parseDomain(string $url): ?string
     {
-        // Limpiar URLs типа "https://sailus.com/path"
         $parsed = parse_url($url);
-        
         return $parsed['host'] ?? null;
     }
 }

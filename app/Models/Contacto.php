@@ -24,7 +24,16 @@ class Contacto extends Model
         'rol',
         'etapa',
         'estado',
+        'diagnostico_data',
+        'fuente',
         'created_by',
         'updated_by',
     ];
+
+    protected function casts(): array
+    {
+        return [
+            'diagnostico_data' => 'array',
+        ];
+    }
 }

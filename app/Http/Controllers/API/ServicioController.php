@@ -10,6 +10,7 @@ use App\Application\UseCases\Servicio\DestroyServicioUseCase;
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\API\Concerns\ApiResponse;
 use App\Http\Requests\ServicioRequest;
+use App\Models\Servicio;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -74,5 +75,24 @@ class ServicioController extends Controller
         }
 
         return $this->successResponse(null, 200, 'Servicio eliminado exitosamente.');
+    }
+
+    public function byEntidad(int $entidadId): JsonResponse
+    {
+        $servicios = Servicio::withCount('detalles')
+            ->where('entidad_id', $entidadId)
+            ->where('estado', 'Activo')
+            ->orderBy('created_at', 'desc')
+            ->get()
+            ->map(fn ($s) => [
+                'id' => $s->id,
+                'nombre' => $s->nombre,
+                'estado' => $s->estado,
+                'vr_servicio' => $s->vr_servicio,
+                'detalles_count' => $s->detalles_count,
+                'created_at' => $s->created_at,
+            ]);
+
+        return $this->successResponse($servicios);
     }
 }

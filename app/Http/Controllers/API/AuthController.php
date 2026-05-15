@@ -5,6 +5,7 @@ namespace App\Http\Controllers\API;
 use App\Application\DTOs\LoginRequest;
 use App\Application\UseCases\Auth\LoginUseCase;
 use App\Application\UseCases\Auth\LogoutUseCase;
+use App\Application\UseCases\ValidateApiKeyUseCase;
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\API\Concerns\ApiResponse;
 use Exception;
@@ -18,6 +19,7 @@ class AuthController extends Controller
     public function __construct(
         private LoginUseCase $loginUseCase,
         private LogoutUseCase $logoutUseCase,
+        private ValidateApiKeyUseCase $validateKeyUseCase,
     ) {}
 
     public function login(Request $request): JsonResponse
@@ -53,6 +55,24 @@ class AuthController extends Controller
 
     public function validateKey(Request $request): JsonResponse
     {
-        return $this->errorResponse('Not implemented yet.', 501);
+        $apiKey = $request->header('X-API-Key');
+
+        if (!$apiKey) {
+            return response()->json([
+                'valid' => false,
+                'error' => 'API key no proporcionada',
+            ], 401);
+        }
+
+        $result = $this->validateKeyUseCase->execute($apiKey);
+
+        if (!$result) {
+            return response()->json([
+                'valid' => false,
+                'error' => 'API key inválida',
+            ], 401);
+        }
+
+        return response()->json($result);
     }
 }

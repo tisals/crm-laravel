@@ -11,5 +11,22 @@ class Producto extends Model
     use HasFactory, SoftDeletes;
 
     protected $table = 'productos';
-    protected $fillable = ['nombre', 'linea_negocio', 'iva', 'estado', 'created_by', 'updated_by'];
+    protected $fillable = [
+        'nombre',
+        'linea_negocio',
+        'iva',
+        'estado',
+        'created_by',
+        'updated_by',
+        'tipo',
+        'descripcion',
+        'caracteristicas',
+    ];
+
+    protected function casts(): array
+    {
+        return [
+            'caracteristicas' => 'array',
+        ];
+    }
 }
