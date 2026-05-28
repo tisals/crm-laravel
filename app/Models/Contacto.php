@@ -36,4 +36,9 @@ class Contacto extends Model
             'diagnostico_data' => 'array',
         ];
     }
+
+    public function entidad()
+    {
+        return $this->belongsTo(\App\Models\Entidad::class, 'entidad_id');
+    }
 }

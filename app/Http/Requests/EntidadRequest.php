@@ -11,6 +11,13 @@ class EntidadRequest extends FormRequest
         return true;
     }
 
+    protected function prepareForValidation(): void
+    {
+        if ($this->has('identificacion') && $this->input('identificacion') === '') {
+            $this->merge(['identificacion' => null]);
+        }
+    }
+
     public function rules(): array
     {
         $entidadId = $this->route('id');
@@ -18,12 +25,15 @@ class EntidadRequest extends FormRequest
         return [
             'tipo_persona' => 'required|in:Natural,Juridica',
             'tipo_id' => 'nullable|string|max:20',
-            'identificacion' => 'required|string|max:50|unique:entidad,identificacion,' . $entidadId,
+            'identificacion' => 'nullable|string|max:50|unique:entidad,identificacion,' . $entidadId,
             'nombre' => 'required|string|max:255',
             'nombre_comercial' => 'nullable|string|max:255',
+            'linea_negocio' => 'nullable|string|max:100',
             'direccion' => 'nullable|string|max:255',
             'ciudad_cod' => 'nullable|string|max:10|exists:ciudades,cod_municipio',
             'dominio' => 'nullable|string|max:255',
+            'email' => 'nullable|email|max:255',
+            'telefono' => 'nullable|string|max:50',
             'rut' => 'nullable|string|max:255',
             'logo' => 'nullable|string|max:255',
             'estado' => 'nullable|string|max:50',
@@ -35,7 +45,6 @@ class EntidadRequest extends FormRequest
         return [
             'tipo_persona.required' => 'El tipo de persona es obligatorio.',
             'tipo_persona.in' => 'El tipo de persona debe ser Natural o Juridica.',
-            'identificacion.required' => 'La identificación es obligatoria.',
             'identificacion.unique' => 'Esta identificación ya está registrada.',
             'nombre.required' => 'El nombre es obligatorio.',
             'ciudad_cod.exists' => 'La ciudad seleccionada no existe.',

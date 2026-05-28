@@ -19,7 +19,7 @@ class SeguimientoRequest extends FormRequest
             'entidad_id' => 'nullable|integer|exists:entidad,id',
             'tipo' => 'required|in:Llamada,Correo,Reunion,Nota,Otro',
             'fecha' => 'required|date',
-            'hora' => 'nullable|date_format:H:i:s',
+            'hora' => ['nullable', 'regex:/^([01]\d|2[0-3]):[0-5]\d(:[0-5]\d)?$/'],
             'fecha_fin' => 'nullable|date',
             'notas' => 'nullable|string',
             'estado' => 'nullable|in:Pendiente,Completado,Cancelado',

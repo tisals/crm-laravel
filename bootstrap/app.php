@@ -16,6 +16,8 @@ return Application::configure(basePath: dirname(__DIR__))
             'api-key' => \App\Infrastructure\Auth\ValidateApiKeyMiddleware::class,
             'rbac' => \App\Infrastructure\Auth\RbacMiddleware::class,
             'api-logger' => \App\Http\Middleware\ApiAccessLogger::class,
+            'extract-token' => \App\Http\Middleware\ExtractTokenFromQuery::class,
+            'throttle-mutations' => \App\Http\Middleware\ThrottleMutations::class,
         ]);
         
         // Agregar logger como middleware global para todas las rutas API
@@ -24,7 +26,11 @@ return Application::configure(basePath: dirname(__DIR__))
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        //
+        $exceptions->render(function (\Illuminate\Auth\AuthenticationException $e, \Illuminate\Http\Request $request) {
+            if ($request->expectsJson() || $request->is('api/*')) {
+                return response()->json(['success' => false, 'error' => 'No autenticado.'], 401);
+            }
+        });
     })
     ->withProviders([
         \App\Providers\EventServiceProvider::class,

@@ -22,6 +22,17 @@ class Servicio extends Model
         'estado',
         'created_by',
         'updated_by',
+        'activation_token',
+        'plan_id',
+        'tier',
+        'subscription_id',
+        'metadata',
+    ];
+
+    protected $casts = [
+        'metadata' => 'array',
+        'fecha_inicio' => 'date',
+        'fecha_fin' => 'date',
     ];
 
     public function oportunidad()

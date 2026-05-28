@@ -55,6 +55,32 @@ class RbacMiddlewareTest extends TestCase
         $response = $this->withHeader('Authorization', 'Bearer ' . $token)
             ->getJson('/api/v1/roles');
 
+        // GET without permission returns empty data (200) instead of 403
+        // POST/PUT/DELETE still return 403
+        $response->assertStatus(200);
+        $response->assertJson(['success' => true, 'data' => []]);
+    }
+
+    #[Test]
+    public function it_denies_write_access_when_permission_missing(): void
+    {
+        $rol = Rol::create(['nombre' => 'Ventas', 'estado' => 'Activo']);
+        // No permiso for 'roles.store'
+
+        $usuario = Usuario::create([
+            'nombre' => 'Ventas User',
+            'email' => 'ventas@test.com',
+            'password_hash' => bcrypt('password123'),
+            'rol_id' => $rol->id,
+            'estado' => 'Activo',
+        ]);
+
+        $token = $usuario->createToken('test-token')->plainTextToken;
+
+        $response = $this->withHeader('Authorization', 'Bearer ' . $token)
+            ->postJson('/api/v1/roles', ['nombre' => 'New Role']);
+
+        // POST without permission still returns 403
         $response->assertStatus(403);
     }
 }

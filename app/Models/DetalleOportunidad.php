@@ -15,6 +15,7 @@ class DetalleOportunidad extends Model
         'oportunidad_id',
         'producto_id',
         'concepto',
+        'descripcion',
         'medida',
         'cantidad',
         'vr_unitario',

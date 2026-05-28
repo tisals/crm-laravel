@@ -11,9 +11,61 @@ use App\Models\Producto;
 use App\Models\Servicio;
 use Illuminate\Support\Facades\DB;
 
+use App\Application\UseCases\Sailus\WebhookPurchaseUseCase;
+use App\Application\UseCases\Sailus\ValidateLicenseUseCase;
+use Illuminate\Http\Request;
+
 class SailusWebhookController extends Controller
 {
     use ApiResponse;
+
+    public function __construct(
+        private WebhookPurchaseUseCase $purchaseUseCase,
+        private ValidateLicenseUseCase $validateLicenseUseCase,
+    ) {}
+
+    public function purchase(Request $request): \Illuminate\Http\JsonResponse
+    {
+        $data = $request->validate([
+            'source' => 'required|string',
+            'order_id' => 'required|string',
+            'customer_email' => 'required|email',
+            'customer_name' => 'required|string',
+            'plan_id' => 'required|string',
+            'amount' => 'required|numeric',
+            'currency' => 'required|string',
+            'subscription_id' => 'required|string',
+            'billing_interval' => 'required|string',
+            'site_url' => 'nullable|string',
+        ]);
+
+        $result = $this->purchaseUseCase->execute($data);
+
+        return response()->json($result, 200);
+    }
+
+    public function validateLicense(Request $request): \Illuminate\Http\JsonResponse
+    {
+        $data = $request->validate([
+            'username' => 'required|string',
+            'token' => 'required|string',
+            'site_url' => 'nullable|string',
+            'plugin_version' => 'nullable|string',
+        ]);
+
+        $result = $this->validateLicenseUseCase->execute(
+            $data['username'],
+            $data['token'],
+            $data['site_url'] ?? null,
+            $data['plugin_version'] ?? null
+        );
+
+        if (!$result) {
+            return $this->errorResponse('Licencia inválida o usuario no autorizado.', 401);
+        }
+
+        return response()->json($result, 200);
+    }
 
     public function registration(WebhookRegistrationRequest $request): \Illuminate\Http\JsonResponse
     {

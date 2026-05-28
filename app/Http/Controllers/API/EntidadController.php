@@ -7,12 +7,14 @@ use App\Application\UseCases\Entidad\ShowEntidadUseCase;
 use App\Application\UseCases\Entidad\StoreEntidadUseCase;
 use App\Application\UseCases\Entidad\UpdateEntidadUseCase;
 use App\Application\UseCases\Entidad\DestroyEntidadUseCase;
+use App\Infrastructure\Services\ActividadLogger;
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\API\Concerns\ApiResponse;
 use App\Http\Requests\EntidadRequest;
 use App\Traits\DispatchesWebhooks;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class EntidadController extends Controller
 {
@@ -31,8 +33,10 @@ class EntidadController extends Controller
         $perPage = min($request->input('per_page', 15), 100);
         $search = $request->input('search');
         $filters = $request->only(['estado', 'tipo_persona']);
+        $sortBy = $request->input('sort_by', 'created_at');
+        $sortOrder = $request->input('sort_order', 'desc');
 
-        $result = $this->indexUseCase->execute($perPage, $search, $filters);
+        $result = $this->indexUseCase->execute($perPage, $search, $filters, $sortBy, $sortOrder);
 
         return $this->successResponse($result);
     }
@@ -48,6 +52,8 @@ class EntidadController extends Controller
             'identificacion' => $result->identificacion,
             'tipo_persona' => $result->tipo_persona,
         ]);
+
+        ActividadLogger::created(Auth::id(), "Marca creada: {$result->nombre}", 'Entidad', $result->id);
 
         return $this->successResponse($result, 201, 'Entidad creada exitosamente.');
     }
@@ -78,27 +84,28 @@ class EntidadController extends Controller
             'identificacion' => $result->identificacion,
         ]);
 
+        ActividadLogger::updated(Auth::id(), "Marca actualizada: {$result->nombre}", 'Entidad', $result->id);
+
         return $this->successResponse($result, 200, 'Entidad actualizada exitosamente.');
     }
 
     public function destroy(int $id): JsonResponse
     {
         $entidad = $this->showUseCase->execute($id);
-        
+
         $result = $this->destroyUseCase->execute($id);
 
         if (!$result) {
             return $this->errorResponse('Entidad no encontrada.', 404);
         }
 
-        // Dispatch webhook (usar datos antes de eliminar)
-        if ($entidad) {
-            $this->dispatchWebhook($entidad, 'entidad.deleted', [
-                'id' => $entidad->id,
-                'nombre' => $entidad->nombre,
-                'identificacion' => $entidad->identificacion,
-            ]);
-        }
+        // Dispatch webhook
+        $this->dispatchWebhook($entidad, 'entidad.deleted', [
+            'id' => $entidad->id,
+            'nombre' => $entidad->nombre,
+        ]);
+
+        ActividadLogger::deleted(Auth::id(), "Marca eliminada: {$entidad->nombre}", 'Entidad', $entidad->id);
 
         return $this->successResponse(null, 200, 'Entidad eliminada exitosamente.');
     }

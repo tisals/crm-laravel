@@ -21,6 +21,7 @@ use App\Domain\Repositories\DetalleServicioRepositoryInterface;
 use App\Domain\Repositories\OrdenServicioRepositoryInterface;
 use App\Domain\Repositories\CuentaRepositoryInterface;
 use App\Domain\Repositories\MovimientoRepositoryInterface;
+use App\Domain\Repositories\MaestroRepositoryInterface;
 use App\Infrastructure\Persistence\EloquentRolRepository;
 use App\Infrastructure\Persistence\EloquentPermisoRepository;
 use App\Infrastructure\Persistence\EloquentUsuarioRepository;
@@ -40,7 +41,9 @@ use App\Infrastructure\Persistence\EloquentDetalleServicioRepository;
 use App\Infrastructure\Persistence\EloquentOrdenServicioRepository;
 use App\Infrastructure\Persistence\EloquentCuentaRepository;
 use App\Infrastructure\Persistence\EloquentMovimientoRepository;
+use App\Infrastructure\Persistence\EloquentMaestroRepository;
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Cache\RateLimiting\Limit;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -65,6 +68,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(OrdenServicioRepositoryInterface::class, EloquentOrdenServicioRepository::class);
         $this->app->bind(CuentaRepositoryInterface::class, EloquentCuentaRepository::class);
         $this->app->bind(MovimientoRepositoryInterface::class, EloquentMovimientoRepository::class);
+        $this->app->bind(MaestroRepositoryInterface::class, EloquentMaestroRepository::class);
     }
 
     public function boot(): void
@@ -88,7 +92,7 @@ class AppServiceProvider extends ServiceProvider
             // Si es API Key, usar el organization_id del middleware
             $organizationId = $request->attributes->get('organization_id', 'anonymous');
             
-            return \Illuminate\Cache\RateLimiter::perMinute(60)
+            return Limit::perMinute(60)
                 ->by('api-key:' . $organizationId)
                 ->response(function () {
                     return response()->json([
@@ -100,7 +104,7 @@ class AppServiceProvider extends ServiceProvider
 
         // Rate limiting específico para autenticación (más restrictivo)
         \Illuminate\Support\Facades\RateLimiter::for('auth', function ($request) {
-            return \Illuminate\Cache\RateLimiter::perMinute(10)
+            return Limit::perMinute(10)
                 ->by('auth:' . ($request->ip() . ':' . $request->input('email', 'unknown')))
                 ->response(function () {
                     return response()->json([

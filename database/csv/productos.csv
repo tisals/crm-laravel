@@ -1,0 +1,160 @@
+﻿ProductoID;Producto Detalle;IVA;Referencia;Linea Negocio;descripcion
+1;Aplicación encuesta / batería de riesgo Psicosocial:;19%;brp;2;"Disponibilidad de profesional especialista para la aplicación, medición e interpretación de resultados de cuestionarios en ciudades principales. 
+Incluye: Asignación de profesional, Papeleria y documentación necesaria. Formas A y B de acuerdo con la normatividad y perfil del colaborador. 
+Entrega de informe final en socialización a directivos, coordinadores comites y demás grupos interesados.
+Entrega de certificado de custodia y confidencialidad.
+Acceso a plataforma web (DashBoard) con gráficas de resultados en tiempo real"
+2;Plan de trabajo riesgo psicosocial;19%;plan-rp;2;"Identificación, Valoración y Diseño del Sistema de Vigilancia Epidemiológica de los Factores Psicosociales
+
+Disponibilidad de profesional especialista para interpretación de resultados y elaboración del PVE Correspndiente.
+
+Incluye: Asignación de profesional en ciudades principales, Papeleria y documentación necesaria. Elaboración de PVE.
+
+Entrega propuesta de plan de intervención.
+
+Entrega de informe final."
+3;Informes batería de riesgo psicosocial:;19%;inf-brp;2;"Disponibilidad de profesional especialista para la medición e interpretación de resultados de cuestionarios. 
+
+Incluye: Asignación de profesional y Entrega de informe final en socialización a directivos, coordinadores comites y demás grupos interesados."
+4;Programa de gestion de riesgo psicosocial:;19%;prog-rp;2;"Disponibilidad de profesional especialista para medición e interpretación y generacion de programa de Gesión de acuerdo con los resultados de cuestionarios. 
+
+Incluye: Asignación de profesional, Entrega de informe final en socialización a directivos, coordinadores comites y demás grupos interesados."
+5;Profesiograma por cargos:;19%;profes;2;"Método de estudio para determinar las exigencias del trabajo y las aptitudes mínimas para su desempeño. Su objetivo es seleccionar al personal más adecuado, analizando tanto los requisitos del puesto de trabajo como la carcaterización psicofísica y biológica del aspirante o trabajador. 
+
+Incluye: Asignación de profesional especialista SST.  Firma y aprobación de documentación relacionada. Entrega del profesiograma aprobado para presentar a las autoridades."
+6;Medición de ruido ambiental por sonometría:;19%;Sonom;2;"Es un estudio a nivel ocupacional de una fuente de ruido puntual que se realiza por intervalos cortos de tiempo, con el fin de conocer la exposición de ruido generado durante una actividad especifica.
+
+Incluye: Asignación de profesional, Papelería y documentación necesaria. equipos de medición, trabajo en campo, entrega de informe final."
+7;Medición de iluminación por luxómetria:;19%;luxo;2;"Es un estudio a nivel ocupacional de fuentes de iluminación puntuales que se realiza por intervalos cortos de tiempo, con el fin de conocer exposición a niveles de iluminación generados durante una actividad especifica.
+
+Incluye: Asignación de profesional, Papelería y documentación necesaria. equipos de medición, trabajo en campo, entrega de informe final."
+8;Medición de material particulado (gases y vapores):;19%;mat-part;2;"Evaluación de Riesgo Higiénico, que se basa en la comparación de las concentraciones ambientales resultanates de las mediciones en el puesto de trabajo, en relación con los valores de referencia prestablecidos.
+
+Material particulado (Normas NIOSH 500 y 600) evaluación de ambientes de trabajo con material particulado, humo, gases y vapores.
+
+Evaluación de la exposición a contaminantes: Estimacion inicial, estudio básico y detallado basado en la medición in situ de los agentes quimicos.
+
+Incluye: Asignación de profesional, Papelería y documentación necesaria. equipos de medición, trabajo en campo, entrega de informe final."
+9;Medición de confort Térmico:;19%;conf-term;2;"Estudio a nivel ocupacional para medir confort o disconfort térmico, se mide mediante magnitudes termométricas, es decir, diferentes unidades que representan la temperatura a distintas escalas. 
+
+Incluye: Asignación de profesional, Papelería y documentación necesaria. equipos de medición, trabajo en campo, entrega de informe final."
+10;Medición de temperatura y humedad:;19%;temp-humed;2;"Estudio a nivel ocupacional para medir confort o disconfort térmico, se mide mediante magnitudes termométricas, es decir, diferentes unidades que representan la temperatura a distintas escalas. 
+
+Incluye: Asignación de profesional, Papelería y documentación necesaria. equipos de medición, trabajo en campo, entrega de informe final."
+;Medición de ruido ambiental por Dosimetría:;19%;Dosim;2;"Calcular la dosis de ruido a que están expuestos los trabajadores que laboran en la empresa en una jornada normal de trabajo. Comparar los niveles de presión sonora con los valores límites permisibles, así mismo presentar recomendaciones de carácter general que contribuyan a disminuir la exposición al ruido de los trabajadores si hay sobreexposición a este factor de riesgo.  
+
+Incluye: Asignación de profesional, Papelería y documentación necesaria. equipos de medición, trabajo en campo, entrega de informe final."
+11;Otras Mediciones Especializadas;19%;med-esp;2;Incluye: Asignación de profesional, Papelería y documentación necesaria. equipos de medición, certificado de acreditación del laboratorio, trabajo en campo, entrega de informe final.
+12;Capacitación Básica Riesgos laborales:;19%;capac-rl;2;"Capacitación Presencial o virtual sobre """" para gurpos de máximo 30 personas.
+
+Incluye: Asignación de profesional especialista, evaluación de conocimientos virtual, entrega de certificado de asistencia."
+13;Capacitación Intermedia Riesgos laborales:;19%;capac;2;"Capacitación - Taller en RIESGOS LABORALES:
+
+Se brinda mediante la asignación de profesional con disponibilidad de (2) Dos horas para dictar capacitación en alguno de los siguientes temas:
+
+Capacitación en primeros Auxilios para trabajos eléctricos 
+
+Capacitación en primeros auxilios y rescate en alturas.
+
+Capacitación Manejo del Riesgo Público.
+
+Primeros auxilios y rescate en emergencia vial.
+
+Se realiza de manera virtual o presencial para grupos de máximo 10 personas.
+
+Incluye: Asignación de profesional especialista, evaluación de conocimientos virtual, entrega de certificado de asistencia."
+14;Diseño / Actualización del SG-SST;19%;act-sgsst;2;"Visitas programadas para que nuestros profesionales realicen actividades de acompañamiento, aprobación de documentos e implemementación del SG-SST.
+Incluye: Acompañamiento por (2) Dos horas mensuales de equipo profesional para revisión y aprobación de las actividades de SGSST.
+Actualización de documentos, realización de capacitaciones, inspecciones, acompañamiento al vigia SST.  De acuerdo con DUR 1072/2015 y Resolución 0312/2019
+Curso virtual de 50 horas sobre SG-SST "
+15;Acompañamiento para la implementación del SG-SST:;19%;implem-sgsst;2;"Visitas programadas para que nuestros profesionales realicen actividades de acompañamiento, aprobación de documentos e implemementación del SG-SST.
+
+Incluye: Acompañamiento por (4) Cuatro horas semanales de equipo profesional para revisión y aprobación de las actividades de SGSST.
+
+Actualización de documentos, realización de capacitaciones, inspecciones, acompañamiento al vigia SST.  De acuerdo con DUR 1072/2015 y Resolución 0312/2019
+
+Curso virtual de 50 horas sobre SG-SST "
+16;Asignación de profesional SST:;19%;consult-sst;2;Incluye: Asignación de profesional, Papelería y documentación necesaria. entrega de informe final.
+17;Auditoria Sistema SG- SST;19%;audit-sst;2;"Disponibilidad de auditor interno para la revisión del cumplimiento al SGSST (sistema de Gestión de la seguridad y salud en el trabajo) de la empresa, basado en Decreto 1072 de 2015 y Resolución 0312 de 2019. 02 Auditoria Realización de auditoria en campo de acuerdo al objetivo establecido, usando métodos como: Entrevista con personal, observación en campo, inspección por muestreo, verificación documental, entre otros a discreción del equipo auditor. 
+
+Incluye:- Acompañamiento por (1) Un día de profesional especialista para realizar auditoría al SG-SST interno de la empresa.- Plan de auditoría, trabajo en campo y elaboración de informe de auditoría."
+18;Análisis de Puesto de Trabajo;19%;apt;2;Estudio realizado con enfáis BIOMECÁNICO por Fisioterapeuta especialista en SST. Busca realizar acompañamiento, revisión y análisis del puesto de trabajo con énfasis ergonómico y ángulos de movimientos por patologías reportadas en solicitud de documentos para estudio de origen de enfermedad en proceso con EPS
+19;Elementos proteccion Personal;19%;epp;2;Elementos y su distribución a instalaciones en ciudades principales
+20;Evaluación de Carga mental;19%;carga-mental;2;"Estudio realizado por Profesional especialista en SST. Pretende realizar acompañamiento, revisión y análisis del puesto de trabajo para determinar factor de riesgo psicosocial de las actividades realizadas y medición de
+CARGA MENTAL para las actividades desarrolladas por cada cargo en la empresa.
+
+Incluye: Asignación de profesional, Papelería y documentación y equipos de medición necesarios."
+21;Intervención Riesgo psicosocial;19%;lallave-enterprise;2;"Asiganción de profesional especialista por horas de acuerdo con programación de actividades de intervención basados en resultados de evaluación de riesgo psicosocial.
+
+Incluye: Asignación de profesional especialista, visita de seguimiento presencial mensual, metodologías de intervención, herramientas de medición complementarias."
+22;Investigación Accidente de trabajo;19%;acc-trab;2;"
+(Aplicando metodología de investigación y criterios establecidos en Resolución 1401 de 2007).
+
+
+Incluye disponibilidad de personal idóneo que analice la
+documentación aportada por la empresa PREVIAMENTE para realizar el documento de investigación, análisis de causas y plan de acción, basándose en reporte de accidente de trabajo y declaraciones de los accidentados y/o testigos."
+23;Capacitación acompañamiento Virtual SST;0%;virtual-sst;2;"SERVICIOS DE FORMACIÓN / CAPACITACIÓN:
+Virtual
+
+Servicio que comprende la realización de formación y/o capacitación en temas especificos.
+
+Incluye:
+Asignación de equipo profesional con disponibilidad horaria para atender grupos virtruales invitados.
+
+Lecciones virtuales en los temas especificos de la formación.
+
+Certificado de asistencia virtual"
+24;Capacitacion virtual SARLAFT;0%;virtual-sarlaft;2;"SERVICIOS DE FORMACIÓN / CAPACITACIÓN:
+Virtual
+
+Servicio que comprende la realización de formación y/o capacitación en temas especificos.
+
+Incluye:
+Asignación de equipo profesional con disponibilidad horaria para atender grupos virtruales invitados.
+
+Lecciones virtuales en los temas especificos de la formación.
+
+Certificado de asistencia virtual"
+25;Diseño y desarrollo WEB;0%;dev;1;"Desarrollo de herramienta web que permita capturar datos de reportes realizados desde la operación, consolidar y visualizar en tiempo real los resultados. Se realiza por modulos así:
+
+Módulo X...
+
+Incluye: Asignación de profesional, reuniones de seguimiento, entrega de usuarios. Seguiimiento a las funcionalidades. Reporte y mejora de acuerdo con reportes de novedades y correcciones sobre caracteristicas desarrolladas."
+26;Licencias de Software;0%;licencia;1;
+27;Distribución;0%;distrib;1;Gastos por desplazamiento de equipos y profesionales
+31;Tamizaje;19%;tamizaje;2;Incluye: Asignación de profesional,  metodológia de evaluación, papaleria y documentación necesaria, trabajo en campo. Entrega y socialización de informe gerencial con recomendaciones organizacionales.
+32;Plan Estratégico de seguridad Vial;19%;pesv;2;"
+Visitas programadas para que nuestros profesionales realicen actividades de acompañamiento e implemementación del PESV 
+
+Incluye: Acompañamiento por (4) Cuatro horas mensuales de equipo profesional para diseño e implementación de actividades de PESV.
+
+Actualización de documentos, realización de capacitaciones, inspecciones, acompañamiento al comite de seguridad vial. De acuerdo con Resolución 40595 de 2022 y los componentes del PESV: 
+
+Fortalecimiento de la Gestión Institucional. 
+Vehículos Seguros 
+Infraestructura física Atención a Victimas
+Comportamiento Humano"
+33;Auditoria PESV;19%;audit-pesv;2;"Disponibilidad de auditor interno para la revisión del cumplimiento al PESV  (Plan Estrategico de Seguridad Vial) de la empresa ubicada en Bogotá D.C.
+
+Incluye: Asignación de profesional, Papeleria y
+documentación necesaria, Entrega de informe final."
+34;Otros servicios;19%;otros;2;"Incluye: Asignación de profesional, Papeleria y documentación necesaria. 
+
+Entrega de informe"
+35;Otros servicios Exentos;0%;otros-exnt;2;
+36;SST inhouse;19%;sst-inhouse;2;"Asiganción de profesional especialista de acuerdo con programación de actividades.
+
+Incluye: Asignación de profesional especialista, visita de seguimiento presencial mensual, metodologías de intervención, herramientas de medición complementarias."
+37;Capacitacion Virtual Buenas practicas Manfactura;0%;cap-bpm;2;"Curso virtual sobre buenas prácticas en la manipulación de alimentos vigencia ANUAL:
+
+Incluye:
+
+Capacitación presencial sobre BPM por parte de un profesional asignado para la empresa (Actividad coordinada una vez se apruebe la cotización).
+
+Acceso a curso virtual que contiene material de capacitación en buenas practicas para la manipulación de alimentos.
+
+Lecciones virtuales en los procesos de manipulación de alimentos.
+
+Certificado virtual sobre Buenas Prácticas en la Manipulación.
+
+Carnet individual certificando la participación en el curso."

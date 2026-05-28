@@ -1,48 +1,46 @@
-# Memory - CRM Laravel (Tecnoinnsoft)
+# Memory — CRM Laravel Session
 
 ## Goal
-CRM modular con bounded contexts: CRM Core, Operaciones, Finanzas
+Import 3,543 oportunidades CSV y limpiar calidad de datos (entidades/contactos duplicados, detalles reales)
 
 ## What Was Done
-- Proyecto Laravel 12 + PHP 8.2 + Tailwind CSS 4 + Vite 7
-- Clean Architecture: Domain (Entities+Repos) → Application (UseCases) → Infrastructure → Interfaces
-- API completo con Sanctum: auth, RBAC, webhooks entrantes
-- Módulos CRM Core (Entidad, Contacto, Oportunidad, Seguimiento)
-- Módulo Operaciones (Servicio, DetalleServicio, OrdenServicio, Proveedor, Colaborador)
-- Módulo Finanzas (Cuenta, Movimiento)
-- Seeds de prueba y usuarios de test
+- ✅ SDD `importar-oportunidades-csv` completo (proposal→spec→design→tasks→apply→verify→archive)
+- ✅ 3,458 / 3,543 oportunidades importadas (98.7%)
+- ✅ Pipeline fila-por-fila: entidad→contacto→oportunidad→detalle
+- ✅ Email splitting, keyword matching, parseFecha fallback, apellidos NOT NULL
+- ✅ **Cleanup entidades/contactos**: `database/cleanup_dupes.php`
+  - Phase 1: 178 merges por dominio
+  - Phase 2: 234 merges por nombre normalizado
+  - Phase 3-5: contactos mergeados
+  - Phase 6: 31 entidades sin contactos eliminadas
+  - Phase 7: 1,109 contactos mergeados por email GLOBAL
+  - **Resultado**: 3,183→2,740 entidades, 4,172→2,679 contactos
+- ✅ `superNormalize()` implementado en UseCase y Seeder (previene futuros duplicados)
+- ✅ **Detalles reales importados** desde `Docs/detalle_oportunidad.csv`
+  - 2,747 sintéticos → **3,601 reales** (854 filas recuperadas)
+  - 601 ops con múltiples line items (hasta 6)
+  - 708 ops sin detalle en CSV fuente (genuino)
+  - Nuevo seeder: `DetalleOportunidadCsvSeeder`
 
 ## Key Discoveries
-- Laravel 12 con Vite 7 y Tailwind 4 (stack moderno)
-- API pública webhook (`/api/v1/webhook/registration`) + auth endpoints
-- Todos los módulos juntos en un monolito Laravel bien modularizado
-- RBAC con middleware `rbac` sobre Sanctum
-- Webhooks HMAC-SHA256 de salida hacia FastAPI
-- Middleware de API key (`X-API-Key`) para integración FastAPI
-
-## Architecture State
-```
-app/
-├── Domain/Entities+Interfaces    # Pure domain, no framework deps
-├── Application/UseCases+Services # Business logic
-├── Infrastructure/Persistence   # Eloquent repos
-└── Interfaces/
-    ├── Http/Controllers+Resources  # Thin controllers, API Resources
-    └── Console/Commands
-```
-
-## Pending (modularizacion)
-- [ ] Reorganizar `Http/Resources/` en subcarpetas por contexto (CRM/Operaciones/Finanzas)
-- [ ] Reorganizar `Http/Controllers/` análogos
-- [ ] Group controllers similarly if needed
+- **443 entidades duplicadas** (275 grupos por dominio, 298 por nombre)
+- **1,109 contactos duplicados por email GLOBAL** (937 grupos) — el Phase 3 original solo dedup dentro de la misma entidad
+- **CSV de detalles separado**: `Docs/detalle_oportunidad.csv` con 3,629 filas reales. El pipeline actual construía detalles sintéticos desde `valor_sin_iva`
+- **Sufijos SAS/LTDA/SA**: `superNormalize()` maneja TODAS las variantes (S.A.S., S. A. S., s a s, etc.)
+- **Unique constraint** `contacto(entidad_id, email_contacto)` requiere merge individual de contactos
+- DB en MariaDB Docker, **NO ejecutar php artisan test** (conecta a MariaDB no SQLite)
+- `concepto` en `detalle_oportunidad` es `varchar(255)` — conceptos del CSV tienen párrafos largos
+- `medida` es `varchar(10)` — "Metro Lineal" (12 chars) no entra
 
 ## How to Proceed
-1. Reorganizar Resources en subcarpetas por bounded context
-2. Actualizar referencias de routes/api.php
-3. Consolidar cualquier lógica compartida
+1. Considerar migrar `concepto` a `text` y `medida` a `varchar(20)` en detalle_oportunidad
+2. Validar datos limpios en frontend CRMPage
+3. Ajustar tipos Contacto en frontend (`nombre` vs `nombres`)
+4. Revisar 708 ops sin detalle (si corresponde)
 
-## Relevant Files
-- `routes/api.php` — todos los endpoints
-- `app/Http/Resources/` — API Resources (flattened, needs grouping)
-- `app/Domain/Entities/` — pure domain entities
-- `app/Application/UseCases/` — business logic by entity
+## Files Created/Modified
+- `database/cleanup_dupes.php` — script de limpieza (6 fases + Phase 7 global contact dedup)
+- `database/seeders/DetalleOportunidadCsvSeeder.php` — importa detalles reales desde CSV
+- `database/csv/detalle_oportunidad.csv` — copia de Docs/ como fuente de verdad
+- `app/Application/UseCases/Oportunidad/OportunidadCsvImportUseCase.php` — superNormalize
+- `database/seeders/OportunidadCsvSeeder.php` — superNormalize

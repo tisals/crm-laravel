@@ -104,7 +104,9 @@ class OportunidadControllerTest extends TestCase
 
         $showResponse->assertStatus(200)
             ->assertJsonPath('success', true)
-            ->assertJsonPath('data.id', $id);
+            ->assertJsonPath('data.id', $id)
+            ->assertJsonPath('data.entidad_nombre', $refs['entidad']->nombre)
+            ->assertJsonPath('data.entidad_identificacion', $refs['entidad']->identificacion);
     }
 
     #[Test]

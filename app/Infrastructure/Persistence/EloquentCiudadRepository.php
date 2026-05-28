@@ -41,4 +41,35 @@ class EloquentCiudadRepository extends BaseRepository implements CiudadRepositor
 
         return $model ? $this->mapModelToEntity($model) : null;
     }
+
+    public function create(array $data): mixed
+    {
+        $model = EloquentCiudad::create($data);
+
+        return $this->mapModelToEntity($model);
+    }
+
+    public function update(int|string $id, array $data): mixed
+    {
+        $model = EloquentCiudad::find($id);
+
+        if (!$model) {
+            return null;
+        }
+
+        $model->update($data);
+
+        return $this->mapModelToEntity($model->fresh());
+    }
+
+    public function delete(int|string $id): bool
+    {
+        $model = EloquentCiudad::find($id);
+
+        if (!$model) {
+            return false;
+        }
+
+        return $model->delete();
+    }
 }

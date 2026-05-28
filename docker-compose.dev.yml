@@ -9,22 +9,53 @@ services:
     environment:
       - APP_ENV=local
       - APP_DEBUG=true
-      - DB_CONNECTION=sqlite
-      - DB_DATABASE=/var/www/html/database/database.sqlite
+      - DB_CONNECTION=mysql
+      - DB_HOST=mariadb
+      - DB_PORT=3306
+      - DB_DATABASE=tecnoinnsoft_crm
+      - DB_USERNAME=root
+      - DB_PASSWORD=sailus_root_dev
+      - CACHE_STORE=file
     volumes:
-      # Código (vendor queda dentro de la imagen)
       - ./app:/var/www/html/app
       - ./config:/var/www/html/config
       - ./database:/var/www/html/database
       - ./public:/var/www/html/public
       - ./resources:/var/www/html/resources
+      - ./bootstrap:/var/www/html/bootstrap
       - ./routes:/var/www/html/routes
       - ./storage:/var/www/html/storage
       - ./tests:/var/www/html/tests
       - ./.env:/var/www/html/.env
     networks:
       - crm-dev
+      - sailus-dev
+
+  dashboard:
+    build:
+      context: ../dashboard-crm
+      dockerfile: Dockerfile
+      target: dev
+    container_name: crm-dashboard-dev
+    ports:
+      - "5174:5174"
+    volumes:
+      - ../dashboard-crm/src:/app/src
+      - ../dashboard-crm/public:/app/public
+      - ../dashboard-crm/index.html:/app/index.html
+      - ../dashboard-crm/vite.config.ts:/app/vite.config.ts
+      - ../dashboard-crm/tsconfig.json:/app/tsconfig.json
+      - ../dashboard-crm/tsconfig.node.json:/app/tsconfig.node.json
+      - ../dashboard-crm/tailwind.config.js:/app/tailwind.config.js
+      - ../dashboard-crm/postcss.config.js:/app/postcss.config.js
+    environment:
+      - VITE_API_BASE_URL=http://localhost:8001/api/v1
+    networks:
+      - crm-dev
 
 networks:
   crm-dev:
     driver: bridge
+  sailus-dev:
+    external: true
+    name: sailus_sailus-dev

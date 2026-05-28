@@ -33,7 +33,7 @@ RUN apk add --no-cache nginx
 
 # Extensiones PHP (pre-compiladas, no desde fuente)
 COPY --from=mlocati/php-extension-installer /usr/bin/install-php-extensions /usr/local/bin/
-RUN install-php-extensions pdo_mysql pdo_sqlite bcmath >/dev/null 2>&1
+RUN install-php-extensions pdo_mysql pdo_sqlite bcmath gd >/dev/null 2>&1
 
 # Copiar vendor + código
 COPY --from=vendor /app/vendor /var/www/html/vendor

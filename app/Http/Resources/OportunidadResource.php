@@ -38,6 +38,18 @@ class OportunidadResource extends JsonResource
 
         if ($this->relationLoaded('detalles')) {
             $arr['valor'] = $this->detalles->sum('vr_total');
+            $arr['detalles'] = $this->detalles->map(fn ($d) => [
+                'id' => $d->id,
+                'producto_id' => $d->producto_id,
+                'concepto' => $d->concepto,
+                'cantidad' => $d->cantidad,
+                'vr_unitario' => $d->vr_unitario,
+                'iva' => $d->iva,
+                'vr_total' => $d->vr_total,
+                'producto' => $d->relationLoaded('producto') && $d->producto
+                    ? ['id' => $d->producto->id, 'nombre' => $d->producto->nombre]
+                    : null,
+            ]);
         }
 
         return $arr;

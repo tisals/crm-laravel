@@ -16,15 +16,26 @@ class StoreDetalleOportunidadUseCase
     public function execute(array $data): mixed
     {
         $producto = Producto::findOrFail($data['producto_id']);
-        $ivaPorcentaje = $producto->iva;
+
+        // Use request iva if provided, otherwise fall back to product's iva
+        $ivaPorcentaje = isset($data['iva']) && $data['iva'] !== null
+            ? (float) $data['iva']
+            : (float) $producto->iva;
 
         $data['medida'] = $data['medida'] ?? $producto->medida ?? 'Und';
-        $data['iva'] = $producto->iva;
+
+        // Fill concepto/descripcion from product if not provided
+        if (empty($data['concepto'])) {
+            $data['concepto'] = $producto->descripcion ?? $producto->nombre;
+        }
+        if (empty($data['descripcion'])) {
+            $data['descripcion'] = $producto->descripcion ?? $producto->nombre;
+        }
 
         $calculos = $this->calculoService->calculate(
             (float) $data['cantidad'],
             (float) $data['vr_unitario'],
-            (float) $ivaPorcentaje
+            $ivaPorcentaje
         );
 
         $data['iva'] = $calculos['iva'];

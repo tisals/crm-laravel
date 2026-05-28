@@ -14,7 +14,10 @@ class Producto extends Model
     protected $fillable = [
         'nombre',
         'linea_negocio',
+        'referencia',
         'iva',
+        'medida',
+        'vr_unitario',
         'estado',
         'created_by',
         'updated_by',

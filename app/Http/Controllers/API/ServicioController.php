@@ -14,6 +14,8 @@ use App\Models\Servicio;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
+use App\Application\UseCases\Servicio\RenewServicioUseCase;
+
 class ServicioController extends Controller
 {
     use ApiResponse;
@@ -24,6 +26,7 @@ class ServicioController extends Controller
         private StoreServicioUseCase $storeUseCase,
         private UpdateServicioUseCase $updateUseCase,
         private DestroyServicioUseCase $destroyUseCase,
+        private RenewServicioUseCase $renewUseCase,
     ) {}
 
     public function index(Request $request): JsonResponse
@@ -94,5 +97,24 @@ class ServicioController extends Controller
             ]);
 
         return $this->successResponse($servicios);
+    }
+
+    public function renew(Request $request, int $id): JsonResponse
+    {
+        $data = $request->validate([
+            'payment_id' => 'required|string',
+            'new_expires_at' => 'required|string',
+            'amount' => 'required|numeric',
+            'currency' => 'required|string',
+            'payment_method' => 'required|string',
+        ]);
+
+        $result = $this->renewUseCase->execute($id, $data);
+
+        if (!$result) {
+            return $this->errorResponse('Servicio no encontrado.', 404);
+        }
+
+        return response()->json($result, 200);
     }
 }

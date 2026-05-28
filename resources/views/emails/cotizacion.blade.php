@@ -7,7 +7,13 @@
     </div>
     <div style="padding: 20px; border: 1px solid #e5e7eb;">
         <p>Hola <strong>{{ $entidad }}</strong>,</p>
-        <p>Adjuntamos la cotización <strong>{{ $codigo }}</strong> para tu revisión.</p>
+        @if(!empty($mensajePersonalizado))
+            <div style="background: #f9fafb; padding: 15px; border-left: 3px solid #009188; margin: 15px 0;">
+                {{ $mensajePersonalizado }}
+            </div>
+        @else
+            <p>Adjuntamos la cotización <strong>{{ $codigo }}</strong> para tu revisión.</p>
+        @endif
         <p>Puedes descargarla directamente desde este enlace:</p>
         <p style="text-align: center; margin: 30px 0;">
             <a href="{{ $url }}" 

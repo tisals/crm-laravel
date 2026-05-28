@@ -24,6 +24,7 @@ class Oportunidad extends Model
         'tiempo_entrega',
         'forma_pago',
         'garantia',
+        'linea_negocio',
         'created_by',
         'updated_by',
     ];

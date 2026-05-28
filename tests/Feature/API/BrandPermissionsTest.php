@@ -31,23 +31,27 @@ class BrandPermissionsTest extends TestCase
             ]
         );
 
-        $ent1 = Entidad::create([
-            'tipo_persona' => 'Juridica',
-            'tipo_id' => 'NIT',
-            'identificacion' => '900000001-0',
-            'nombre' => 'Tecnoinnsoft',
-            'dominio' => 'tecnoinnsoft.com',
-            'estado' => 'Propia',
-        ]);
+        $ent1 = Entidad::firstOrCreate(
+            ['identificacion' => '900000001-0'],
+            [
+                'tipo_persona' => 'Juridica',
+                'tipo_id' => 'NIT',
+                'nombre' => 'Tecnoinnsoft',
+                'dominio' => 'tecnoinnsoft.com',
+                'estado' => 'Propia',
+            ]
+        );
 
-        $ent2 = Entidad::create([
-            'tipo_persona' => 'Juridica',
-            'tipo_id' => 'NIT',
-            'identificacion' => '900000002-0',
-            'nombre' => 'Deseguridad.dev',
-            'dominio' => 'deseguridad.net',
-            'estado' => 'Propia',
-        ]);
+        $ent2 = Entidad::firstOrCreate(
+            ['identificacion' => '900000002-0'],
+            [
+                'tipo_persona' => 'Juridica',
+                'tipo_id' => 'NIT',
+                'nombre' => 'Deseguridad.dev',
+                'dominio' => 'deseguridad.net',
+                'estado' => 'Propia',
+            ]
+        );
 
         $user->entidades()->attach([$ent1->id, $ent2->id]);
 

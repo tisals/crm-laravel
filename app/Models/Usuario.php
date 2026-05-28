@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Database\Eloquent\Builder;
 use Laravel\Sanctum\HasApiTokens;
+use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 
 class Usuario extends Authenticatable
@@ -45,6 +46,11 @@ class Usuario extends Authenticatable
     public function scopeAdmins(Builder $query): Builder
     {
         return $query->where('rol_id', 1)->where('estado', 'Activo');
+    }
+
+    public function rol(): BelongsTo
+    {
+        return $this->belongsTo(Rol::class, 'rol_id');
     }
 
     public function entidades(): BelongsToMany

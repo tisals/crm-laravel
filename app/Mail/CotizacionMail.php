@@ -17,6 +17,7 @@ class CotizacionMail extends Mailable
 
     public function __construct(
         public Oportunidad $oportunidad,
+        public ?string $mensajePersonalizado = null,
     ) {}
 
     public function envelope(): Envelope
@@ -34,6 +35,7 @@ class CotizacionMail extends Mailable
                 'codigo' => $this->oportunidad->codigo,
                 'entidad' => $this->oportunidad->entidad?->nombre ?? 'Cliente',
                 'url' => url("/api/v1/oportunidades/{$this->oportunidad->id}/pdf"),
+                'mensajePersonalizado' => $this->mensajePersonalizado,
             ],
         );
     }
@@ -41,6 +43,41 @@ class CotizacionMail extends Mailable
     public function attachments(): array
     {
         $oportunidad = $this->oportunidad->load(['entidad', 'contacto', 'detalles.producto']);
+
+        // ── Brand resolution desde linea_negocio de TODOS los productos ──
+        $brandEntity = null;
+        $lineas = $oportunidad->detalles
+            ->pluck('producto.linea_negocio')
+            ->filter()
+            ->unique();
+
+        $hasTecnoinnsoft = $lineas->contains(fn ($ln) => stripos($ln, 'tecnoinnsoft') !== false);
+        $hasDeseguridad  = $lineas->contains(fn ($ln) => stripos($ln, 'deseguridad') !== false);
+
+        if ($hasTecnoinnsoft) {
+            $brandEntity = \App\Models\Entidad::where('estado', 'Propia')
+                ->where(function ($q) {
+                    $q->where('nombre', 'like', '%Tecnoinnsoft%')
+                      ->orWhere('nombre_comercial', 'like', '%Tecnoinnsoft%');
+                })->first();
+        }
+
+        if (!$brandEntity && $hasDeseguridad) {
+            $brandEntity = \App\Models\Entidad::where('estado', 'Propia')
+                ->where(function ($q) {
+                    $q->where('nombre', 'like', '%Deseguridad%')
+                      ->orWhere('nombre_comercial', 'like', '%Deseguridad%');
+                })->first();
+        }
+
+        if (!$brandEntity) {
+            $brandEntity = \App\Models\Entidad::where('estado', 'Propia')->first();
+        }
+        // ── Fin brand resolution ──
+
+        $subtotal = $oportunidad->detalles->sum(fn ($d) => (float) $d->cantidad * (float) $d->vr_unitario);
+        $iva = $oportunidad->detalles->sum('iva');
+        $total = $oportunidad->detalles->sum('vr_total');
 
         $data = [
             'cotizacion_no' => $oportunidad->codigo,
@@ -56,10 +93,17 @@ class CotizacionMail extends Mailable
                 'delivery_time' => $oportunidad->tiempo_entrega ?? '',
             ],
             'brand' => [
-                'logo' => '',
+                'logo' => $brandEntity?->logo ?? '',
                 'slogan' => 'Soluciones en Seguridad y Salud en el Trabajo',
-                'name' => 'deseguridad.net',
-                'business_sign' => 'Tecnoinnsoft SAS · NIT 901.234.567-0',
+                'name' => $brandEntity?->nombre_comercial
+                    ?? $brandEntity?->nombre
+                    ?? 'deseguridad.net',
+                'nombre_comercial' => $brandEntity?->nombre_comercial ?? $brandEntity?->nombre ?? '',
+                'nit' => $brandEntity?->identificacion ?? '',
+                'email' => $brandEntity?->email ?? '',
+                'direccion' => $brandEntity?->direccion ?? '',
+                'telefono' => $brandEntity?->telefono ?? '',
+                'dominio' => $brandEntity?->dominio ?? '',
             ],
             'entity' => [
                 'name' => $oportunidad->entidad?->nombre ?? '—',
@@ -72,20 +116,22 @@ class CotizacionMail extends Mailable
                 ],
             ],
             'detalle_oportunidad' => $oportunidad->detalles->map(fn ($d) => [
-                'name' => $d->producto?->nombre ?? $d->concepto ?? 'Servicio',
+                'producto' => $d->producto?->nombre ?? $d->concepto ?? 'Servicio',
+                'descripcion' => $d->descripcion ?? $d->concepto ?? '—',
                 'unidad' => $d->medida ?? 'Und',
                 'qty' => number_format((float) $d->cantidad, 2),
                 'unit_value' => '$' . number_format((float) $d->vr_unitario, 0),
                 'total' => '$' . number_format((float) $d->vr_total, 0),
                 'iva' => (float) $d->iva,
             ]),
-            'subtotal' => '$' . number_format($oportunidad->detalles->sum('vr_total'), 0),
-            'iva' => '$' . number_format($oportunidad->detalles->sum('iva'), 0),
-            'total_general' => '$' . number_format($oportunidad->detalles->sum('vr_total') + $oportunidad->detalles->sum('iva'), 0),
+            'subtotal' => '$' . number_format($subtotal, 0),
+            'iva' => '$' . number_format($iva, 0),
+            'total_general' => '$' . number_format($total, 0),
         ];
 
         $pdf = Pdf::loadView('pdf.cotizacion', $data);
         $pdf->setPaper('letter');
+        $pdf->setOption('isRemoteEnabled', true);
 
         return [
             Attachment::fromData(fn () => $pdf->output(), "cotizacion-{$this->oportunidad->codigo}.pdf")

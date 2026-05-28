@@ -110,7 +110,7 @@ class SeguimientoController extends Controller
     /**
      * GET /api/v1/seguimientos/calendar.ics
      * Exporta TODOS los seguimientos Pendientes como un archivo .ics mensual.
-     * Params: mes (YYYY-MM), contacto_id (opcional)
+     * Params: mes (YYYY-MM), contacto_id (opcional), entidad_id (opcional)
      */
     public function exportCalendarIcs(Request $request): Response
     {
@@ -123,7 +123,9 @@ class SeguimientoController extends Controller
             ->where('estado', 'Pendiente')
             ->whereBetween('fecha', [$startOfMonth->toDateString(), $endOfMonth->toDateString()]);
 
-        if ($request->filled('contacto_id')) {
+        if ($request->filled('entidad_id')) {
+            $query->where('entidad_id', $request->input('entidad_id'));
+        } elseif ($request->filled('contacto_id')) {
             $query->where('contacto_id', $request->input('contacto_id'));
         }
 

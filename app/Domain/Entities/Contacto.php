@@ -7,6 +7,7 @@ class Contacto
     public function __construct(
         public int $id,
         public ?int $entidad_id = null,
+        public ?string $entidad_nombre = null,
         public string $nombres,
         public string $apellidos,
         public ?string $area = null,
@@ -29,6 +30,7 @@ class Contacto
         return new self(
             id: $data['id'],
             entidad_id: $data['entidad_id'] ?? null,
+            entidad_nombre: $data['entidad_nombre'] ?? null,
             nombres: $data['nombres'],
             apellidos: $data['apellidos'],
             area: $data['area'] ?? null,
@@ -52,6 +54,7 @@ class Contacto
         return [
             'id' => $this->id,
             'entidad_id' => $this->entidad_id,
+            'entidad_nombre' => $this->entidad_nombre,
             'nombres' => $this->nombres,
             'apellidos' => $this->apellidos,
             'area' => $this->area,

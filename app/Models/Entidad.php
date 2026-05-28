@@ -18,9 +18,12 @@ class Entidad extends Model
         'identificacion',
         'nombre',
         'nombre_comercial',
+        'linea_negocio',
         'direccion',
         'ciudad_cod',
         'dominio',
+        'email',
+        'telefono',
         'rut',
         'logo',
         'estado',
@@ -93,5 +96,10 @@ class Entidad extends Model
     {
         return $this->belongsToMany(Usuario::class, 'entidad_usuario', 'entidad_id', 'usuario_id')
             ->withTimestamps();
+    }
+
+    public function contactos()
+    {
+        return $this->hasMany(Contacto::class, 'entidad_id');
     }
 }

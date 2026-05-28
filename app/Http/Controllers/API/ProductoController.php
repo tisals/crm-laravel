@@ -7,11 +7,13 @@ use App\Application\UseCases\Producto\ShowProductoUseCase;
 use App\Application\UseCases\Producto\StoreProductoUseCase;
 use App\Application\UseCases\Producto\UpdateProductoUseCase;
 use App\Application\UseCases\Producto\DestroyProductoUseCase;
+use App\Infrastructure\Services\ActividadLogger;
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\API\Concerns\ApiResponse;
 use App\Http\Requests\ProductoRequest;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 
 class ProductoController extends Controller
 {
@@ -40,6 +42,13 @@ class ProductoController extends Controller
     {
         $result = $this->storeUseCase->execute($request->validated());
 
+        ActividadLogger::created(
+            Auth::id(),
+            "Producto creado: {$result->nombre}",
+            'Producto',
+            $result->id,
+        );
+
         return $this->successResponse($result, 201, 'Producto creado exitosamente.');
     }
 
@@ -62,6 +71,13 @@ class ProductoController extends Controller
             return $this->errorResponse('Producto no encontrado.', 404);
         }
 
+        ActividadLogger::updated(
+            Auth::id(),
+            "Producto actualizado: {$result->nombre}",
+            'Producto',
+            $id,
+        );
+
         return $this->successResponse($result, 200, 'Producto actualizado exitosamente.');
     }
 
@@ -72,6 +88,8 @@ class ProductoController extends Controller
         if (!$result) {
             return $this->errorResponse('Producto no encontrado.', 404);
         }
+
+        ActividadLogger::deleted(Auth::id(), "Producto eliminado (ID: {$id})", 'Producto', $id);
 
         return $this->successResponse(null, 200, 'Producto eliminado exitosamente.');
     }

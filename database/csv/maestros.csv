@@ -1,0 +1,29 @@
+﻿id;nombre;campo;habilitado;created_at;updated_at
+1;Activo;Estado;Y;21/04/2025 8:00;21/04/2025 8:00
+2;Inactivo;Estado;Y;21/04/2025 8:00;24/09/2025 21:06
+3;Pendiente;Estado;Y;21/04/2025 8:00;24/09/2025 21:06
+4;Si;Si_No;Y;21/04/2025 8:00;21/04/2025 8:00
+5;No;Si_No;Y;21/04/2025 8:00;21/04/2025 8:00
+6;Pendiente;Estado_transaccional;Y;21/04/2025 8:00;21/04/2025 8:00
+7;En proceso;Estado_transaccional;Y;21/04/2025 8:00;29/09/2025 20:36
+8;En validacion;Estado_transaccional;Y;21/04/2025 8:00;29/09/2025 20:36
+9;Finalizado;Estado_transaccional;Y;21/04/2025 8:00;24/09/2025 21:07
+10;Psicologo Especialista;Tipo_proveedor;Y;21/04/2025 8:00;21/04/2025 8:00
+11;Especialista SST;Tipo_proveedor;Y;21/04/2025 8:00;21/04/2025 8:00
+12;Fisioterapeuta;Tipo_proveedor;Y;21/04/2025 8:00;21/04/2025 8:00
+13;Ingeniero Mediciones;Tipo_proveedor;Y;21/04/2025 8:00;21/04/2025 8:00
+14;NIT;tipo_identificacion;Y;21/04/2025 8:00;21/04/2025 8:00
+15;CE;tipo_identificacion;Y;21/04/2025 8:00;21/04/2025 8:00
+16;CC;tipo_identificacion;Y;21/04/2025 8:00;21/04/2025 8:00
+17;PN;Tipo_cliente;Y;21/04/2025 8:00;21/04/2025 8:00
+18;PJ;Tipo_cliente;Y;21/04/2025 8:00;21/04/2025 8:00
+19;Borrador;Estado oportunidad;Y;26/06/2025 8:00;21/04/2025 8:00
+20;Enviado;Estado oportunidad;Y;26/06/2025 8:00;21/04/2025 8:00
+21;En negociación;Estado oportunidad;Y;26/06/2025 8:00;21/04/2025 8:00
+22;Ganado;Estado oportunidad;Y;21/04/2025 8:00;26/09/2025 20:03
+23;Perdido;Estado oportunidad;Y;21/04/2025 8:00;21/04/2025 8:00
+24;Recuerda que para poder utilizar esta aplicación debes de Tener una cuenta activa e iniciar sesión;Bienvenida;Y;26/09/2025 8:00;26/09/2025 8:00
+25;Prospecto;Etapa_contacto;Y;26/09/2025 8:00;26/09/2025 8:00
+26;Cliente;Etapa_contacto;Y;26/09/2025 8:00;26/09/2025 8:00
+27;Propia;Etapa_contacto;Y;26/09/2025 8:00;26/09/2025 8:00
+28;Inactivo;Etapa_contacto;Y;26/09/2025 8:00;26/09/2025 8:00

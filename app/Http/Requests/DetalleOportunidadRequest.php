@@ -16,9 +16,11 @@ class DetalleOportunidadRequest extends FormRequest
         $rules = [
             'producto_id' => 'required|integer|exists:productos,id',
             'concepto' => 'nullable|string|max:255',
+            'descripcion' => 'nullable|string|max:1000',
             'medida' => 'nullable|string|max:10|in:Und,Hrs,Srv',
             'cantidad' => 'required|numeric|min:0.01',
             'vr_unitario' => 'required|numeric|min:0',
+            'iva' => 'nullable|numeric|min:0|max:100',
         ];
 
         if ($this->isMethod('PUT')) {

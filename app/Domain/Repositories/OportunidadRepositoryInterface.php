@@ -6,7 +6,7 @@ use Illuminate\Pagination\LengthAwarePaginator;
 
 interface OportunidadRepositoryInterface
 {
-    public function paginate(int $perPage = 15, ?string $search = null, array $filters = []): LengthAwarePaginator;
+    public function paginate(int $perPage = 15, ?string $search = null, array $filters = [], ?string $sortBy = null, ?string $sortOrder = 'desc'): LengthAwarePaginator;
     public function findById(int $id): mixed;
     public function create(array $data): mixed;
     public function update(int $id, array $data): mixed;

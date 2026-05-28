@@ -12,6 +12,7 @@ use App\Application\UseCases\Oportunidad\ClonarOportunidadUseCase;
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\API\Concerns\ApiResponse;
 use App\Http\Requests\OportunidadRequest;
+use App\Http\Resources\OportunidadResource;
 use App\Traits\DispatchesWebhooks;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -32,16 +33,28 @@ class OportunidadController extends Controller
 
     public function index(Request $request): JsonResponse
     {
-        $perPage = min($request->input('per_page', 15), 100);
+        $perPage = min((int) $request->input('per_page', 50), 100);
         $search = $request->input('search');
-        $filters = $request->only(['estado', 'entidad_id', 'fecha_desde', 'fecha_hasta', 'codigo']);
+        $filters = $request->only(['estado', 'entidad_id', 'producto_id', 'fecha_desde', 'fecha_hasta', 'codigo']);
+        $sortBy = $request->input('sort_by', 'created_at');
+        $sortOrder = $request->input('sort_order', 'desc');
 
-        $result = $this->indexUseCase->execute($perPage, $search, $filters);
+        $result = $this->indexUseCase->execute($perPage, $search, $filters, $sortBy, $sortOrder);
 
-        // Eager-load relationships for each item in the collection
-        $result->getCollection()->transform(fn ($item) => $item->load(['entidad', 'detalles']));
+        // Eager-load relationships for each item
+        $result->getCollection()->transform(fn ($item) => $item->load(['entidad', 'detalles.producto']));
 
-        return $this->successResponse($result);
+        $resource = OportunidadResource::collection($result);
+        $serialized = $resource->toArray(request());
+        $paginator = $result->toArray();
+
+        return $this->successResponse([
+            'data' => $serialized,
+            'total' => $paginator['total'] ?? 0,
+            'current_page' => $paginator['current_page'] ?? 1,
+            'last_page' => $paginator['last_page'] ?? 1,
+            'per_page' => (int) $paginator['per_page'],
+        ]);
     }
 
     public function store(OportunidadRequest $request): JsonResponse
@@ -64,13 +77,13 @@ class OportunidadController extends Controller
 
     public function show(int $id): JsonResponse
     {
-        $result = $this->showUseCase->execute($id);
+        $oportunidad = \App\Models\Oportunidad::with(['entidad', 'detalles'])->find($id);
 
-        if (!$result) {
+        if (!$oportunidad) {
             return $this->errorResponse('Oportunidad no encontrada.', 404);
         }
 
-        return $this->successResponse($result);
+        return $this->successResponse(new OportunidadResource($oportunidad));
     }
 
     public function update(OportunidadRequest $request, int $id): JsonResponse
@@ -139,8 +152,8 @@ class OportunidadController extends Controller
             return $this->errorResponse('Oportunidad no encontrada.', 404);
         }
 
-        if ($oportunidad->estado !== 'Aceptada') {
-            return $this->errorResponse('Solo oportunidades aceptadas pueden marcarse como ganadas.', 422);
+        if ($oportunidad->estado !== 'Negociada') {
+            return $this->errorResponse('Solo oportunidades negociadas pueden marcarse como ganadas.', 422);
         }
 
         $result = $this->ganarUseCase->execute($id);

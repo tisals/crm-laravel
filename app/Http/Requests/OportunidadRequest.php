@@ -20,7 +20,7 @@ class OportunidadRequest extends FormRequest
             'contacto_id' => 'nullable|integer|exists:contacto,id',
             'fecha' => 'required|date',
             'fuente_canal' => 'nullable|string|max:100',
-            'estado' => 'nullable|in:Borrador,Enviada,Aceptada,Rechazada,Ganada,Perdida',
+            'estado' => 'nullable|in:Borrador,Enviada,Negociada,Rechazada,Ganada',
             'observaciones' => 'nullable|string',
             'aclaraciones' => 'nullable|string',
             'validez_oferta' => 'nullable|integer|min:1',
@@ -45,7 +45,7 @@ class OportunidadRequest extends FormRequest
             'entidad_id.exists' => 'La entidad seleccionada no existe.',
             'contacto_id.exists' => 'El contacto seleccionado no existe.',
             'fecha.required' => 'La fecha es obligatoria.',
-            'estado.in' => 'El estado debe ser Borrador, Enviada, Aceptada, Rechazada, Ganada o Perdida.',
+            'estado.in' => 'El estado debe ser Borrador, Enviada, Negociada, Rechazada o Ganada.',
         ];
     }
 }

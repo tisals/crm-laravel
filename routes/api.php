@@ -6,6 +6,7 @@ use App\Http\Controllers\API\RolController;
 use App\Http\Controllers\API\PermisoController;
 use App\Http\Controllers\API\UsuarioController;
 use App\Http\Controllers\API\CiudadController;
+use App\Http\Controllers\API\MaestroController;
 use App\Http\Controllers\API\ProductoController;
 use App\Http\Controllers\API\EtiquetaController;
 use App\Http\Controllers\API\EntidadController;
@@ -38,10 +39,31 @@ Route::prefix('v1')->group(function () {
         ->middleware('auth:sanctum')
         ->name('webhook.registration');
 
+    Route::post('/webhook/purchase', [SailusWebhookController::class, 'purchase'])
+        ->middleware('auth:sanctum')
+        ->name('webhook.purchase');
+
+    Route::post('/license/validate', [SailusWebhookController::class, 'validateLicense'])
+        ->middleware('auth:sanctum')
+        ->name('license.validate');
+
+    Route::put('/services/{id}/renew', [ServicioController::class, 'renew'])
+        ->middleware('auth:sanctum')
+        ->name('services.renew');
+
     // Auth (con rate limiting específico para login)
     Route::post('/auth/login', [AuthController::class, 'login'])
         ->middleware('throttle:auth')
         ->name('auth.login');
+
+    // Password reset (public, rate limited)
+    Route::post('/auth/forgot-password', [AuthController::class, 'forgotPassword'])
+        ->middleware('throttle:5,10')
+        ->name('password.forgot');
+
+    Route::post('/auth/reset-password', [AuthController::class, 'resetPassword'])
+        ->middleware('throttle:5,10')
+        ->name('password.reset');
 
     // API Key validation (uses X-API-Key header, not Sanctum)
     Route::get('/auth/validate-key', [AuthController::class, 'validateKey'])
@@ -53,8 +75,9 @@ Route::prefix('v1')->group(function () {
         ->middleware(['auth:sanctum', 'throttle:api'])
         ->name('users.brands');
 
-    // Protected endpoints (require Sanctum token) + Rate Limiting
-    Route::middleware(['auth:sanctum', 'throttle:api'])->group(function () {
+    // Protected endpoints (require Sanctum token)
+    // Rate limiting: mutations (POST/PUT/DELETE) → throttle:api; GETs → sin throttle
+    Route::middleware(['auth:sanctum', 'throttle-mutations'])->group(function () {
         Route::post('/auth/logout', [AuthController::class, 'logout'])->name('auth.logout');
 
         // Dashboard (sin RBAC — todos los usuarios autenticados)
@@ -88,9 +111,29 @@ Route::prefix('v1')->group(function () {
             Route::put('/usuarios/{id}/status', [UsuarioController::class, 'toggleStatus'])->name('usuarios.toggle-status');
         });
 
-        // Ciudades (read-only)
-        Route::get('/ciudades', [CiudadController::class, 'index'])->name('ciudades.index');
-        Route::get('/ciudades/{cod_municipio}', [CiudadController::class, 'show'])->name('ciudades.show');
+        // Seguridad Dashboard
+        Route::middleware('rbac')->group(function () {
+            Route::get('/seguridad/dashboard', [\App\Http\Controllers\API\SecurityDashboardController::class, 'index'])
+                ->name('seguridad.dashboard');
+        });
+
+        // Ciudades
+        Route::middleware('rbac')->group(function () {
+            Route::get('/ciudades', [CiudadController::class, 'index'])->name('ciudades.index');
+            Route::post('/ciudades', [CiudadController::class, 'store'])->name('ciudades.store');
+            Route::get('/ciudades/{cod_municipio}', [CiudadController::class, 'show'])->name('ciudades.show');
+            Route::put('/ciudades/{cod_municipio}', [CiudadController::class, 'update'])->name('ciudades.update');
+            Route::delete('/ciudades/{cod_municipio}', [CiudadController::class, 'destroy'])->name('ciudades.destroy');
+        });
+
+        // Maestros
+        Route::middleware('rbac')->group(function () {
+            Route::get('/maestros', [MaestroController::class, 'index'])->name('maestros.index');
+            Route::post('/maestros', [MaestroController::class, 'store'])->name('maestros.store');
+            Route::get('/maestros/{id}', [MaestroController::class, 'show'])->name('maestros.show');
+            Route::put('/maestros/{id}', [MaestroController::class, 'update'])->name('maestros.update');
+            Route::delete('/maestros/{id}', [MaestroController::class, 'destroy'])->name('maestros.destroy');
+        });
 
         // Productos
         Route::middleware('rbac')->group(function () {
@@ -182,14 +225,19 @@ Route::prefix('v1')->group(function () {
         Route::post('/oportunidades/{id}/enviar', [CotizacionController::class, 'enviar']);
         Route::get('/oportunidades/{id}/pdf', [CotizacionController::class, 'pdf']);
 
-        // Seguimiento
+        // ICS exports — MUST be before {id} routes, otherwise calendar.ics matches {id}
+        Route::middleware(['auth:sanctum', 'extract-token'])->group(function () {
+            Route::get('/seguimientos/{id}/ics', [SeguimientoController::class, 'exportIcs'])->name('seguimientos.ics');
+            Route::get('/seguimientos/calendar.ics', [SeguimientoController::class, 'exportCalendarIcs'])->name('seguimientos.calendar');
+        });
+
+        // Seguimiento CRUD
         Route::middleware('rbac')->group(function () {
             Route::get('/seguimientos', [SeguimientoController::class, 'index'])->name('seguimientos.index');
             Route::post('/seguimientos', [SeguimientoController::class, 'store'])->name('seguimientos.store');
             Route::get('/seguimientos/{id}', [SeguimientoController::class, 'show'])->name('seguimientos.show');
             Route::put('/seguimientos/{id}', [SeguimientoController::class, 'update'])->name('seguimientos.update');
             Route::delete('/seguimientos/{id}', [SeguimientoController::class, 'destroy'])->name('seguimientos.destroy');
-            Route::get('/seguimientos/{id}/ics', [SeguimientoController::class, 'exportIcs'])->name('seguimientos.ics');
         });
 
         // Seguimiento filters by related entity
@@ -198,9 +246,6 @@ Route::prefix('v1')->group(function () {
             Route::get('/contactos/{contactoId}/seguimientos', [SeguimientoController::class, 'index'])->name('contactos.seguimientos.index');
             Route::get('/entidades/{entidadId}/seguimientos', [SeguimientoController::class, 'index'])->name('entidades.seguimientos.index');
         });
-
-        // Calendar export (public — used for ICS download link)
-        Route::get('/seguimientos/calendar.ics', [SeguimientoController::class, 'exportCalendarIcs'])->name('seguimientos.calendar');
 
         // ===== Phase 4: Operaciones + Finanzas =====
 

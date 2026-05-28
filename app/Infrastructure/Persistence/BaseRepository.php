@@ -71,7 +71,7 @@ abstract class BaseRepository
     {
         $modelClass = $this->getModelClass();
 
-        return new $modelClass();
+        return $modelClass::query();
     }
 
     protected function applySearch($query, string $search)

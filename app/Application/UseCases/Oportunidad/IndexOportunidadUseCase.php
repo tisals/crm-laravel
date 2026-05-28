@@ -11,8 +11,8 @@ class IndexOportunidadUseCase
         private OportunidadRepositoryInterface $repository,
     ) {}
 
-    public function execute(int $perPage = 15, ?string $search = null, array $filters = []): LengthAwarePaginator
+    public function execute(int $perPage = 15, ?string $search = null, array $filters = [], ?string $sortBy = null, ?string $sortOrder = 'desc'): LengthAwarePaginator
     {
-        return $this->repository->paginate($perPage, $search, $filters);
+        return $this->repository->paginate($perPage, $search, $filters, $sortBy, $sortOrder);
     }
 }
