@@ -2,9 +2,9 @@ name: CI
 
 on:
   push:
-    branches: [ main, master ]
+    branches: [ main, staging ]
   pull_request:
-    branches: [ main, master ]
+    branches: [ main, staging ]
 
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
@@ -67,16 +67,26 @@ jobs:
       run: php artisan test --ansi
 
     # --------------------------------------------------
-    # EasyPanel deploy trigger (only on main/master push)
+    # EasyPanel deploy triggers
     # --------------------------------------------------
-    - name: Trigger EasyPanel deploy
+    - name: Trigger EasyPanel deploy (Production)
       if: github.ref == 'refs/heads/main' && github.event_name == 'push'
       run: |
-        # Uncomment and set EASY_PANEL_WEBHOOK secret in repo settings
-        # curl -X POST "${{ secrets.EASY_PANEL_WEBHOOK }}" \
+        # Set secrets in repo settings:
+        #   EASY_PANEL_WEBHOOK_PROD → production deploy webhook
+        #   EASY_PANEL_WEBHOOK_STAGING → staging deploy webhook
+        # curl -X POST "${{ secrets.EASY_PANEL_WEBHOOK_PROD }}" \
         #   -H "Content-Type: application/json" \
-        #   -d '{"repository":"${{ github.repository }}","ref":"${{ github.ref }}"}'
-        echo "EasyPanel deploy webhook commented out. Set EASY_PANEL_WEBHOOK secret to enable."
+        #   -d '{"repository":"${{ github.repository }}","ref":"main"}'
+        echo "Production webhook: set EASY_PANEL_WEBHOOK_PROD to enable."
+
+    - name: Trigger EasyPanel deploy (Staging)
+      if: github.ref == 'refs/heads/staging' && github.event_name == 'push'
+      run: |
+        # curl -X POST "${{ secrets.EASY_PANEL_WEBHOOK_STAGING }}" \
+        #   -H "Content-Type: application/json" \
+        #   -d '{"repository":"${{ github.repository }}","ref":"staging"}'
+        echo "Staging webhook: set EASY_PANEL_WEBHOOK_STAGING to enable."
 
     # --------------------------------------------------
     # PR comment when tests pass
@@ -95,7 +105,7 @@ jobs:
             comment.user.type === 'Bot' && 
             comment.body.includes('✅ Tests passed')
           );
-          const body = `## ✅ Tests passed\n\nAll PHPUnit tests passed successfully. This branch is ready for **EasyPanel** auto-deploy.\n\n| Metric | Value |\n|--------|-------|\n| Status | Passing |\n| Commit | ${{ github.sha }} |\n| Branch | ${{ github.head_ref }} |\n\n_EasyPanel will deploy automatically when this PR is merged into \\\`main\\\`._`;
+          const body = `## ✅ Tests passed\n\nAll PHPUnit tests passed successfully. This branch is ready for **EasyPanel** auto-deploy.\n\n| Metric | Value |\n|--------|-------|\n| Status | Passing |\n| Commit | ${{ github.sha }} |\n| Branch | ${{ github.head_ref }} |\n\n_EasyPanel will deploy automatically when this PR is merged into \\\`main\\\` (production) or \\\`staging\\\`._`;
           if (botComment) {
             await github.rest.issues.updateComment({
               comment_id: botComment.id,
