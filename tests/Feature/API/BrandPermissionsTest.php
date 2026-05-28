@@ -21,13 +21,15 @@ class BrandPermissionsTest extends TestCase
     #[Test]
     public function it_returns_brand_permissions_for_admin_user()
     {
-        $user = Usuario::create([
-            'nombre' => 'Admin',
-            'email' => 'admin@tecnoinnsoft.dev',
-            'password_hash' => bcrypt('password'),
-            'rol_id' => 1,
-            'estado' => 'Activo',
-        ]);
+        $user = Usuario::firstOrCreate(
+            ['email' => 'admin@tecnoinnsoft.dev'],
+            [
+                'nombre' => 'Admin',
+                'password_hash' => bcrypt('password'),
+                'rol_id' => 1,
+                'estado' => 'Activo',
+            ]
+        );
 
         $ent1 = Entidad::create([
             'tipo_persona' => 'Juridica',
@@ -67,13 +69,15 @@ class BrandPermissionsTest extends TestCase
     #[Test]
     public function it_returns_404_for_non_existent_user()
     {
-        $user = Usuario::create([
-            'nombre' => 'Temp',
-            'email' => 'temp@test.com',
-            'password_hash' => bcrypt('password'),
-            'rol_id' => 1,
-            'estado' => 'Activo',
-        ]);
+        $user = Usuario::firstOrCreate(
+            ['email' => 'temp_brands_test@test.com'],
+            [
+                'nombre' => 'Temp',
+                'password_hash' => bcrypt('password'),
+                'rol_id' => 1,
+                'estado' => 'Activo',
+            ]
+        );
         $token = $user->createToken('test-token')->plainTextToken;
 
         $response = $this->withToken($token)
