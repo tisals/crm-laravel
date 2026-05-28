@@ -14,9 +14,6 @@ jobs:
   test:
     runs-on: ubuntu-latest
 
-    services:
-      # SQLite does not need a service, tests use :memory:
-
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
