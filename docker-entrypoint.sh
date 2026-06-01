@@ -30,20 +30,53 @@ fi
 php artisan key:generate --force 2>&1 || true
 
 # Crear base de datos si no existe (mysql/mariadb)
-if [ -n "$DB_HOST" ] && [ -n "$DB_DATABASE" ] && [ -n "$DB_USERNAME" ] && [ -n "$DB_PASSWORD" ]; then
-    echo "-> Checking database '${DB_DATABASE}'..." >&2
-    php -r "
-        \$pdo = new PDO('mysql:host=${DB_HOST};port=${DB_PORT:-3306}', '${DB_USERNAME}', '${DB_PASSWORD}', [
-            PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
-        ]);
-        \$stmt = \$pdo->query('SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = \"${DB_DATABASE}\"');
-        if (!\$stmt->fetch()) {
-            \$pdo->exec('CREATE DATABASE \`${DB_DATABASE}\` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci');
-            echo \"-> Database '${DB_DATABASE}' created.\n\" >&2;
-        } else {
-            echo \"-> Database '${DB_DATABASE}' already exists.\n\" >&2;
+# Usa DB_ROOT_USER/DB_ROOT_PASSWORD si están definidas, sino DB_USERNAME/DB_PASSWORD
+if [ -n "$DB_HOST" ] && [ -n "$DB_DATABASE" ]; then
+    DB_CREATE_USER="${DB_ROOT_USER:-$DB_USERNAME}"
+    DB_CREATE_PASS="${DB_ROOT_PASSWORD:-$DB_PASSWORD}"
+    if [ -n "$DB_CREATE_USER" ] && [ -n "$DB_CREATE_PASS" ]; then
+        echo "-> Checking database '${DB_DATABASE}' (as ${DB_CREATE_USER})..." >&2
+        cat > /tmp/init-db.php << 'PHPEOF'
+<?php
+$host = getenv('DB_HOST');
+$port = getenv('DB_PORT') ?: '3306';
+$user = getenv('DB_CREATE_USER');
+$pass = getenv('DB_CREATE_PASS');
+$db   = getenv('DB_DATABASE');
+
+try {
+    $pdo = new PDO("mysql:host=$host;port=$port", $user, $pass, [
+        PDO::ATTR_ERRMODE => PDO::ERRMODE_EXCEPTION,
+        PDO::ATTR_TIMEOUT => 5,
+    ]);
+    $stmt = $pdo->query("SELECT SCHEMA_NAME FROM INFORMATION_SCHEMA.SCHEMATA WHERE SCHEMA_NAME = '$db'");
+    if (!$stmt->fetch()) {
+        $pdo->exec("CREATE DATABASE `$db` CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci");
+        echo "Database '$db' created.\n";
+        // Grant all privileges to the app user if we're root
+        $appUser = getenv('DB_USERNAME');
+        $appPass = getenv('DB_PASSWORD');
+        if ($appUser && $appPass && $user !== $appUser) {
+            $pdo->exec("GRANT ALL PRIVILEGES ON `$db`.* TO '$appUser'@'%' IDENTIFIED BY '$appPass'");
+            $pdo->exec("FLUSH PRIVILEGES");
+            echo "Privileges granted to '$appUser'.\n";
         }
-    " 2>&1 || echo "-> WARNING: Could not create database (may already exist or insufficient privileges)" >&2
+    } else {
+        echo "Database '$db' already exists.\n";
+    }
+} catch (Exception $e) {
+    echo "DB_CREATE_FAILED:" . $e->getMessage() . "\n";
+}
+PHPEOF
+        DB_CREATE_USER="$DB_CREATE_USER" DB_CREATE_PASS="$DB_CREATE_PASS" \
+            php /tmp/init-db.php 2>&1 | while IFS= read -r line; do
+            case "$line" in
+                DB_CREATE_FAILED:*) echo "-> WARNING: Cannot create database ($(echo "$line" | sed 's/DB_CREATE_FAILED://'))" >&2 ;;
+                *) echo "-> $line" >&2 ;;
+            esac
+        done
+        rm -f /tmp/init-db.php
+    fi
 fi
 
 # Migrar si no se ha hecho exitosamente
