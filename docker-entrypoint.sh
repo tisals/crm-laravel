@@ -32,6 +32,10 @@ php artisan key:generate --force 2>&1 || true
 # Crear base de datos si no existe (mysql/mariadb)
 # Usa DB_ROOT_USER/DB_ROOT_PASSWORD si están definidas, sino DB_USERNAME/DB_PASSWORD
 if [ -n "$DB_HOST" ] && [ -n "$DB_DATABASE" ]; then
+    # Si hay DB_ROOT_PASSWORD pero no DB_ROOT_USER, asumir 'root'
+    if [ -n "$DB_ROOT_PASSWORD" ] && [ -z "${DB_ROOT_USER:-}" ]; then
+        DB_ROOT_USER="root"
+    fi
     DB_CREATE_USER="${DB_ROOT_USER:-$DB_USERNAME}"
     DB_CREATE_PASS="${DB_ROOT_PASSWORD:-$DB_PASSWORD}"
     if [ -n "$DB_CREATE_USER" ] && [ -n "$DB_CREATE_PASS" ]; then
