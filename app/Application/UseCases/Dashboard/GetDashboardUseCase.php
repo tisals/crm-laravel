@@ -248,14 +248,14 @@ class GetDashboardUseCase
 
     private function getComercialesVentas(?int $comercialId, ?string $fechaInicio, ?string $fechaFin): array
     {
-        $query = DB::table('users')
+        $query = DB::table('usuarios')
             ->select(
-                'users.id',
-                'users.name',
+                'usuarios.id',
+                'usuarios.nombre',
                 DB::raw('COUNT(DISTINCT oportunidad.id) as oportunidades_count'),
                 DB::raw('SUM(detalle_oportunidad.vr_total) as total_ventas')
             )
-            ->join('entidad_usuario', 'users.id', '=', 'entidad_usuario.usuario_id')
+            ->join('entidad_usuario', 'usuarios.id', '=', 'entidad_usuario.usuario_id')
             ->join('entidad', 'entidad.id', '=', 'entidad_usuario.entidad_id')
             ->join('oportunidad', 'oportunidad.entidad_id', '=', 'entidad.id')
             ->join('detalle_oportunidad', 'detalle_oportunidad.oportunidad_id', '=', 'oportunidad.id')
@@ -273,10 +273,9 @@ class GetDashboardUseCase
             ->map(function ($row) {
                 return [
                     'id' => (int) $row->id,
-                        'nombre' => $row->name,
-                        'oportunidades_count' => (int) $row->oportunidades_count,
-                        'total_ventas' => (float) $row->total_ventas,
-
+                    'nombre' => $row->nombre,
+                    'oportunidades_count' => (int) $row->oportunidades_count,
+                    'total_ventas' => (float) $row->total_ventas,
                 ];
             })
             ->toArray();
