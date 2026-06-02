@@ -25,10 +25,10 @@ class EntidadCsvSeeder extends Seeder
 
         // Numeric codes from maestros.csv (Etapa_contacto)
         return match ($value) {
-            '25' => 'Cliente',
-            '26' => 'Propia',
-            '24' => 'Prospecto',
-            '27' => 'Inactivo',
+            '25' => 'Prospecto',
+            '26' => 'Cliente',
+            '27' => 'Propia',
+            '28' => 'Inactivo',
             '1' => 'Activo',     // Estado
             '2' => 'Inactivo',   // Estado
             '3' => 'Pendiente',  // Estado

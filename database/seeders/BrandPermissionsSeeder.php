@@ -10,18 +10,7 @@ class BrandPermissionsSeeder extends Seeder
 {
     public function run(): void
     {
-        // 1. Crear usuario admin si no existe
-        $user = Usuario::firstOrCreate(
-            ['email' => 'admin@tecnoinnsoft.dev'],
-            [
-                'nombre' => 'Admin Principal',
-                'password_hash' => bcrypt('password'),
-                'rol_id' => 1,
-                'estado' => 'Activo',
-            ]
-        );
-
-        // 2. Crear entidades marca
+        // 1. Crear entidades marca primero
         $tecnoinnsoft = Entidad::firstOrCreate(
             ['identificacion' => '900000001-0'],
             [
@@ -46,12 +35,63 @@ class BrandPermissionsSeeder extends Seeder
             ]
         );
 
-        // 3. Vincular usuario a las marcas
-        $user->entidades()->syncWithoutDetaching([
-            $tecnoinnsoft->id,
-            $deseguridad->id,
-        ]);
+        // 2. Definir lista de usuarios a crear
+        $usuarios = [
+            [
+                'email' => 'admin@tecnoinnsoft.dev',
+                'nombre' => 'Admin Principal',
+                'password_hash' => bcrypt('password'),
+                'rol_id' => 1,
+                'estado' => 'Activo',
+            ],
+            [
+                'email' => 'gestorcomercial.tis@gmail.com',
+                'nombre' => 'Lorena Bernal',
+                'password_hash' => bcrypt('password'),
+                'rol_id' => 2, // Ventas (Comercial)
+                'estado' => 'Activo',
+            ],
+            [
+                'email' => 'direccion.tis@gmail.com',
+                'nombre' => 'Jaime Novoa',
+                'password_hash' => bcrypt('password'),
+                'rol_id' => 2, // Ventas (Comercial)
+                'estado' => 'Activo',
+            ],
+            [
+                'email' => 'innovacionydesarrollo.tis@gmail.com',
+                'nombre' => 'Alejandro Leguizamo',
+                'password_hash' => bcrypt('password'),
+                'rol_id' => 1, // Admin (Super Admin)
+                'estado' => 'Activo',
+            ],
+            [
+                'email' => 'servicioalcliente.tis@gmail.com',
+                'nombre' => 'Patricia Moreno',
+                'password_hash' => bcrypt('password'),
+                'rol_id' => 2, // Ventas (Comercial)
+                'estado' => 'Activo',
+            ],
+        ];
 
-        $this->command->info("✅ Admin ID {$user->id} vinculado a: {$tecnoinnsoft->dominio}, {$deseguridad->dominio}");
+        // 3. Crear y vincular a cada usuario con las marcas
+        foreach ($usuarios as $u) {
+            $user = Usuario::firstOrCreate(
+                ['email' => $u['email']],
+                [
+                    'nombre' => $u['nombre'],
+                    'password_hash' => $u['password_hash'],
+                    'rol_id' => $u['rol_id'],
+                    'estado' => $u['estado'],
+                ]
+            );
+
+            $user->entidades()->syncWithoutDetaching([
+                $tecnoinnsoft->id,
+                $deseguridad->id,
+            ]);
+
+            $this->command->info("✅ Usuario ID {$user->id} ({$user->nombre}) vinculado a: {$tecnoinnsoft->dominio}, {$deseguridad->dominio}");
+        }
     }
 }

@@ -29,6 +29,9 @@ class OportunidadCsvImportUseCase
     /** @var array<string, string> Maestro nombre → estado interno */
     private array $estadoMap = [];
 
+    /** @var array{nits: array, names: array} Clientes from billing sheet */
+    private array $clientesFacturacion = ['nits' => [], 'names' => []];
+
     private ?Producto $fallbackProduct = null;
     private int $defaultUserId = 1;
 
@@ -83,6 +86,12 @@ class OportunidadCsvImportUseCase
     public function setEstadoMap(array $map): static
     {
         $this->estadoMap = $map;
+        return $this;
+    }
+
+    public function setClientesFacturacion(array $list): static
+    {
+        $this->clientesFacturacion = $list;
         return $this;
     }
 
@@ -211,6 +220,20 @@ class OportunidadCsvImportUseCase
         }
 
         // Not found → CREATE
+        $isClient = false;
+        if ($nit) {
+            $cleanNit = preg_replace('/[\.\-\s]/', '', $nit);
+            if (in_array($cleanNit, $this->clientesFacturacion['nits'] ?? [])) {
+                $isClient = true;
+            }
+        }
+        if (!$isClient) {
+            $normalizedName = $this->normalizeEntityName($empresaName);
+            if (in_array($normalizedName, $this->clientesFacturacion['names'] ?? [])) {
+                $isClient = true;
+            }
+        }
+
         $newId = DB::table('entidad')->insertGetId([
             'nombre'          => mb_substr($empresaName, 0, 255),
             'nombre_comercial'=> mb_substr($empresaName, 0, 255),
@@ -219,7 +242,7 @@ class OportunidadCsvImportUseCase
             'tipo_id'         => 'NIT',
             'identificacion'  => $nit ? preg_replace('/[\.\-\s]/', '', $nit) : null,
             'dominio'         => $dominio ?: null,
-            'estado'          => 'Cliente',
+            'estado'          => $isClient ? 'Cliente' : 'Prospecto',
             'created_at'      => $now,
             'updated_at'      => $now,
         ]);

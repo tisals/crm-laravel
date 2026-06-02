@@ -58,6 +58,9 @@ class OportunidadCsvSeeder extends Seeder
             ->toArray();
         $this->command->info('  → ' . count($maestrosEstado) . ' estados loaded.');
 
+        $jsonPath = database_path('csv/clientes_facturacion.json');
+        $clientesFacturacion = file_exists($jsonPath) ? json_decode(file_get_contents($jsonPath), true) : ['nits' => [], 'names' => []];
+
         $useCase = new OportunidadCsvImportUseCase();
         $useCase
             ->setEntityMap($entityMap['map'])
@@ -65,7 +68,8 @@ class OportunidadCsvSeeder extends Seeder
             ->setProductMap($products->all())
             ->setFallbackProduct($fallbackProduct)
             ->setDefaultUserId(1)
-            ->setEstadoMap($maestrosEstado);
+            ->setEstadoMap($maestrosEstado)
+            ->setClientesFacturacion($clientesFacturacion);
 
         // --- Process in chunks ---
         $totalCreated = 0;
