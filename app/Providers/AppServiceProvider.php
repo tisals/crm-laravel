@@ -42,6 +42,8 @@ use App\Infrastructure\Persistence\EloquentOrdenServicioRepository;
 use App\Infrastructure\Persistence\EloquentCuentaRepository;
 use App\Infrastructure\Persistence\EloquentMovimientoRepository;
 use App\Infrastructure\Persistence\EloquentMaestroRepository;
+use App\Models\Oportunidad;
+use App\Observers\OportunidadObserver;
 use Illuminate\Support\ServiceProvider;
 use Illuminate\Cache\RateLimiting\Limit;
 
@@ -73,6 +75,9 @@ class AppServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
+        // Register observers
+        Oportunidad::observe(OportunidadObserver::class);
+
         // Rate Limiting para API
         // Por defecto: 60 requests/minuto por token/API key
         // Para API keys externas: configurable por entidad

@@ -22,6 +22,7 @@ use App\Http\Controllers\API\DetalleServicioController;
 use App\Http\Controllers\API\OrdenServicioController;
 use App\Http\Controllers\API\CuentaController;
 use App\Http\Controllers\API\DashboardController;
+use App\Http\Controllers\API\EntidadUsuarioController;
 use App\Http\Controllers\API\MovimientoController;
 use App\Http\Controllers\API\BrandPermissionController;
 use App\Http\Controllers\API\ContactoAccionController;
@@ -308,6 +309,13 @@ Route::prefix('v1')->group(function () {
             Route::get('/movimientos/{id}', [MovimientoController::class, 'show'])->name('movimientos.show');
             Route::put('/movimientos/{id}', [MovimientoController::class, 'update'])->name('movimientos.update');
             Route::delete('/movimientos/{id}', [MovimientoController::class, 'destroy'])->name('movimientos.destroy');
+        });
+
+        // Entity-User assignment
+        Route::middleware('rbac')->group(function () {
+            Route::get('/entidad/{id}/usuarios', [EntidadUsuarioController::class, 'index'])->name('entidad.usuarios.index');
+            Route::post('/entidad-usuario', [EntidadUsuarioController::class, 'store'])->name('entidad-usuario.store');
+            Route::delete('/entidad-usuario', [EntidadUsuarioController::class, 'destroy'])->name('entidad-usuario.destroy');
         });
     });
 });

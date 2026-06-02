@@ -23,9 +23,12 @@ class GanarOportunidadUseCase
 
         $updated = $this->oportunidadRepository->update($id, ['estado' => 'Ganada']);
 
-        // Update entidad estado to 'Cliente'
+        // Update entidad estado to 'Cliente' and set cliente_desde if first win
         \App\Models\Entidad::where('id', $oportunidad->entidad_id)
             ->update(['estado' => 'Cliente']);
+        \App\Models\Entidad::where('id', $oportunidad->entidad_id)
+            ->whereNull('cliente_desde')
+            ->update(['cliente_desde' => now()]);
 
         // Calculate total vr_servicio from detalles
         $sourceModel = \App\Models\Oportunidad::with('detalles')->find($id);

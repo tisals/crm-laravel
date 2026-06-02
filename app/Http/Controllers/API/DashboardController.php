@@ -6,6 +6,7 @@ use App\Application\UseCases\Dashboard\GetDashboardUseCase;
 use App\Http\Controllers\Controller;
 use App\Http\Controllers\API\Concerns\ApiResponse;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Http\Request;
 
 class DashboardController extends Controller
 {
@@ -15,9 +16,14 @@ class DashboardController extends Controller
         private GetDashboardUseCase $dashboardUseCase,
     ) {}
 
-    public function index(): JsonResponse
+    public function index(Request $request): JsonResponse
     {
-        $data = $this->dashboardUseCase->execute();
+        $data = $this->dashboardUseCase->execute(
+            comercialId: $request->integer('comercial_id') ?: null,
+            fechaInicio: $request->query('fecha_inicio'),
+            fechaFin: $request->query('fecha_fin'),
+            authUser: $request->user(),
+        );
 
         return $this->successResponse($data);
     }

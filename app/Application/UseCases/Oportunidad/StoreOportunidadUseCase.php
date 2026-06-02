@@ -15,6 +15,15 @@ class StoreOportunidadUseCase
     {
         $data['codigo'] = $this->generarCodigoUseCase->execute();
 
-        return $this->repository->create($data);
+        $oportunidad = $this->repository->create($data);
+
+        // If created directly as Ganada, set cliente_desde
+        if (isset($data['estado']) && $data['estado'] === 'Ganada') {
+            \App\Models\Entidad::where('id', $oportunidad->entidad_id)
+                ->whereNull('cliente_desde')
+                ->update(['cliente_desde' => now()]);
+        }
+
+        return $oportunidad;
     }
 }

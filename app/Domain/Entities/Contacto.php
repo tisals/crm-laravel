@@ -23,6 +23,8 @@ class Contacto
         public ?int $updated_by = null,
         public ?string $created_at = null,
         public ?string $updated_at = null,
+        public ?array $diagnostico_data = null,
+        public ?string $fuente = null,
     ) {}
 
     public static function fromArray(array $data): self
@@ -46,6 +48,8 @@ class Contacto
             updated_by: $data['updated_by'] ?? null,
             created_at: $data['created_at'] ?? null,
             updated_at: $data['updated_at'] ?? null,
+            diagnostico_data: $data['diagnostico_data'] ?? null,
+            fuente: $data['fuente'] ?? null,
         );
     }
 
@@ -70,6 +74,8 @@ class Contacto
             'updated_by' => $this->updated_by,
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
+            'diagnostico_data' => $this->diagnostico_data,
+            'fuente' => $this->fuente,
         ];
     }
 }

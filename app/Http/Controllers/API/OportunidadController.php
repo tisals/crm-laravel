@@ -152,8 +152,8 @@ class OportunidadController extends Controller
             return $this->errorResponse('Oportunidad no encontrada.', 404);
         }
 
-        if ($oportunidad->estado !== 'Negociada') {
-            return $this->errorResponse('Solo oportunidades negociadas pueden marcarse como ganadas.', 422);
+        if ($oportunidad->estado !== 'Aceptada') {
+            return $this->errorResponse('Solo oportunidades aceptadas pueden marcarse como ganadas.', 422);
         }
 
         $result = $this->ganarUseCase->execute($id);

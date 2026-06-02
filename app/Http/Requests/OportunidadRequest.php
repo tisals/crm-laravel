@@ -20,7 +20,7 @@ class OportunidadRequest extends FormRequest
             'contacto_id' => 'nullable|integer|exists:contacto,id',
             'fecha' => 'required|date',
             'fuente_canal' => 'nullable|string|max:100',
-            'estado' => 'nullable|in:Borrador,Enviada,Negociada,Rechazada,Ganada',
+            'estado' => 'nullable|in:Borrador,Enviada,Aceptada,Rechazada,Ganada,Perdida',
             'observaciones' => 'nullable|string',
             'aclaraciones' => 'nullable|string',
             'validez_oferta' => 'nullable|integer|min:1',
