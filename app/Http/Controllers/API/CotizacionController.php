@@ -170,6 +170,7 @@ class CotizacionController extends Controller
 
     private function buildPdfData(Oportunidad $oportunidad): array
     {
+        $oportunidad->loadMissing('creador');
         $detalles = $oportunidad->detalles->map(fn ($d) => [
             'producto' => $d->producto?->nombre ?? '—',
             'descripcion' => $d->descripcion ?? $d->concepto ?? '—',
@@ -249,9 +250,14 @@ class CotizacionController extends Controller
             ],
             'contact' => [
                 'user' => [
-                    'name' => $oportunidad->contacto?->nombres ?? '—',
-                    'email' => $oportunidad->contacto?->email_contacto ?? '—',
+                    'name' => $oportunidad->creador?->nombre ?? '—',
+                    'email' => $oportunidad->creador?->email ?? '—',
                 ],
+            ],
+            'client_contact' => [
+                'name' => $oportunidad->contacto ? ($oportunidad->contacto->nombres . ' ' . $oportunidad->contacto->apellidos) : '—',
+                'email' => $oportunidad->contacto?->email_contacto ?? '—',
+                'telefono' => $oportunidad->contacto?->movil ?? $oportunidad->contacto?->tel_contacto ?? '—',
             ],
             'detalle_oportunidad' => $detalles,
             'subtotal' => '$' . number_format($subtotal, 0),

@@ -84,6 +84,11 @@
                                 <h2 style="margin-bottom: 4px;">Dirigida a:</h2>
                                 <p style="font-size: 11pt; font-weight: bold; color: #333333;">{{ $entity['name'] }}</p>
                                 <p style="font-size: 11pt; font-weight: bold; color: #333333;">{{ $entity['city'] }}</p>
+                                @if(isset($client_contact) && $client_contact['name'] !== '—')
+                                    <p style="font-size: 8pt; color: #4b5563; margin-top: 4px;"><strong>Atención:</strong> {{ $client_contact['name'] }}</p>
+                                    <p style="font-size: 8pt; color: #6b7280;">Email: {{ $client_contact['email'] }}</p>
+                                    <p style="font-size: 8pt; color: #6b7280;">Tel: {{ $client_contact['telefono'] }}</p>
+                                @endif
                             </td>
                         </tr>
                     </table>
@@ -134,7 +139,7 @@
                 <!-- Left: Observations -->
                 <td width="55%" valign="top" style="padding-right: 12px;">
                     <p class="teal" style="font-size: 8pt; font-weight: bold; margin-bottom: 3px;">Observaciones</p>
-                    <p style="font-size: 8pt; font-style: italic; color: #4b5563;">{{ $opportunity['observations'] }}</p>
+                    <p style="font-size: 8pt; font-style: italic; color: #4b5563;">{!! nl2br(e($opportunity['observations'])) !!}</p>
                 </td>
 
                 <!-- Right: Totals -->
@@ -161,7 +166,7 @@
                                 </table>
 
                                 <p style="font-size: 7pt; font-weight: bold; color: #6b7280; margin-top: 8px; margin-bottom: 2px;">Forma de Pago</p>
-                                <p style="font-size: 8pt; color: #333333;">{{ $opportunity['payment_conditions'] }}</p>
+                                <p style="font-size: 8pt; color: #333333;">{!! nl2br(e($opportunity['payment_conditions'])) !!}</p>
                             </td>
                         </tr>
                     </table>
@@ -174,7 +179,7 @@
             <tr>
                 <td style="border-top: 1px solid #9ca3af; padding-top: 10px;">
                     <p class="teal" style="font-size: 8pt; font-weight: bold; margin-bottom: 3px;">Notas Aclaratorias</p>
-                    <p style="font-size: 8pt; font-style: italic; color: #4b5563;">{{ $opportunity['aclarations'] }}</p>
+                    <p style="font-size: 8pt; font-style: italic; color: #4b5563;">{!! nl2br(e($opportunity['aclarations'])) !!}</p>
                 </td>
             </tr>
         </table>
@@ -193,7 +198,7 @@
                     <tr>
                         <td width="50%" align="center" valign="top">
                             <p style="font-size: 7pt; font-weight: bold; color: #6b7280; margin-bottom: 2px;">Garantia</p>
-                            <p style="font-size: 7pt; color: #9ca3af;">{{ $opportunity['guarantees'] }}</p>
+                            <p style="font-size: 7pt; color: #9ca3af;">{!! nl2br(e($opportunity['guarantees'])) !!}</p>
                         </td>
                         <td width="50%" align="center" valign="top" style="border-left: 1px solid #e5e7eb;">
                             <p style="font-size: 7pt; font-weight: bold; color: #6b7280; margin-bottom: 2px;">Tiempo de entrega</p>

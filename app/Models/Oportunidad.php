@@ -44,6 +44,11 @@ class Oportunidad extends Model
         return $this->hasMany(DetalleOportunidad::class, 'oportunidad_id');
     }
 
+    public function creador()
+    {
+        return $this->belongsTo(Usuario::class, 'created_by');
+    }
+
     public function seguimientos()
     {
         return $this->hasMany(Seguimiento::class, 'oportunidad_id');
