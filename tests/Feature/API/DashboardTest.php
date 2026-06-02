@@ -133,7 +133,7 @@ class DashboardTest extends TestCase
     }
 
     #[Test]
-    public function ventas_mes_is_average_not_sum(): void
+    public function ventas_mes_is_annual_total_divided_by_12(): void
     {
         $auth = $this->createAdminUser();
         $entidad = Entidad::factory()->create();
@@ -170,35 +170,44 @@ class DashboardTest extends TestCase
         $response = $this->withHeader('Authorization', 'Bearer ' . $auth['token'])
             ->getJson('/api/v1/dashboard');
 
-        // AVG = (1000 + 500) / 2 months = 750
-        $this->assertEquals(750.0, $response->json('data.ventas.ventas_mes'));
+        // ventas_mes = total anual / 12 = 1500 / 12 = 125
+        $this->assertEquals(125.0, $response->json('data.ventas.ventas_mes'));
     }
 
     #[Test]
-    public function ltv_is_total_revenue_per_client(): void
+    public function ltv_is_average_monthly_billing_per_client(): void
     {
         $auth = $this->createAdminUser();
         $producto = Producto::factory()->create();
 
-        // Entity 1: 2 won opps, total 3000
+        // Entity 1: 2 won opps in DIFFERENT months → total 3000 / 2 months = 1500/mes
         $ent1 = Entidad::factory()->create();
         $c1 = Contacto::factory()->create(['entidad_id' => $ent1->id]);
-        $opp1 = Oportunidad::factory()->create(['entidad_id' => $ent1->id, 'contacto_id' => $c1->id, 'estado' => 'Ganada']);
+        $opp1 = Oportunidad::factory()->create([
+            'entidad_id' => $ent1->id, 'contacto_id' => $c1->id, 'estado' => 'Ganada',
+            'fecha' => '2026-01-15',
+        ]);
         DetalleOportunidad::factory()->create(['oportunidad_id' => $opp1->id, 'producto_id' => $producto->id, 'vr_total' => 2000]);
-        $opp2 = Oportunidad::factory()->create(['entidad_id' => $ent1->id, 'contacto_id' => $c1->id, 'estado' => 'Ganada']);
+        $opp2 = Oportunidad::factory()->create([
+            'entidad_id' => $ent1->id, 'contacto_id' => $c1->id, 'estado' => 'Ganada',
+            'fecha' => '2026-02-10',
+        ]);
         DetalleOportunidad::factory()->create(['oportunidad_id' => $opp2->id, 'producto_id' => $producto->id, 'vr_total' => 1000]);
 
-        // Entity 2: 1 won opp, total 1000
+        // Entity 2: 1 won opp in 1 month → 500 / 1 = 500/mes
         $ent2 = Entidad::factory()->create();
         $c2 = Contacto::factory()->create(['entidad_id' => $ent2->id]);
-        $opp3 = Oportunidad::factory()->create(['entidad_id' => $ent2->id, 'contacto_id' => $c2->id, 'estado' => 'Ganada']);
+        $opp3 = Oportunidad::factory()->create([
+            'entidad_id' => $ent2->id, 'contacto_id' => $c2->id, 'estado' => 'Ganada',
+            'fecha' => '2026-01-20',
+        ]);
         DetalleOportunidad::factory()->create(['oportunidad_id' => $opp3->id, 'producto_id' => $producto->id, 'vr_total' => 500]);
 
         $response = $this->withHeader('Authorization', 'Bearer ' . $auth['token'])
             ->getJson('/api/v1/dashboard');
 
-        // LTV = (2000+1000+500) / 2 entities = 1750
-        $this->assertEquals(1750.0, $response->json('data.ventas.ltv'));
+        // LTV = avg(1500, 500) = 1000
+        $this->assertEquals(1000.0, $response->json('data.ventas.ltv'));
     }
 
     #[Test]

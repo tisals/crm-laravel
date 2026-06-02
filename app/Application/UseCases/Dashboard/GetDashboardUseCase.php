@@ -87,6 +87,16 @@ class GetDashboardUseCase
         $ganadas   = (int) (clone $oppQuery)->where('estado', 'Ganada')->count();
         $tasaConversion = $totalOpp > 0 ? round(($ganadas / $totalOpp) * 100, 1) : 0.0;
 
+        // --- Oportunidades creadas por mes ---
+        $oportunidadesPorMes = [];
+        for ($m = 1; $m <= 12; $m++) {
+            $q = Oportunidad::query()
+                ->whereMonth('fecha', $m)
+                ->whereYear('fecha', $year);
+            $this->applyDateFilter($q, $fechaInicio, $fechaFin, 'oportunidad.fecha');
+            $oportunidadesPorMes[$this->mesNombre($m)] = (int) $q->count();
+        }
+
         // --- Entidades por mes (creadas en el mes) ---
         $entidadesPorMes = [];
         for ($m = 1; $m <= 12; $m++) {
@@ -121,11 +131,12 @@ class GetDashboardUseCase
             ->toArray();
 
         return [
-            'nuevos_leads_mes'         => $nuevosLeadsMes,
-            'tasa_conversion'          => $tasaConversion,
-            'entidades_por_mes'        => $entidadesPorMes,
-            'entidades_convertidas_mes' => $entidadesConvertidasMes,
-            'oportunidades_por_estado'  => $oportunidadesPorEstado,
+            'nuevos_leads_mes'          => $nuevosLeadsMes,
+            'tasa_conversion'           => $tasaConversion,
+            'entidades_por_mes'         => $entidadesPorMes,
+            'entidades_convertidas_mes'  => $entidadesConvertidasMes,
+            'oportunidades_por_mes'      => $oportunidadesPorMes,
+            'oportunidades_por_estado'   => $oportunidadesPorEstado,
         ];
     }
 
@@ -140,17 +151,13 @@ class GetDashboardUseCase
         // --- Base query: won opportunity details ---
         $ventasQuery = $this->baseVentasQuery($comercialId, $fechaInicio, $fechaFin);
 
-        // --- Ventas promedio mensual (PHP-side to avoid DB-specific SQL) ---
+        // --- Ventas promedio mensual: total anual / 12 ---
         $allWon = (clone $ventasQuery)
             ->select('detalle_oportunidad.vr_total', 'oportunidad.fecha')
             ->get();
         $totalRevenue = (float) $allWon->sum('vr_total');
-        $monthsWithSales = $allWon->pluck('fecha')
-            ->map(fn ($d) => date('Y-m', strtotime((string) $d)))
-            ->unique()
-            ->count();
-        $ventasMes = $monthsWithSales > 0
-            ? round($totalRevenue / $monthsWithSales, 2)
+        $ventasMes = $totalRevenue > 0
+            ? round($totalRevenue / 12, 2)
             : 0.0;
 
         // --- Ventas por mes (12 months) ---
@@ -162,13 +169,23 @@ class GetDashboardUseCase
             $ventasPorMes[$this->mesNombre($m)] = (float) ($q->sum('detalle_oportunidad.vr_total') ?: 0);
         }
 
-        // --- LTV ---
-        $ltvData = (clone $ventasQuery)->select(
-            DB::raw('COALESCE(SUM(detalle_oportunidad.vr_total), 0) as total_ingresos'),
-            DB::raw('COUNT(DISTINCT oportunidad.entidad_id) as total_clientes')
-        )->first();
-        $ltv = $ltvData && $ltvData->total_clientes > 0
-            ? (float) ($ltvData->total_ingresos / $ltvData->total_clientes)
+        // --- LTV: facturación mensual promedio por cliente ---
+        // Por cada cliente: total ingresos / meses con ventas → promedio entre clientes
+        $clientesLtv = (clone $ventasQuery)
+            ->select('oportunidad.entidad_id', 'detalle_oportunidad.vr_total', 'oportunidad.fecha')
+            ->get()
+            ->groupBy('entidad_id')
+            ->map(function ($items) {
+                $total = (float) $items->sum('vr_total');
+                $months = $items->pluck('fecha')
+                    ->map(fn ($d) => date('Y-m', strtotime((string) $d)))
+                    ->unique()
+                    ->count();
+
+                return $months > 0 ? $total / $months : 0;
+            });
+        $ltv = $clientesLtv->count() > 0
+            ? round($clientesLtv->avg(), 2)
             : 0.0;
 
         // --- Funnel: oportunidades por estado con total y monto ---
