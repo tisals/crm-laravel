@@ -87,7 +87,7 @@ class GetDashboardUseCase
         $ganadas   = (int) (clone $oppQuery)->where('estado', 'Ganada')->count();
         $tasaConversion = $totalOpp > 0 ? round(($ganadas / $totalOpp) * 100, 1) : 0.0;
 
-        // --- Oportunidades creadas por mes ---
+        // --- Oportunidades creadas por mes (cantidad) ---
         $oportunidadesPorMes = [];
         for ($m = 1; $m <= 12; $m++) {
             $q = Oportunidad::query()
@@ -95,6 +95,17 @@ class GetDashboardUseCase
                 ->whereYear('fecha', $year);
             $this->applyDateFilter($q, $fechaInicio, $fechaFin, 'oportunidad.fecha');
             $oportunidadesPorMes[$this->mesNombre($m)] = (int) $q->count();
+        }
+
+        // --- Oportunidades monto por mes (suma vr_total de todas las oportunidades creadas en el mes) ---
+        $oportunidadesMontoPorMes = [];
+        for ($m = 1; $m <= 12; $m++) {
+            $q = DetalleOportunidad::query()
+                ->join('oportunidad', 'detalle_oportunidad.oportunidad_id', '=', 'oportunidad.id')
+                ->whereMonth('oportunidad.fecha', $m)
+                ->whereYear('oportunidad.fecha', $year);
+            $this->applyDateFilter($q, $fechaInicio, $fechaFin, 'oportunidad.fecha');
+            $oportunidadesMontoPorMes[$this->mesNombre($m)] = (float) ($q->sum('detalle_oportunidad.vr_total') ?: 0);
         }
 
         // --- Entidades por mes (creadas en el mes) ---
@@ -135,8 +146,9 @@ class GetDashboardUseCase
             'tasa_conversion'           => $tasaConversion,
             'entidades_por_mes'         => $entidadesPorMes,
             'entidades_convertidas_mes'  => $entidadesConvertidasMes,
-            'oportunidades_por_mes'      => $oportunidadesPorMes,
-            'oportunidades_por_estado'   => $oportunidadesPorEstado,
+            'oportunidades_por_mes'       => $oportunidadesPorMes,
+            'oportunidades_monto_por_mes' => $oportunidadesMontoPorMes,
+            'oportunidades_por_estado'    => $oportunidadesPorEstado,
         ];
     }
 
