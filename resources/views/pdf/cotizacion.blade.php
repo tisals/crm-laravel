@@ -129,15 +129,12 @@
         </table>
 
         <!-- ====== OBSERVATIONS + TOTALS ====== -->
-        <table width="100%" cellpadding="10" cellspacing="0" style="margin-bottom: 14px;">
+        <table width="100%" cellpadding="10" cellspacing="0" style="margin-bottom: 4px;">
             <tr>
                 <!-- Left: Observations -->
                 <td width="55%" valign="top" style="padding-right: 12px;">
                     <p class="teal" style="font-size: 8pt; font-weight: bold; margin-bottom: 3px;">Observaciones</p>
-                    <p style="font-size: 8pt; font-style: italic; color: #4b5563; margin-bottom: 8px;">{{ $opportunity['observations'] }}</p>
-                    <table width="100%" cellpadding="0" cellspacing="0" style="border-bottom: 1px solid #9ca3af; margin-bottom: 8px;"><tr><td style="height: 4px;"></td></tr></table>
-                    <p class="teal" style="font-size: 8pt; font-weight: bold; margin-bottom: 3px;">Notas Aclaratorias</p>
-                    <p style="font-size: 8pt; font-style: italic; color: #4b5563;">{{ $opportunity['aclarations'] }}</p>
+                    <p style="font-size: 8pt; font-style: italic; color: #4b5563;">{{ $opportunity['observations'] }}</p>
                 </td>
 
                 <!-- Right: Totals -->
@@ -168,6 +165,16 @@
                             </td>
                         </tr>
                     </table>
+                </td>
+            </tr>
+        </table>
+
+        <!-- ====== NOTAS ACLARATORIAS (full width) ====== -->
+        <table width="100%" cellpadding="10" cellspacing="0" style="margin-bottom: 14px;">
+            <tr>
+                <td style="border-top: 1px solid #9ca3af; padding-top: 10px;">
+                    <p class="teal" style="font-size: 8pt; font-weight: bold; margin-bottom: 3px;">Notas Aclaratorias</p>
+                    <p style="font-size: 8pt; font-style: italic; color: #4b5563;">{{ $opportunity['aclarations'] }}</p>
                 </td>
             </tr>
         </table>
