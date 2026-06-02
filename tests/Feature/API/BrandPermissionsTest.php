@@ -53,7 +53,7 @@ class BrandPermissionsTest extends TestCase
             ]
         );
 
-        $user->entidades()->attach([$ent1->id, $ent2->id]);
+        $user->entidades()->syncWithoutDetaching([$ent1->id, $ent2->id]);
 
         $token = $user->createToken('test-token')->plainTextToken;
 
