@@ -41,8 +41,19 @@ class OportunidadObserver
                 ->update(['cliente_desde' => now()]);
         } elseif ($originalEstado === 'Ganada' && $oportunidad->estado !== 'Ganada') {
             // Changed FROM 'Ganada' (to any other state) — clear cliente_desde
-            \App\Models\Entidad::where('id', $oportunidad->entidad_id)
-                ->update(['cliente_desde' => null]);
+            // and set entidad state back to Activo if no other won opportunities exist
+            $hasOtherWon = Oportunidad::where('entidad_id', $oportunidad->entidad_id)
+                ->where('estado', 'Ganada')
+                ->where('id', '!=', $oportunidad->id)
+                ->exists();
+
+            if (!$hasOtherWon) {
+                \App\Models\Entidad::where('id', $oportunidad->entidad_id)
+                    ->update([
+                        'cliente_desde' => null,
+                        'estado' => 'Activo'
+                    ]);
+            }
         }
     }
 }

@@ -18,12 +18,22 @@ class UpdateOportunidadUseCase
             return $this->ganarUseCase->execute($id, $data);
         }
 
-        // If estado is changing FROM Ganada, clear cliente_desde
+        // If estado is changing FROM Ganada, clear cliente_desde and set estado back to Activo if no other won opps exist
         if (isset($data['estado']) && $data['estado'] !== 'Ganada') {
             $oportunidad = $this->repository->findById($id);
             if ($oportunidad && $oportunidad->estado === 'Ganada') {
-                \App\Models\Entidad::where('id', $oportunidad->entidad_id)
-                    ->update(['cliente_desde' => null]);
+                $hasOtherWon = \App\Models\Oportunidad::where('entidad_id', $oportunidad->entidad_id)
+                    ->where('estado', 'Ganada')
+                    ->where('id', '!=', $oportunidad->id)
+                    ->exists();
+
+                if (!$hasOtherWon) {
+                    \App\Models\Entidad::where('id', $oportunidad->entidad_id)
+                        ->update([
+                            'cliente_desde' => null,
+                            'estado' => 'Activo'
+                        ]);
+                }
             }
         }
 
