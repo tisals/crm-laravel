@@ -27,6 +27,11 @@ class GetDashboardUseCase
         ?string $fechaFin = null,
         ?Usuario $authUser = null
     ): array {
+        // Default date range: January 1 to today
+        $now = now();
+        $fechaInicio = $fechaInicio ?? $now->copy()->startOfYear()->toDateString();
+        $fechaFin = $fechaFin ?? $now->toDateString();
+
         // Ventas role auto-filters to their own entities; super_admin can pass ?comercial_id
         $effectiveComercialId = $this->resolveComercialId($comercialId, $authUser);
 
@@ -34,6 +39,7 @@ class GetDashboardUseCase
             'prospectos'           => $this->getProspectosData($fechaInicio, $fechaFin),
             'ventas'               => $this->getVentasData($effectiveComercialId, $fechaInicio, $fechaFin),
             'chart'                => $this->getChartData($effectiveComercialId, $fechaInicio, $fechaFin),
+            'comerciales_ventas'   => $this->getComercialesVentas($effectiveComercialId, $fechaInicio, $fechaFin),
             'actividades_recientes' => $this->getActividadesRecientes(),
         ];
     }
@@ -240,6 +246,44 @@ class GetDashboardUseCase
         return $query;
     }
 
+    private function getComercialesVentas(?int $comercialId, ?string $fechaInicio, ?string $fechaFin): array
+    {
+        $query = DB::table('users')
+            ->select(
+                'users.id',
+                'users.name',
+                DB::raw('COUNT(DISTINCT oportunidad.id) as oportunidades_count'),
+                DB::raw('SUM(detalle_oportunidad.vr_total) as total_ventas')
+            )
+            ->join('entidad_usuario', 'users.id', '=', 'entidad_usuario.usuario_id')
+            ->join('entidad', 'entidad.id', '=', 'entidad_usuario.entidad_id')
+            ->join('oportunidad', 'oportunidad.entidad_id', '=', 'entidad.id')
+            ->join('detalle_oportunidad', 'detalle_oportunidad.oportunidad_id', '=', 'oportunidad.id')
+            ->where('oportunidad.estado', 'Ganada')
+            ->whereBetween('oportunidad.fecha', [$fechaInicio, $fechaFin]);
+
+        if ($comercialId) {
+            $query->where('usuarios.id', $comercialId);
+        }
+
+        $result = $query
+            ->groupBy('usuarios.id', 'usuarios.nombre')
+            ->orderBy('total_ventas', 'desc')
+            ->get()
+            ->map(function ($row) {
+                return [
+                    'id' => (int) $row->id,
+                        'nombre' => $row->name,
+                        'oportunidades_count' => (int) $row->oportunidades_count,
+                        'total_ventas' => (float) $row->total_ventas,
+
+                ];
+            })
+            ->toArray();
+
+        return $result;
+    }
+
     // -----------------------------------------------------------------------
     //  Section: chart (12-month data for the graph)
     // -----------------------------------------------------------------------
@@ -337,6 +381,11 @@ class GetDashboardUseCase
     {
         if ($fechaInicio && $fechaFin) {
             $query->whereBetween($dateField, [$fechaInicio, $fechaFin]);
+        } elseif (!$fechaInicio && !$fechaFin) {
+            // Rango por defecto: Enero 1 al día actual del año en curso
+            $now = now();
+            $query->whereDate($dateField, '>=', $now->copy()->startOfYear()->toDateString())
+                  ->whereDate($dateField, '<=', $now->toDateString());
         } elseif ($fechaInicio) {
             $query->whereDate($dateField, '>=', $fechaInicio);
         } elseif ($fechaFin) {
