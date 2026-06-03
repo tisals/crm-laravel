@@ -2,14 +2,10 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
-
-class Rol extends Model
+/**
+ * @deprecated Use Modules\Shared\Models\Rol instead.
+ */
+class Rol extends \Modules\Shared\Models\Rol
 {
-    use HasFactory, SoftDeletes;
-
-    protected $table = 'roles';
-    protected $fillable = ['nombre', 'estado', 'created_by', 'updated_by'];
+    // Inherits everything for backward compatibility during migration.
 }

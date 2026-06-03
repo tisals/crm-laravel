@@ -2,14 +2,10 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
-
-class Etiqueta extends Model
+/**
+ * @deprecated Use Modules\CRM\Models\Etiqueta instead.
+ */
+class Etiqueta extends \Modules\CRM\Models\Etiqueta
 {
-    use HasFactory, SoftDeletes;
-
-    protected $table = 'etiquetas';
-    protected $fillable = ['nombre', 'estado', 'created_by', 'updated_by'];
+    // Inherits everything for backward compatibility during migration.
 }

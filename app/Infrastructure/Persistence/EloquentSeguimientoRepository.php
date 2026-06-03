@@ -14,6 +14,12 @@ class EloquentSeguimientoRepository extends BaseRepository implements Seguimient
         return EloquentSeguimiento::class;
     }
 
+    protected function newQuery()
+    {
+        $modelClass = $this->getModelClass();
+        return $modelClass::with(['autor', 'contacto', 'entidad', 'oportunidad']);
+    }
+
     protected function mapModelToEntity(Model $model): mixed
     {
         return SeguimientoEntity::fromArray($model->toArray());

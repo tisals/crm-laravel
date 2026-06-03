@@ -27,6 +27,9 @@ services:
       - ./storage:/var/www/html/storage
       - ./tests:/var/www/html/tests
       - ./.env:/var/www/html/.env
+      - ./vendor:/var/www/html/vendor
+      - ./Modules:/var/www/html/Modules
+      - ./modules_statuses.json:/var/www/html/modules_statuses.json
     networks:
       - crm-dev
       - sailus-dev

@@ -1,0 +1,30 @@
+{
+    "name": "nwidart/administrativo",
+    "description": "",
+    "authors": [
+        {
+            "name": "Nicolas Widart",
+            "email": "n.widart@gmail.com"
+        }
+    ],
+    "extra": {
+        "laravel": {
+            "providers": [],
+            "aliases": {
+
+            }
+        }
+    },
+    "autoload": {
+        "psr-4": {
+            "Modules\\Administrativo\\": "app/",
+            "Modules\\Administrativo\\Database\\Factories\\": "database/factories/",
+            "Modules\\Administrativo\\Database\\Seeders\\": "database/seeders/"
+        }
+    },
+    "autoload-dev": {
+        "psr-4": {
+            "Modules\\Administrativo\\Tests\\": "tests/"
+        }
+    }
+}

@@ -139,7 +139,7 @@
                 <!-- Left: Observations -->
                 <td width="55%" valign="top" style="padding-right: 12px;">
                     <p class="teal" style="font-size: 8pt; font-weight: bold; margin-bottom: 3px;">Observaciones</p>
-                    <p style="font-size: 8pt; font-style: italic; color: #4b5563;">{!! nl2br(e($opportunity['observations'])) !!}</p>
+                    <p style="font-size: 8pt; font-style: italic; color: #4b5563;">{!! nl2br(e(preg_replace('/\. /', ".\n", $opportunity['observations']))) !!}</p>
                 </td>
 
                 <!-- Right: Totals -->
@@ -179,7 +179,7 @@
             <tr>
                 <td style="border-top: 1px solid #9ca3af; padding-top: 10px;">
                     <p class="teal" style="font-size: 8pt; font-weight: bold; margin-bottom: 3px;">Notas Aclaratorias</p>
-                    <p style="font-size: 8pt; font-style: italic; color: #4b5563;">{!! nl2br(e($opportunity['aclarations'])) !!}</p>
+                    <p style="font-size: 8pt; font-style: italic; color: #4b5563;">{!! nl2br(e(preg_replace('/\. /', ".\n", $opportunity['aclarations']))) !!}</p>
                 </td>
             </tr>
         </table>

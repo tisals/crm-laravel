@@ -103,7 +103,8 @@ class ContactoAccionController extends Controller
                 $creados[] = $proximo;
 
                 // Programar notificación para la fecha/hora del próximo seguimiento
-                $this->scheduleFollowUpNotification($proximo);
+                $proximoModel = Seguimiento::findOrFail($proximo->id);
+                $this->scheduleFollowUpNotification($proximoModel);
             }
 
             $mensaje = $fechaProximo

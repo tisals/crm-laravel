@@ -2,24 +2,10 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
-
-class LugarEntidad extends Model
+/**
+ * @deprecated Use Modules\Administrativo\Models\LugarEntidad instead.
+ */
+class LugarEntidad extends \Modules\Administrativo\Models\LugarEntidad
 {
-    use HasFactory, SoftDeletes;
-
-    protected $table = 'lugares_entidad';
-    protected $fillable = [
-        'entidad_id',
-        'area_oficina',
-        'direccion',
-        'direccion_adicional',
-        'ciudad_cod',
-        'contacto_id',
-        'estado',
-        'created_by',
-        'updated_by',
-    ];
+    // Inherits everything for backward compatibility during migration.
 }

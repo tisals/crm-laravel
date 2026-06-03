@@ -1,0 +1,48 @@
+schema: spec-driven
+
+context: |
+  Tech stack: PHP 8.2, Laravel 12.0, nwidart/laravel-modules
+  Architecture: Modular Monolith
+  Testing: PHPUnit 11.5.55
+  Style: Laravel Pint / default PSR-12
+
+strict_tdd: true
+
+testing:
+  strict_tdd: true
+  test_runner:
+    command: vendor/bin/phpunit
+    framework: PHPUnit
+  test_layers:
+    unit: true
+    integration: true
+    e2e: false
+  coverage:
+    available: false
+  quality_tools:
+    linter: false
+    type_checker: false
+    formatter: true
+
+rules:
+  proposal:
+    - Include rollback plan for risky changes
+    - Identify affected modules/packages
+  specs:
+    - Use Given/When/Then format for scenarios
+    - Use RFC 2119 keywords (MUST, SHALL, SHOULD, MAY)
+  design:
+    - Include sequence diagrams for complex flows
+    - Document architecture decisions with rationale
+  tasks:
+    - Group tasks by phase (infrastructure, implementation, testing)
+    - Use hierarchical numbering (1.1, 1.2, etc.)
+    - Keep tasks small enough to complete in one session
+  apply:
+    - Follow existing code patterns and conventions
+    - Load relevant coding skills for the project stack
+  verify:
+    - Run tests if test infrastructure exists
+    - Compare implementation against every spec scenario
+  archive:
+    - Warn before merging destructive deltas (large removals)

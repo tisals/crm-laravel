@@ -36,17 +36,18 @@ Route::prefix('v1')->group(function () {
     // Public endpoints
     Route::get('/health', fn () => response()->json(['status' => 'ok']));
     Route::get('/plans', [PlanController::class, 'index']);
-    Route::post('/webhook/registration', [SailusWebhookController::class, 'registration'])
-        ->middleware('auth:sanctum')
-        ->name('webhook.registration');
-
-    Route::post('/webhook/purchase', [SailusWebhookController::class, 'purchase'])
-        ->middleware('auth:sanctum')
-        ->name('webhook.purchase');
-
-    Route::post('/license/validate', [SailusWebhookController::class, 'validateLicense'])
-        ->middleware('auth:sanctum')
-        ->name('license.validate');
+    // Moved to Modules/CRM:
+    // Route::post('/webhook/registration', [SailusWebhookController::class, 'registration'])
+    //     ->middleware('auth:sanctum')
+    //     ->name('webhook.registration');
+    //
+    // Route::post('/webhook/purchase', [SailusWebhookController::class, 'purchase'])
+    //     ->middleware('auth:sanctum')
+    //     ->name('webhook.purchase');
+    //
+    // Route::post('/license/validate', [SailusWebhookController::class, 'validateLicense'])
+    //     ->middleware('auth:sanctum')
+    //     ->name('license.validate');
 
     Route::put('/services/{id}/renew', [ServicioController::class, 'renew'])
         ->middleware('auth:sanctum')
@@ -163,15 +164,15 @@ Route::prefix('v1')->group(function () {
             Route::delete('/entidad/{id}', [EntidadController::class, 'destroy'])->name('entidad.destroy');
         });
 
-        // Contacto
-        Route::middleware('rbac')->group(function () {
-            Route::get('/contacto', [ContactoController::class, 'index'])->name('contacto.index');
-            Route::post('/contacto', [ContactoController::class, 'store'])->name('contacto.store');
-            Route::get('/contacto/{id}', [ContactoController::class, 'show'])->name('contacto.show');
-            Route::put('/contacto/{id}', [ContactoController::class, 'update'])->name('contacto.update');
-            Route::delete('/contacto/{id}', [ContactoController::class, 'destroy'])->name('contacto.destroy');
-            Route::post('/contacto/{contactoId}/acciones', [ContactoAccionController::class, 'acciones'])->name('contacto.acciones');
-        });
+        // Contacto (Moved to Modules/CRM)
+        // Route::middleware('rbac')->group(function () {
+        //     Route::get('/contacto', [ContactoController::class, 'index'])->name('contacto.index');
+        //     Route::post('/contacto', [ContactoController::class, 'store'])->name('contacto.store');
+        //     Route::get('/contacto/{id}', [ContactoController::class, 'show'])->name('contacto.show');
+        //     Route::put('/contacto/{id}', [ContactoController::class, 'update'])->name('contacto.update');
+        //     Route::delete('/contacto/{id}', [ContactoController::class, 'destroy'])->name('contacto.destroy');
+        //     Route::post('/contacto/{contactoId}/acciones', [ContactoAccionController::class, 'acciones'])->name('contacto.acciones');
+        // });
 
         // Lugares Entidad (nested under entidad)
         Route::middleware('rbac')->group(function () {

@@ -46,54 +46,9 @@ class RealDataSeeder extends Seeder
         $this->callWith(SeguimientoCsvSeeder::class, []);
         $this->command->info('✅ Seguimientos seeded.');
 
-        $this->command->info('Assigning entities equitatively among the 4 commercial / admin users...');
-        $emails = [
-            'gestorcomercial.tis@gmail.com',
-            'direccion.tis@gmail.com',
-            'innovacionydesarrollo.tis@gmail.com',
-            'servicioalcliente.tis@gmail.com'
-        ];
-        $userIds = \Illuminate\Support\Facades\DB::table('usuarios')
-            ->whereIn('email', $emails)
-            ->orderBy('id')
-            ->pluck('id')
-            ->toArray();
-
-        if (count($userIds) === 4) {
-            $entidadIds = \Illuminate\Support\Facades\DB::table('entidad')
-                ->orderBy('id')
-                ->pluck('id')
-                ->toArray();
-
-            $totalEntidades = count($entidadIds);
-            $chunkSize = (int) ceil($totalEntidades / 4);
-            $chunks = array_chunk($entidadIds, $chunkSize);
-
-            \Illuminate\Support\Facades\DB::table('entidad_usuario')->delete(); // clean pivot
-
-            $insertData = [];
-            foreach ($userIds as $index => $userId) {
-                if (isset($chunks[$index])) {
-                    foreach ($chunks[$index] as $entidadId) {
-                        $insertData[] = [
-                            'usuario_id' => $userId,
-                            'entidad_id' => $entidadId,
-                            'created_at' => now(),
-                            'updated_at' => now(),
-                        ];
-                    }
-                }
-            }
-            
-            // Insert in chunks of 500 rows to prevent DB packet size limits
-            foreach (array_chunk($insertData, 500) as $chunk) {
-                \Illuminate\Support\Facades\DB::table('entidad_usuario')->insert($chunk);
-            }
-            
-            $this->command->info("✅ Assigned {$totalEntidades} entities equitatively among 4 users (" . count($insertData) . " assignments).");
-        } else {
-            $this->command->error("Could not find the 4 target users (found " . count($userIds) . "). Skipping assignment.");
-        }
+        $this->command->info('Seeding Usuarios...');
+        $this->callWith(UsuariosTableSeeder::class, []);
+        $this->command->info('✅ Usuarios y entidades asignadas.');
 
         $this->command->info('Real data import complete.');
     }

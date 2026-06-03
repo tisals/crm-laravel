@@ -2,56 +2,10 @@
 
 namespace App\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
-
-class Servicio extends Model
+/**
+ * @deprecated Use Modules\Administrativo\Models\Servicio instead.
+ */
+class Servicio extends \Modules\Administrativo\Models\Servicio
 {
-    use HasFactory, SoftDeletes;
-
-    protected $table = 'servicios';
-    protected $fillable = [
-        'oportunidad_id',
-        'entidad_id',
-        'nombre',
-        'vr_servicio',
-        'fecha_inicio',
-        'fecha_fin',
-        'prestador_id',
-        'estado',
-        'created_by',
-        'updated_by',
-        'activation_token',
-        'plan_id',
-        'tier',
-        'subscription_id',
-        'metadata',
-    ];
-
-    protected $casts = [
-        'metadata' => 'array',
-        'fecha_inicio' => 'date',
-        'fecha_fin' => 'date',
-    ];
-
-    public function oportunidad()
-    {
-        return $this->belongsTo(Oportunidad::class, 'oportunidad_id');
-    }
-
-    public function entidad()
-    {
-        return $this->belongsTo(Entidad::class, 'entidad_id');
-    }
-
-    public function prestador()
-    {
-        return $this->belongsTo(Proveedor::class, 'prestador_id');
-    }
-
-    public function detalles()
-    {
-        return $this->hasMany(DetalleServicio::class, 'servicio_id');
-    }
+    // Inherits everything for backward compatibility during migration.
 }

@@ -114,13 +114,25 @@ trait CsvSeederTrait
         }
 
         // dd/mm/YYYY HH:MM:SS
-        if (preg_match('/(\d{2})\/(\d{2})\/(\d{4})\s+(\d{2}):(\d{2}):(\d{2})/', $value, $m)) {
-            return "{$m[3]}-{$m[2]}-{$m[1]} {$m[4]}:{$m[5]}:{$m[6]}";
+        if (preg_match('/^(\d{1,2})\/(\d{1,2})\/(\d{4})\s+(\d{1,2}):(\d{2}):(\d{2})/', $value, $m)) {
+            $d = str_pad($m[1], 2, '0', STR_PAD_LEFT);
+            $mo = str_pad($m[2], 2, '0', STR_PAD_LEFT);
+            $h = str_pad($m[4], 2, '0', STR_PAD_LEFT);
+            return "{$m[3]}-{$mo}-{$d} {$h}:{$m[5]}:{$m[6]}";
         }
 
         // dd/mm/YYYY
-        if (preg_match('/(\d{2})\/(\d{2})\/(\d{4})/', $value, $m)) {
-            return "{$m[3]}-{$m[2]}-{$m[1]}";
+        if (preg_match('/^(\d{1,2})\/(\d{1,2})\/(\d{4})/', $value, $m)) {
+            $d = str_pad($m[1], 2, '0', STR_PAD_LEFT);
+            $mo = str_pad($m[2], 2, '0', STR_PAD_LEFT);
+            return "{$m[3]}-{$mo}-{$d}";
+        }
+        
+        // YYYY-MM-DD
+        if (preg_match('/^(\d{4})-(\d{1,2})-(\d{1,2})/', $value, $m)) {
+            $mo = str_pad($m[2], 2, '0', STR_PAD_LEFT);
+            $d = str_pad($m[3], 2, '0', STR_PAD_LEFT);
+            return "{$m[1]}-{$mo}-{$d}";
         }
 
         return null;

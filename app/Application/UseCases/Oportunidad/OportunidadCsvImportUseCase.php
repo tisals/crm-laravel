@@ -120,18 +120,18 @@ class OportunidadCsvImportUseCase
                         continue;
                     }
 
+                    // Use CSV fecha for timestamps so Kanban and entities sort by real date
+                    $fechaStr = $this->parseFecha($row['fecha'] ?? null);
+                    $timestamp = $fechaStr ? \Carbon\Carbon::parse($fechaStr) : $now;
+
                     // --- 1. Entity ---
-                    $entidadId = $this->resolveEntityId($row, $now);
+                    $entidadId = $this->resolveEntityId($row, $timestamp);
 
                     // --- 2. Contact ---
-                    $contactId = $this->resolveContactId($row, $entidadId, $now);
+                    $contactId = $this->resolveContactId($row, $entidadId, $timestamp);
 
                     // --- 3. Oportunidad (upsert by codigo) ---
                     $oppData = $this->buildOpportunityData($row, $entidadId, $contactId);
-
-                    // Use CSV fecha for timestamps so Kanban sorts by real date
-                    $fechaStr = $this->parseFecha($row['fecha'] ?? null);
-                    $timestamp = $fechaStr ? \Carbon\Carbon::parse($fechaStr) : $now;
                     $oppData['created_at'] = $timestamp;
                     $oppData['updated_at'] = $timestamp;
 
@@ -147,8 +147,8 @@ class OportunidadCsvImportUseCase
                     $detalleData = $this->buildDetalleData($row);
                     if ($detalleData !== null) {
                         $detalleData['oportunidad_id'] = $oppId;
-                        $detalleData['created_at'] = $now;
-                        $detalleData['updated_at'] = $now;
+                        $detalleData['created_at'] = $timestamp;
+                        $detalleData['updated_at'] = $timestamp;
 
                         DB::table('detalle_oportunidad')->where('oportunidad_id', $oppId)->delete();
                         DB::table('detalle_oportunidad')->insert($detalleData);
@@ -243,6 +243,7 @@ class OportunidadCsvImportUseCase
             'identificacion'  => $nit ? preg_replace('/[\.\-\s]/', '', $nit) : null,
             'dominio'         => $dominio ?: null,
             'estado'          => $isClient ? 'Cliente' : 'Prospecto',
+            'cliente_desde'   => $isClient ? $now : null,
             'created_at'      => $now,
             'updated_at'      => $now,
         ]);
@@ -527,11 +528,26 @@ class OportunidadCsvImportUseCase
         if (!$value) {
             return null;
         }
-        if (preg_match('/(\d{2})\/(\d{2})\/(\d{4})\s+(\d{2}):(\d{2}):(\d{2})/', $value, $m)) {
-            return "{$m[3]}-{$m[2]}-{$m[1]} {$m[4]}:{$m[5]}:{$m[6]}";
+        if (is_numeric($value)) {
+            // Excel serial date (Windows 1900 format)
+            $unixDate = ($value - 25569) * 86400;
+            return gmdate("Y-m-d", (int) $unixDate);
         }
-        if (preg_match('/(\d{2})\/(\d{2})\/(\d{4})/', $value, $m)) {
-            return "{$m[3]}-{$m[2]}-{$m[1]}";
+        if (preg_match('/(\d{1,2})\/(\d{1,2})\/(\d{4})\s+(\d{1,2}):(\d{2}):(\d{2})/', $value, $m)) {
+            $d = str_pad($m[1], 2, '0', STR_PAD_LEFT);
+            $mo = str_pad($m[2], 2, '0', STR_PAD_LEFT);
+            $h = str_pad($m[4], 2, '0', STR_PAD_LEFT);
+            return "{$m[3]}-{$mo}-{$d} {$h}:{$m[5]}:{$m[6]}";
+        }
+        if (preg_match('/(\d{1,2})\/(\d{1,2})\/(\d{4})/', $value, $m)) {
+            $d = str_pad($m[1], 2, '0', STR_PAD_LEFT);
+            $mo = str_pad($m[2], 2, '0', STR_PAD_LEFT);
+            return "{$m[3]}-{$mo}-{$d}";
+        }
+        if (preg_match('/^(\d{4})-(\d{1,2})-(\d{1,2})/', $value, $m)) {
+            $mo = str_pad($m[2], 2, '0', STR_PAD_LEFT);
+            $d = str_pad($m[3], 2, '0', STR_PAD_LEFT);
+            return "{$m[1]}-{$mo}-{$d}";
         }
         return null;
     }

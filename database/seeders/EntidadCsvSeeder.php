@@ -114,6 +114,64 @@ class EntidadCsvSeeder extends Seeder
         return null;
     }
 
+    /**
+     * Aggressive entity name normalization: removes ALL variations of legal suffixes
+     * (SAS, S.A.S., S. A. S., s a s, LTDA, L T D A, SA, E.U., S. en C., Inc, Corp, etc.),
+     * punctuation, stop words — returns only the identifying core of the name.
+     */
+    protected function normalizeEntityName(string $name): string
+    {
+        $name = strtolower(trim($name));
+
+        // Normalize spaces around punctuation
+        $name = preg_replace('/\s*\.\s*/', '.', $name);
+        $name = preg_replace('/\s*-\s*/', '-', $name);
+
+        // Remove all known legal suffixes (order: specific → generic)
+        $suffixPatterns = [
+            '/^s\.?\s*a\.?\s*s\.?\s*\b/',
+            '/\b(s\.?\s*a\.?\s*s\.?)\s*$/',
+            '/\b(s\s*a\s*s)\s*$/',
+            '/\b(l\.?\s*t\.?\s*d\.?\s*a\.?)\s*$/',
+            '/\b(l\s*t\s*d\s*a?)\s*$/',
+            '/\b(s\.?\s*a\.?)\s*$/',
+            '/\b(s\s*a)\s*$/',
+            '/\b(e\.?\s*u\.?)\s*$/',
+            '/\b(s\.?\s*e\.?\s*n\.?\s*c\.?)\s*$/',
+            '/\b(inc\.?)\s*$/',
+            '/\b(corp\.?)\s*$/',
+            '/\b(ltda\.?)\s*$/',
+            '/\b(sas)\s*$/',
+            '/\b(eu)\s*$/',
+            '/\b(s\.a)\s*$/',
+        ];
+        foreach ($suffixPatterns as $pattern) {
+            $name = preg_replace($pattern, '', $name);
+        }
+
+        // Remove standalone suffix words
+        $removeWords = [
+            'sas', 'ltda', 'ltd', 'sa', 's.a', 's.a.s', 'e.u', 'eu',
+            'inc', 'corp', 'foundation', 'fundacion', 'corporacion',
+            'sociedad', 'anonima', 'cooperativa', 'asociacion',
+        ];
+        $words = explode(' ', $name);
+        $words = array_filter($words, fn($w) => !in_array(trim($w), $removeWords));
+        $name = implode(' ', $words);
+
+        // Remove special chars and collapse spaces
+        $name = preg_replace('/[^\p{L}\p{N}\s]/u', ' ', $name);
+        $name = preg_replace('/\s+/', ' ', $name);
+
+        // Remove Spanish stop words
+        $stopWords = ['y', 'de', 'del', 'la', 'los', 'las', 'el', 'en', 'para', 'con', 'sin', 'por', 'e', 'o', 'a', 'su', 'un', 'una'];
+        $words = explode(' ', trim($name));
+        $words = array_filter($words, fn($w) => !in_array(trim($w), $stopWords));
+        $name = implode(' ', $words);
+
+        return trim(preg_replace('/\s+/', ' ', $name));
+    }
+
     public function run(): void
     {
         $csvFile = $this->csvPath('Entidades.csv');
@@ -122,6 +180,9 @@ class EntidadCsvSeeder extends Seeder
             $this->command->error("CSV file not found: {$csvFile}");
             return;
         }
+
+        $jsonPath = database_path('csv/clientes_facturacion.json');
+        $clientesFacturacion = file_exists($jsonPath) ? json_decode(file_get_contents($jsonPath), true) : ['nits' => [], 'names' => []];
 
         $cityMap = $this->buildCityMap();
         $rows = [];
@@ -145,6 +206,26 @@ class EntidadCsvSeeder extends Seeder
                 }
             }
 
+            // Cross-reference to determine if it is Cliente or Prospecto
+            $isClient = false;
+            $cleanNit = preg_replace('/[\.\-\s]/', '', $identificacion);
+            if ($cleanNit) {
+                if (in_array($cleanNit, $clientesFacturacion['nits'] ?? [])) {
+                    $isClient = true;
+                }
+            }
+            if (!$isClient) {
+                $normalizedName = $this->normalizeEntityName($row['nombre'] ?? '');
+                if (in_array($normalizedName, $clientesFacturacion['names'] ?? [])) {
+                    $isClient = true;
+                }
+            }
+
+            $estadoCsv = $this->mapEstado($row['estado'] ?? null);
+            $estado = $isClient ? 'Cliente' : $estadoCsv;
+            $fechaCreacion = $this->parseExcelDate($row['fecha_creacion'] ?? null) ?? now();
+            $clienteDesde = $isClient ? $fechaCreacion : null;
+
             $rows[] = [
                 'identificacion' => $identificacion,
                 'tipo_persona' => $this->mapTipoPersona($row['tipo_persona'] ?? null),
@@ -155,8 +236,9 @@ class EntidadCsvSeeder extends Seeder
                 'ciudad_cod' => $ciudadCod,
                 'dominio' => $row['dominio'] ?? null,
                 'logo' => $row['logo'] ?? null,
-                'estado' => $this->mapEstado($row['estado'] ?? null),
-                'created_at' => $this->parseExcelDate($row['fecha_creacion'] ?? null) ?? now(),
+                'estado' => $estado,
+                'cliente_desde' => $clienteDesde,
+                'created_at' => $fechaCreacion,
                 'updated_at' => $this->parseExcelDate($row['fecha_actualizacion'] ?? null) ?? now(),
             ];
         }

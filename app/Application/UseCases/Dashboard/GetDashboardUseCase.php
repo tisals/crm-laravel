@@ -36,7 +36,7 @@ class GetDashboardUseCase
         $effectiveComercialId = $this->resolveComercialId($comercialId, $authUser);
 
         return [
-            'prospectos'           => $this->getProspectosData($fechaInicio, $fechaFin),
+            'prospectos'           => $this->getProspectosData($effectiveComercialId, $fechaInicio, $fechaFin),
             'ventas'               => $this->getVentasData($effectiveComercialId, $fechaInicio, $fechaFin),
             'chart'                => $this->getChartData($effectiveComercialId, $fechaInicio, $fechaFin),
             'comerciales_ventas'   => $this->getComercialesVentas($effectiveComercialId, $fechaInicio, $fechaFin),
@@ -67,7 +67,7 @@ class GetDashboardUseCase
     //  Section: prospectos
     // -----------------------------------------------------------------------
 
-    private function getProspectosData(?string $fechaInicio, ?string $fechaFin): array
+    private function getProspectosData(?int $comercialId, ?string $fechaInicio, ?string $fechaFin): array
     {
         $year = $this->resolveYear($fechaInicio);
 
@@ -83,11 +83,22 @@ class GetDashboardUseCase
             $leadsQuery->whereMonth('created_at', now()->month)
                        ->whereYear('created_at', now()->year);
         }
+
+        // Filter leads (contactos) by commercial if specified
+        if ($comercialId) {
+            $leadsQuery->whereIn('entidad_id', function ($q) use ($comercialId) {
+                $q->select('entidad_id')
+                  ->from('entidad_usuario')
+                  ->where('usuario_id', $comercialId);
+            });
+        }
+
         $nuevosLeadsMes = (int) $leadsQuery->count();
 
         // --- Tasa de conversión ---
         $oppQuery = Oportunidad::query();
         $this->applyDateFilter($oppQuery, $fechaInicio, $fechaFin, 'oportunidad.fecha');
+        $this->applyCommercialFilter($oppQuery, $comercialId);
 
         $totalOpp  = (int) (clone $oppQuery)->count();
         $ganadas   = (int) (clone $oppQuery)->where('estado', 'Ganada')->count();
@@ -100,6 +111,7 @@ class GetDashboardUseCase
                 ->whereMonth('fecha', $m)
                 ->whereYear('fecha', $year);
             $this->applyDateFilter($q, $fechaInicio, $fechaFin, 'oportunidad.fecha');
+            $this->applyCommercialFilter($q, $comercialId);
             $oportunidadesPorMes[$this->mesNombre($m)] = (int) $q->count();
         }
 
@@ -111,6 +123,7 @@ class GetDashboardUseCase
                 ->whereMonth('oportunidad.fecha', $m)
                 ->whereYear('oportunidad.fecha', $year);
             $this->applyDateFilter($q, $fechaInicio, $fechaFin, 'oportunidad.fecha');
+            $this->applyCommercialFilter($q, $comercialId);
             $oportunidadesMontoPorMes[$this->mesNombre($m)] = (float) ($q->sum('detalle_oportunidad.vr_total') ?: 0);
         }
 
@@ -121,6 +134,13 @@ class GetDashboardUseCase
                 ->whereMonth('created_at', $m)
                 ->whereYear('created_at', $year);
             $this->applyDateFilter($q, $fechaInicio, $fechaFin, 'entidad.created_at');
+            if ($comercialId) {
+                $q->whereIn('id', function ($sq) use ($comercialId) {
+                    $sq->select('entidad_id')
+                       ->from('entidad_usuario')
+                       ->where('usuario_id', $comercialId);
+                });
+            }
             $entidadesPorMes[$this->mesNombre($m)] = (int) $q->count();
         }
 
@@ -132,6 +152,7 @@ class GetDashboardUseCase
                 ->whereMonth('fecha', $m)
                 ->whereYear('fecha', $year);
             $this->applyDateFilter($q, $fechaInicio, $fechaFin, 'oportunidad.fecha');
+            $this->applyCommercialFilter($q, $comercialId);
             $entidadesConvertidasMes[$this->mesNombre($m)] = (int) (clone $q)
                 ->distinct()
                 ->count('entidad_id');
@@ -140,6 +161,7 @@ class GetDashboardUseCase
         // --- Oportunidades por estado ---
         $oppEstadoQuery = Oportunidad::query();
         $this->applyDateFilter($oppEstadoQuery, $fechaInicio, $fechaFin, 'oportunidad.fecha');
+        $this->applyCommercialFilter($oppEstadoQuery, $comercialId);
         $oportunidadesPorEstado = (clone $oppEstadoQuery)
             ->select('estado', DB::raw('COUNT(*) as total'))
             ->groupBy('estado')

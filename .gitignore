@@ -25,3 +25,16 @@ Homestead.yaml
 Thumbs.db
 *.md
 /docs/*
+
+# Temporary test scripts
+/check_rbac.php
+/extract_clientes.py
+/test_csv.php
+/test_db.php
+/test_json.php
+/test_seguimiento.php
+/tmp_csv_dates.php
+/tmp_csv_head.php
+/tmp_db_state.php
+/tmp_test.php
+

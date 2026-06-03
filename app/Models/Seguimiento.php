@@ -26,6 +26,33 @@ class Seguimiento extends Model
         'updated_by',
     ];
 
+    protected $appends = [
+        'autor_nombre',
+        'contacto_nombre',
+        'entidad_nombre',
+        'oportunidad_codigo',
+    ];
+
+    public function getAutorNombreAttribute()
+    {
+        return $this->autor ? $this->autor->nombre : null;
+    }
+
+    public function getContactoNombreAttribute()
+    {
+        return $this->contacto ? $this->contacto->nombre : null;
+    }
+
+    public function getEntidadNombreAttribute()
+    {
+        return $this->entidad ? $this->entidad->nombre : null;
+    }
+
+    public function getOportunidadCodigoAttribute()
+    {
+        return $this->oportunidad ? $this->oportunidad->codigo : null;
+    }
+
     public function oportunidad()
     {
         return $this->belongsTo(Oportunidad::class, 'oportunidad_id');
