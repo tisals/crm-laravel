@@ -15,7 +15,7 @@ class DetalleOportunidadRequest extends FormRequest
     {
         $rules = [
             'producto_id' => 'required|integer|exists:productos,id',
-            'concepto' => 'nullable|string|max:255',
+            'concepto' => 'nullable|string|max:5000',
             'descripcion' => 'nullable|string|max:1000',
             'medida' => 'nullable|string|max:10|in:Und,Hrs,Srv',
             'cantidad' => 'required|numeric|min:0.01',
