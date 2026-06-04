@@ -12,11 +12,12 @@ class BrandPermissionsSeeder extends Seeder
     public function run(): void
     {
         // 1. Crear entidades marca primero
-        $tecnoinnsoft = Entidad::firstOrCreate(
-            ['identificacion' => '900935453-0'],
+        $tecnoinnsoft = Entidad::updateOrCreate(
+            ['id' => 1],
             [
                 'tipo_persona' => 'Juridica',
                 'tipo_id' => 'NIT',
+                'identificacion' => '900935453',
                 'nombre' => 'Tecnoinnsoft SAS BIC',
                 'nombre_comercial' => 'Tecnoinnsoft',
                 'dominio' => 'tecnoinnsoft.com',
@@ -24,11 +25,12 @@ class BrandPermissionsSeeder extends Seeder
             ]
         );
 
-        $deseguridad = Entidad::firstOrCreate(
-            ['identificacion' => '900935453-0'],
+        $deseguridad = Entidad::updateOrCreate(
+            ['id' => 2],
             [
                 'tipo_persona' => 'Juridica',
                 'tipo_id' => 'NIT',
+                'identificacion' => '900935453-0',
                 'nombre' => 'Deseguridad.net',
                 'nombre_comercial' => 'Deseguridad.net',
                 'dominio' => 'https://deseguridad.net',

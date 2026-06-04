@@ -227,6 +227,7 @@ class EntidadCsvSeeder extends Seeder
             $clienteDesde = $isClient ? $fechaCreacion : null;
 
             $rows[] = [
+                'id' => (int) $row['id'],
                 'identificacion' => $identificacion,
                 'tipo_persona' => $this->mapTipoPersona($row['tipo_persona'] ?? null),
                 'tipo_id' => $this->mapTipoId($row['tipo_id'] ?? null),
@@ -250,7 +251,8 @@ class EntidadCsvSeeder extends Seeder
 
         DB::transaction(function () use ($rows) {
             $identificaciones = array_column($rows, 'identificacion');
-            DB::table('entidad')->whereIn('identificacion', $identificaciones)->delete();
+            $ids = array_column($rows, 'id');
+            DB::table('entidad')->whereIn('identificacion', $identificaciones)->orWhereIn('id', $ids)->delete();
             DB::table('entidad')->insert($rows);
         });
 
