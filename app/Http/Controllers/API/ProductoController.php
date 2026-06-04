@@ -31,7 +31,7 @@ class ProductoController extends Controller
     {
         $perPage = min($request->input('per_page', 15), 100);
         $search = $request->input('search');
-        $filters = $request->only(['estado', 'linea_negocio']);
+        $filters = $request->only(['estado', 'linea_negocio', 'referencia']);
 
         $result = $this->indexUseCase->execute($perPage, $search, $filters);
 
