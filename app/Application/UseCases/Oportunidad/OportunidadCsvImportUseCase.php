@@ -108,7 +108,38 @@ class OportunidadCsvImportUseCase
     {
         $counters = ['created' => 0, 'skipped' => 0, 'errors' => 0, 'details' => []];
 
-        DB::transaction(function () use ($rows, &$counters) {
+        $pipelineId = DB::table('pipelines')->where('codigo', 'llegada')->value('id');
+        if (!$pipelineId) {
+            $pipelineId = DB::table('pipelines')->insertGetId([
+                'nombre' => 'Llegada',
+                'codigo' => 'llegada',
+                'habilitado' => true,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+        }
+
+        $stages = ['Borrador', 'Enviada', 'Aceptada', 'Rechazada', 'Ganada', 'Perdida'];
+        $stageMap = [];
+        foreach ($stages as $index => $stageName) {
+            $stageId = DB::table('pipeline_etapas')
+                ->where('pipeline_id', $pipelineId)
+                ->where('nombre', $stageName)
+                ->value('id');
+            if (!$stageId) {
+                $stageId = DB::table('pipeline_etapas')->insertGetId([
+                    'pipeline_id' => $pipelineId,
+                    'nombre' => $stageName,
+                    'orden' => $index,
+                    'habilitado' => true,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+            }
+            $stageMap[$stageName] = $stageId;
+        }
+
+        DB::transaction(function () use ($rows, &$counters, $pipelineId, $stageMap) {
             $now = now();
             $this->newEntityMap = []; // reset per chunk
 
@@ -132,6 +163,13 @@ class OportunidadCsvImportUseCase
 
                     // --- 3. Oportunidad (upsert by codigo) ---
                     $oppData = $this->buildOpportunityData($row, $entidadId, $contactId);
+                    
+                    $resolvedStage = $oppData['estado'];
+                    $oppData['pipeline_id'] = $pipelineId;
+                    $oppData['pipeline_etapa_id'] = $stageMap[$resolvedStage] ?? $stageMap['Borrador'];
+                    $oppData['estado'] = 'Activa';
+                    $oppData['is_latest'] = true;
+
                     $oppData['created_at'] = $timestamp;
                     $oppData['updated_at'] = $timestamp;
 
