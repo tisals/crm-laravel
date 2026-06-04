@@ -43,12 +43,12 @@ class RealDataSeeder extends Seeder
         $this->callWith(DetalleOportunidadCsvSeeder::class, []);
         $this->command->info('✅ Detalles seeded.');
 
-        $this->callWith(SeguimientoCsvSeeder::class, []);
-        $this->command->info('✅ Seguimientos seeded.');
-
         $this->command->info('Seeding Usuarios...');
         $this->callWith(UsuariosTableSeeder::class, []);
         $this->command->info('✅ Usuarios y entidades asignadas.');
+
+        $this->callWith(SeguimientoCsvSeeder::class, []);
+        $this->command->info('✅ Seguimientos seeded.');
 
         $this->command->info('Real data import complete.');
     }
