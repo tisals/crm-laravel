@@ -10,6 +10,7 @@ use App\Models\Contacto;
 use App\Models\Oportunidad;
 use App\Models\DetalleOportunidad;
 use App\Models\Producto;
+use App\Models\Ciudad;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
@@ -17,6 +18,13 @@ use Tests\TestCase;
 class DashboardTest extends TestCase
 {
     use RefreshDatabase;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+        Ciudad::create(['cod_municipio' => '05001', 'nombre' => 'Medellín', 'departamento' => 'Antioquia']);
+        $this->seed(\Database\Seeders\PipelineSeeder::class);
+    }
 
     private function createAdminUser(): array
     {

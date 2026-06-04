@@ -9,6 +9,10 @@ class OportunidadResource extends JsonResource
 {
     public function toArray(Request $request): array
     {
+        if ($this->pipeline_etapa_id && (!$this->relationLoaded('pipelineEtapa') || $this->pipelineEtapa?->id !== $this->pipeline_etapa_id)) {
+            $this->load('pipelineEtapa');
+        }
+
         $arr = [
             'id' => $this->id,
             'codigo' => $this->codigo,
@@ -16,7 +20,13 @@ class OportunidadResource extends JsonResource
             'contacto_id' => $this->contacto_id,
             'fecha' => $this->fecha,
             'fuente_canal' => $this->fuente_canal,
-            'estado' => $this->estado,
+            'estado' => $this->pipelineEtapa ? $this->pipelineEtapa->nombre : $this->estado,
+            'estado_registro' => $this->estado, // Actual active/inactive state
+            'pipeline_id' => $this->pipeline_id,
+            'pipeline_etapa_id' => $this->pipeline_etapa_id,
+            'parent_id' => $this->parent_id,
+            'version' => $this->version,
+            'is_latest' => $this->is_latest,
             'observaciones' => $this->observaciones,
             'aclaraciones' => $this->aclaraciones,
             'validez_oferta' => $this->validez_oferta,

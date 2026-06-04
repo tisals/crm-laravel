@@ -15,7 +15,7 @@ class OportunidadFactory extends Factory
             'codigo' => fake()->unique()->regexify('COT-[0-9]{6}'),
             'entidad_id' => \App\Models\Entidad::factory(),
             'contacto_id' => null,
-            'fecha' => fake()->date(),
+            'fecha' => now()->format('Y-m-d'),
             'fuente_canal' => fake()->optional(0.6)->randomElement(['Web', 'Referido', 'Llamada', 'Email', 'Otro']),
             'estado' => 'Borrador',
             'observaciones' => fake()->optional(0.5)->sentence(),

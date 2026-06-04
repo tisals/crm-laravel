@@ -210,6 +210,7 @@ Route::prefix('v1')->group(function () {
             Route::delete('/oportunidades/{id}', [OportunidadController::class, 'destroy'])->name('oportunidades.destroy');
             Route::post('/oportunidades/{id}/ganar', [OportunidadController::class, 'ganar'])->name('oportunidades.ganar');
             Route::post('/oportunidades/{id}/clonar', [OportunidadController::class, 'clonar'])->name('oportunidades.clonar');
+            Route::post('/oportunidades/{id}/version', [OportunidadController::class, 'versionar'])->name('oportunidades.version');
         });
 
         // Detalle Oportunidad (nested under oportunidad + direct)

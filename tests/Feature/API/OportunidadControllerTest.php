@@ -16,6 +16,12 @@ class OportunidadControllerTest extends TestCase
 {
     use RefreshDatabase;
 
+    protected function setUp(): void
+    {
+        parent::setUp();
+        $this->seed(\Database\Seeders\PipelineSeeder::class);
+    }
+
     private function authenticate(): string
     {
         $rol = Rol::create(['nombre' => 'Admin', 'estado' => 'Activo']);
@@ -262,5 +268,40 @@ class OportunidadControllerTest extends TestCase
         $data = $response->json('data.data');
         $this->assertCount(2, $data);
         $this->assertEquals(3, $response->json('data.total'));
+    }
+
+    #[Test]
+    public function it_creates_a_new_version_of_an_oportunidad(): void
+    {
+        $token = $this->authenticate();
+        $refs = $this->createReferences();
+
+        // Create base opportunity
+        $response = $this->withHeader('Authorization', 'Bearer ' . $token)
+            ->postJson('/api/v1/oportunidades', [
+                'entidad_id' => $refs['entidad']->id,
+                'contacto_id' => $refs['contacto']->id,
+                'fecha' => '2026-05-10',
+                'estado' => 'Borrador',
+            ]);
+
+        $id = $response->json('data.id');
+        $originalCodigo = $response->json('data.codigo');
+
+        // Create version
+        $versionResponse = $this->withHeader('Authorization', 'Bearer ' . $token)
+            ->postJson("/api/v1/oportunidades/{$id}/version");
+
+        $versionResponse->assertStatus(201)
+            ->assertJsonPath('success', true)
+            ->assertJsonPath('data.version', 2)
+            ->assertJsonPath('data.parent_id', $id)
+            ->assertJsonPath('data.is_latest', true)
+            ->assertJsonPath('data.codigo', $originalCodigo . '-V2');
+
+        // Verify the original opportunity is now marked is_latest=false and Inactiva
+        $original = \App\Models\Oportunidad::find($id);
+        $this->assertFalse($original->is_latest);
+        $this->assertEquals('Inactiva', $original->estado);
     }
 }

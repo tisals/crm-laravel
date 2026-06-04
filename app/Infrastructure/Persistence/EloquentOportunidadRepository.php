@@ -25,6 +25,9 @@ class EloquentOportunidadRepository extends BaseRepository implements Oportunida
     {
         $query = $this->newQuery();
 
+        // Default to latest active versions
+        $query->where('is_latest', true)->where('estado', 'Activa');
+
         if ($search) {
             $query = $this->applySearch($query, $search);
         }
@@ -89,6 +92,7 @@ class EloquentOportunidadRepository extends BaseRepository implements Oportunida
                 'fecha_hasta' => $query->whereDate('fecha', '<=', $value),
                 'codigo' => $query->where('codigo', 'like', "%{$value}%"),
                 'producto_id' => $query->whereHas('detalles', fn($q) => $q->where('producto_id', $value)),
+                'estado' => $query->whereHas('pipelineEtapa', fn($q) => $q->where('nombre', $value)),
                 default => $query->where($field, $value),
             };
         }

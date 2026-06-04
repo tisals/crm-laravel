@@ -24,13 +24,23 @@ class CotizacionControllerTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->seed(\Database\Seeders\DatabaseSeeder::class);
+        $this->seed([
+            \Database\Seeders\RoleSeeder::class,
+            \Database\Seeders\PermisoSeeder::class,
+            \Database\Seeders\CiudadSeeder::class,
+        ]);
+
+        $superAdmin = Rol::where('nombre', 'SuperAdmin')->first() ?? Rol::create(['nombre' => 'SuperAdmin', 'estado' => 'Activo']);
+        \App\Models\Permiso::firstOrCreate([
+            'rol_id' => $superAdmin->id,
+            'vista' => '*',
+        ]);
 
         $this->user = Usuario::create([
             'nombre' => 'Test',
             'email' => 'test@crm.dev',
             'password_hash' => bcrypt('password'),
-            'rol_id' => 1,
+            'rol_id' => $superAdmin->id,
             'estado' => 'Activo',
         ]);
         $this->token = $this->user->createToken('test')->plainTextToken;

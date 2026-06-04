@@ -21,12 +21,13 @@ class BrandPermissionsTest extends TestCase
     #[Test]
     public function it_returns_brand_permissions_for_admin_user()
     {
+        $superAdmin = \App\Models\Rol::where('nombre', 'SuperAdmin')->first() ?? \App\Models\Rol::create(['nombre' => 'SuperAdmin', 'estado' => 'Activo']);
         $user = Usuario::firstOrCreate(
             ['email' => 'admin@tecnoinnsoft.dev'],
             [
                 'nombre' => 'Admin',
                 'password_hash' => bcrypt('password'),
-                'rol_id' => 1,
+                'rol_id' => $superAdmin->id,
                 'estado' => 'Activo',
             ]
         );
@@ -73,12 +74,13 @@ class BrandPermissionsTest extends TestCase
     #[Test]
     public function it_returns_404_for_non_existent_user()
     {
+        $superAdmin = \App\Models\Rol::where('nombre', 'SuperAdmin')->first() ?? \App\Models\Rol::create(['nombre' => 'SuperAdmin', 'estado' => 'Activo']);
         $user = Usuario::firstOrCreate(
             ['email' => 'temp_brands_test@test.com'],
             [
                 'nombre' => 'Temp',
                 'password_hash' => bcrypt('password'),
-                'rol_id' => 1,
+                'rol_id' => $superAdmin->id,
                 'estado' => 'Activo',
             ]
         );

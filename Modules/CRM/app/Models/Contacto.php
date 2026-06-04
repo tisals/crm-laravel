@@ -24,6 +24,7 @@ class Contacto extends Model
         'rol',
         'etapa',
         'estado',
+        'score',
         'diagnostico_data',
         'fuente',
         'created_by',

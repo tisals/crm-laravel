@@ -37,19 +37,21 @@ class SecurityDashboardTest extends TestCase
     {
         $token = $this->authenticate();
 
+        $rol = Rol::first();
+
         // Create additional users
         Usuario::create([
             'nombre' => 'User Two',
             'email' => 'user2@test.com',
             'password_hash' => bcrypt('password123'),
-            'rol_id' => 1,
+            'rol_id' => $rol->id,
             'estado' => 'Activo',
         ]);
         Usuario::create([
             'nombre' => 'Inactive User',
             'email' => 'inactive@test.com',
             'password_hash' => bcrypt('password123'),
-            'rol_id' => 1,
+            'rol_id' => $rol->id,
             'estado' => 'Inactivo',
         ]);
 
