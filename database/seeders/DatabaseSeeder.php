@@ -12,8 +12,8 @@ class DatabaseSeeder extends Seeder
             RoleSeeder::class,
             PermisoSeeder::class,
             CiudadSeeder::class,
-            BrandPermissionsSeeder::class,
             RealDataSeeder::class,   // Entidades, Contactos, Productos y Maestros reales desde CSV
+            BrandPermissionsSeeder::class, // Vincula los usuarios principales a las marcas propias (id 1 y 2)
         ]);
     }
 }
