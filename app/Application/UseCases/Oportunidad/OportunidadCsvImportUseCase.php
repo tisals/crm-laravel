@@ -224,40 +224,41 @@ class OportunidadCsvImportUseCase
         $empresaName = $parsed['name'];
         $nit = $parsed['nit'];
 
+        $id = null;
+
         // Priority 1: Domain
         if ($dominio) {
             $domainKey = strtolower(explode('.', $dominio)[0]);
             $id = $this->lookupEntityId($domainKey);
-            if ($id) return $id;
         }
 
         // Priority 2: NIT
-        if ($nit) {
+        if (!$id && $nit) {
             $cleanNit = preg_replace('/[\.\-\s]/', '', $nit);
-            $id = $this->lookupEntityId($cleanNit);
-            if ($id) return $id;
-            $id = $this->lookupEntityId($nit);
-            if ($id) return $id;
+            $id = $this->lookupEntityId($cleanNit) ?? $this->lookupEntityId($nit);
         }
 
         // Priority 3: Normalized name
-        $normalized = $this->normalizeEntityName($empresaName);
-        $id = $this->lookupEntityId($normalized);
-        if ($id) return $id;
-
-        // Priority 4: Raw lower name
-        $nameLower = strtolower($empresaName);
-        $id = $this->lookupEntityId($nameLower);
-        if ($id) return $id;
-
-        // Priority 5: Keyword fuzzy match (catches typos like "Activo" vs "Activos SAS")
-        $csvWords = $this->extractKeyWords($empresaName);
-        if (!empty($csvWords)) {
-            $id = $this->lookupEntityIdByKeywords($csvWords);
-            if ($id) return $id;
+        if (!$id) {
+            $normalized = $this->normalizeEntityName($empresaName);
+            $id = $this->lookupEntityId($normalized);
         }
 
-        // Not found → CREATE
+        // Priority 4: Raw lower name
+        if (!$id) {
+            $nameLower = strtolower($empresaName);
+            $id = $this->lookupEntityId($nameLower);
+        }
+
+        // Priority 5: Keyword fuzzy match (catches typos like "Activo" vs "Activos SAS")
+        if (!$id) {
+            $csvWords = $this->extractKeyWords($empresaName);
+            if (!empty($csvWords)) {
+                $id = $this->lookupEntityIdByKeywords($csvWords);
+            }
+        }
+
+        // Check if it is client based on billing sheet
         $isClient = false;
         if ($nit) {
             $cleanNit = preg_replace('/[\.\-\s]/', '', $nit);
@@ -272,6 +273,39 @@ class OportunidadCsvImportUseCase
             }
         }
 
+        $timestampStr = $now instanceof \Carbon\Carbon ? $now->format('Y-m-d H:i:s') : (string) $now;
+
+        if ($id) {
+            // Update existing entity's state and client_desde based on billing JSON crossing
+            $updateData = [
+                'estado' => $isClient ? 'Cliente' : 'Prospecto',
+            ];
+            if ($isClient) {
+                $updateData['cliente_desde'] = DB::raw("IFNULL(LEAST(IFNULL(cliente_desde, '{$timestampStr}'), '{$timestampStr}'), '{$timestampStr}')");
+            } else {
+                $updateData['cliente_desde'] = null;
+            }
+
+            DB::table('entidad')
+                ->where('id', $id)
+                ->update($updateData);
+
+            // Ensure created_at / updated_at are the oldest possible dates
+            DB::table('entidad')
+                ->where('id', $id)
+                ->where(function ($q) use ($timestampStr) {
+                    $q->whereNull('created_at')
+                      ->orWhere('created_at', '>', $timestampStr);
+                })
+                ->update([
+                    'created_at' => $timestampStr,
+                    'updated_at' => $timestampStr
+                ]);
+
+            return $id;
+        }
+
+        // Not found → CREATE
         $newId = DB::table('entidad')->insertGetId([
             'nombre'          => mb_substr($empresaName, 0, 255),
             'nombre_comercial'=> mb_substr($empresaName, 0, 255),
@@ -287,6 +321,8 @@ class OportunidadCsvImportUseCase
         ]);
 
         // Index for dedup within same chunk
+        $normalized = $this->normalizeEntityName($empresaName);
+        $nameLower  = strtolower($empresaName);
         $this->newEntityMap[$normalized] = $newId;
         $this->newEntityMap[$nameLower]  = $newId;
 
@@ -448,7 +484,7 @@ class OportunidadCsvImportUseCase
             'entidad_id'     => $entidadId,
             'contacto_id'    => $contactId,
             'fecha'          => $this->parseFecha($row['fecha'] ?? null) ?? date('Y-m-d'),
-            'fuente_canal'   => $this->cleanStr($row['fuente_canal'] ?? null),
+            'fuente_canal'   => $this->cleanStr($row['fuente_canal'] ?? $row['fuentecanal'] ?? null),
             'estado'         => $estado,
             'observaciones'  => $this->cleanStr($row['observaciones'] ?? null),
             'aclaraciones'   => $this->cleanStr($row['aclaraciones'] ?? null),
