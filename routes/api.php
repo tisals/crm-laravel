@@ -211,6 +211,7 @@ Route::prefix('v1')->group(function () {
             Route::post('/oportunidades/{id}/ganar', [OportunidadController::class, 'ganar'])->name('oportunidades.ganar');
             Route::post('/oportunidades/{id}/clonar', [OportunidadController::class, 'clonar'])->name('oportunidades.clonar');
             Route::post('/oportunidades/{id}/version', [OportunidadController::class, 'versionar'])->name('oportunidades.version');
+            Route::get('/pipelines', [\App\Http\Controllers\API\PipelineController::class, 'index'])->name('pipelines.index');
         });
 
         // Detalle Oportunidad (nested under oportunidad + direct)
