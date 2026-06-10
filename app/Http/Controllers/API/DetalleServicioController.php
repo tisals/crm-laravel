@@ -2,13 +2,13 @@
 
 namespace App\Http\Controllers\API;
 
+use App\Application\UseCases\DetalleServicio\DestroyDetalleServicioUseCase;
 use App\Application\UseCases\DetalleServicio\IndexDetalleServicioUseCase;
 use App\Application\UseCases\DetalleServicio\ShowDetalleServicioUseCase;
 use App\Application\UseCases\DetalleServicio\StoreDetalleServicioUseCase;
 use App\Application\UseCases\DetalleServicio\UpdateDetalleServicioUseCase;
-use App\Application\UseCases\DetalleServicio\DestroyDetalleServicioUseCase;
-use App\Http\Controllers\Controller;
 use App\Http\Controllers\API\Concerns\ApiResponse;
+use App\Http\Controllers\Controller;
 use App\Http\Requests\DetalleServicioRequest;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -52,7 +52,7 @@ class DetalleServicioController extends Controller
     {
         $result = $this->showUseCase->execute($id);
 
-        if (!$result) {
+        if (! $result) {
             return $this->errorResponse('Detalle no encontrado.', 404);
         }
 
@@ -63,7 +63,7 @@ class DetalleServicioController extends Controller
     {
         $result = $this->updateUseCase->execute($id, $request->validated());
 
-        if (!$result) {
+        if (! $result) {
             return $this->errorResponse('Detalle no encontrado.', 404);
         }
 
@@ -74,7 +74,7 @@ class DetalleServicioController extends Controller
     {
         $result = $this->destroyUseCase->execute($id);
 
-        if (!$result) {
+        if (! $result) {
             return $this->errorResponse('Detalle no encontrado.', 404);
         }
 

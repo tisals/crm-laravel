@@ -14,12 +14,12 @@ class WebhookService
      */
     public function dispatch(Entidad $entidad, string $event, array $payload): void
     {
-        if (!$entidad->hasWebhooksEnabled()) {
+        if (! $entidad->hasWebhooksEnabled()) {
             return;
         }
 
         $config = $entidad->getWebhookConfig();
-        
+
         // Preparar payload con firma HMAC-SHA256
         $timestamp = time();
         $body = json_encode([
@@ -66,8 +66,9 @@ class WebhookService
             return 'sha256=unsigned';
         }
 
-        $signature = $timestamp . '.' . $body . '.' . $secret;
-        return 'sha256=' . hash_hmac('sha256', $signature, $secret);
+        $signature = $timestamp.'.'.$body.'.'.$secret;
+
+        return 'sha256='.hash_hmac('sha256', $signature, $secret);
     }
 
     /**

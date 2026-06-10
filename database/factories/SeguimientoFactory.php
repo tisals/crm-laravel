@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Models\Entidad;
 use App\Models\Seguimiento;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
@@ -14,7 +15,7 @@ class SeguimientoFactory extends Factory
         return [
             'oportunidad_id' => null,
             'contacto_id' => null,
-            'entidad_id' => \App\Models\Entidad::factory(),
+            'entidad_id' => Entidad::factory(),
             'tipo' => fake()->randomElement(['Llamada', 'Correo', 'Reunion', 'Nota', 'Otro']),
             'fecha' => fake()->date(),
             'hora' => fake()->optional(0.7)->time('H:i:s'),

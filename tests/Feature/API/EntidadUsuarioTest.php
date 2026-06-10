@@ -2,10 +2,10 @@
 
 namespace Tests\Feature\API;
 
+use App\Models\Entidad;
 use App\Models\Permiso;
 use App\Models\Rol;
 use App\Models\Usuario;
-use App\Models\Entidad;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
@@ -78,7 +78,7 @@ class EntidadUsuarioTest extends TestCase
         $entidad = Entidad::factory()->create();
         $ventas = $this->createVentasUser();
 
-        $response = $this->withHeader('Authorization', 'Bearer ' . $auth['token'])
+        $response = $this->withHeader('Authorization', 'Bearer '.$auth['token'])
             ->postJson('/api/v1/entidad-usuario', [
                 'usuario_id' => $ventas['usuario']->id,
                 'entidad_id' => $entidad->id,
@@ -104,7 +104,7 @@ class EntidadUsuarioTest extends TestCase
         $entidad->usuarios()->attach($ventas['usuario']->id);
 
         // Then deassign
-        $response = $this->withHeader('Authorization', 'Bearer ' . $auth['token'])
+        $response = $this->withHeader('Authorization', 'Bearer '.$auth['token'])
             ->deleteJson('/api/v1/entidad-usuario', [
                 'usuario_id' => $ventas['usuario']->id,
                 'entidad_id' => $entidad->id,
@@ -128,8 +128,8 @@ class EntidadUsuarioTest extends TestCase
 
         $entidad->usuarios()->attach($ventas['usuario']->id);
 
-        $response = $this->withHeader('Authorization', 'Bearer ' . $auth['token'])
-            ->getJson('/api/v1/entidad/' . $entidad->id . '/usuarios');
+        $response = $this->withHeader('Authorization', 'Bearer '.$auth['token'])
+            ->getJson('/api/v1/entidad/'.$entidad->id.'/usuarios');
 
         $response->assertStatus(200)
             ->assertJsonPath('success', true)
@@ -143,7 +143,7 @@ class EntidadUsuarioTest extends TestCase
         $entidad = Entidad::factory()->create();
         $ventas = $this->createVentasUser();
 
-        $response = $this->withHeader('Authorization', 'Bearer ' . $auth['token'])
+        $response = $this->withHeader('Authorization', 'Bearer '.$auth['token'])
             ->postJson('/api/v1/entidad-usuario', [
                 'usuario_id' => $ventas['usuario']->id,
                 'entidad_id' => $entidad->id,
@@ -159,7 +159,7 @@ class EntidadUsuarioTest extends TestCase
         $entidad = Entidad::factory()->create();
         $ops = $this->createOperacionesUser();
 
-        $response = $this->withHeader('Authorization', 'Bearer ' . $auth['token'])
+        $response = $this->withHeader('Authorization', 'Bearer '.$auth['token'])
             ->postJson('/api/v1/entidad-usuario', [
                 'usuario_id' => $ops['usuario']->id,
                 'entidad_id' => $entidad->id,
@@ -179,7 +179,7 @@ class EntidadUsuarioTest extends TestCase
         $entidad->usuarios()->attach($ventas['usuario']->id);
 
         // Try to assign again
-        $response = $this->withHeader('Authorization', 'Bearer ' . $auth['token'])
+        $response = $this->withHeader('Authorization', 'Bearer '.$auth['token'])
             ->postJson('/api/v1/entidad-usuario', [
                 'usuario_id' => $ventas['usuario']->id,
                 'entidad_id' => $entidad->id,
@@ -195,7 +195,7 @@ class EntidadUsuarioTest extends TestCase
         $entidad = Entidad::factory()->create();
         $ventas = $this->createVentasUser();
 
-        $response = $this->withHeader('Authorization', 'Bearer ' . $auth['token'])
+        $response = $this->withHeader('Authorization', 'Bearer '.$auth['token'])
             ->deleteJson('/api/v1/entidad-usuario', [
                 'usuario_id' => $ventas['usuario']->id,
                 'entidad_id' => $entidad->id,

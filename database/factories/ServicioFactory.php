@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Models\Entidad;
 use App\Models\Servicio;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
@@ -12,7 +13,7 @@ class ServicioFactory extends Factory
     public function definition(): array
     {
         return [
-            'entidad_id' => \App\Models\Entidad::factory(),
+            'entidad_id' => Entidad::factory(),
             'nombre' => fake()->sentence(3),
             'vr_servicio' => fake()->randomFloat(2, 100000, 50000000),
             'fecha_inicio' => fake()->date(),

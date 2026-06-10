@@ -20,12 +20,13 @@ class ThrottleMutations
     public function handle(Request $request, Closure $next, string $limiterName = 'api'): Response
     {
         // Solo throttlear mutations
-        if (!in_array($request->method(), ['POST', 'PUT', 'PATCH', 'DELETE'])) {
+        if (! in_array($request->method(), ['POST', 'PUT', 'PATCH', 'DELETE'])) {
             return $next($request);
         }
 
         // Devolver al throttle normal de Laravel
         $throttle = app('Illuminate\Routing\Middleware\ThrottleRequests');
+
         return $throttle->handle($request, $next, $limiterName);
     }
 }

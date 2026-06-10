@@ -11,6 +11,7 @@ class Colaborador extends Model
     use HasFactory, SoftDeletes;
 
     protected $table = 'colaboradores';
+
     protected $fillable = [
         'usuario_id',
         'nombres',

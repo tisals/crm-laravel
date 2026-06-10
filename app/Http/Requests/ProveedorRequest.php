@@ -17,7 +17,7 @@ class ProveedorRequest extends FormRequest
 
         return [
             'tipo_id' => 'nullable|string|max:20',
-            'identificacion' => 'required|string|max:50|unique:proveedores,identificacion,' . $proveedorId,
+            'identificacion' => 'required|string|max:50|unique:proveedores,identificacion,'.$proveedorId,
             'nombres' => 'nullable|string|max:150',
             'apellidos' => 'nullable|string|max:150',
             'profesion' => 'nullable|string|max:150',

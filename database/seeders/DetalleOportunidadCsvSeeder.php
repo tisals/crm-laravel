@@ -23,8 +23,9 @@ class DetalleOportunidadCsvSeeder extends Seeder
     {
         $csvFile = $this->csvPath('detalle_oportunidad.csv');
 
-        if (!file_exists($csvFile)) {
+        if (! file_exists($csvFile)) {
             $this->command->error("CSV not found: {$csvFile}");
+
             return;
         }
 
@@ -33,7 +34,7 @@ class DetalleOportunidadCsvSeeder extends Seeder
             ->pluck('id', 'codigo')
             ->mapWithKeys(fn ($id, $cod) => [trim($cod) => $id])
             ->toArray();
-        $this->command->info("  → " . count($oppsByCodigo) . " oportunidades loaded.");
+        $this->command->info('  → '.count($oppsByCodigo).' oportunidades loaded.');
 
         // Parse CSV and collect rows grouped by codigo
         $this->command->info('Parsing detalle CSV...');
@@ -45,12 +46,15 @@ class DetalleOportunidadCsvSeeder extends Seeder
             $rawCodigo = $row['no_cotizacion'] ?? '';
             $codigo = trim(str_replace("\xEF\xBB\xBF", '', $rawCodigo));
 
-            if (empty($codigo)) continue;
+            if (empty($codigo)) {
+                continue;
+            }
             $totalRows++;
 
             $oppId = $oppsByCodigo[$codigo] ?? null;
-            if (!$oppId) {
+            if (! $oppId) {
                 $unknownCodigos[$codigo] = true;
+
                 continue;
             }
 
@@ -66,22 +70,22 @@ class DetalleOportunidadCsvSeeder extends Seeder
 
             $detalleGroups[$codigo][] = [
                 'oportunidad_id' => $oppId,
-                'cod'            => $row['cod'] ?? '01',
-                'producto'       => $this->cleanStr($row['producto'] ?? null),
-                'concepto'       => $concepto,
-                'medida'         => $medida ?? 'Unidad',
-                'cantidad'       => $this->parseCantidad($row['cantidad'] ?? null),
-                'iva_pct'        => $this->parseIva($row['iva'] ?? null),
-                'vr_unitario'    => $this->parseMonetary($row['vrunitario'] ?? null),
-                'vr_total'       => $this->parseMonetary($row['vr_total'] ?? null),
+                'cod' => $row['cod'] ?? '01',
+                'producto' => $this->cleanStr($row['producto'] ?? null),
+                'concepto' => $concepto,
+                'medida' => $medida ?? 'Unidad',
+                'cantidad' => $this->parseCantidad($row['cantidad'] ?? null),
+                'iva_pct' => $this->parseIva($row['iva'] ?? null),
+                'vr_unitario' => $this->parseMonetary($row['vrunitario'] ?? null),
+                'vr_total' => $this->parseMonetary($row['vr_total'] ?? null),
             ];
         }
 
         $this->command->info("  → {$totalRows} rows parsed.");
-        $this->command->info("  → " . count($detalleGroups) . " unique codigos matched.");
+        $this->command->info('  → '.count($detalleGroups).' unique codigos matched.');
 
-        if (!empty($unknownCodigos)) {
-            $this->command->warn("  → " . count($unknownCodigos) . " codigos NOT found in DB (skipped).");
+        if (! empty($unknownCodigos)) {
+            $this->command->warn('  → '.count($unknownCodigos).' codigos NOT found in DB (skipped).');
         }
 
         // Delete ALL existing synthetic detalles and re-insert from CSV
@@ -111,17 +115,17 @@ class DetalleOportunidadCsvSeeder extends Seeder
                 foreach ($rows as $r) {
                     $insertBatch[] = [
                         'oportunidad_id' => $r['oportunidad_id'],
-                        'producto_id'    => 1, // fallback; will be matched by name in future
-                        'concepto'       => $r['concepto'],
-                        'descripcion'    => $r['producto'] ?? $r['concepto'] ?? '',
-                        'medida'         => $r['medida'],
-                        'cantidad'       => $r['cantidad'],
-                        'vr_unitario'    => $r['vr_unitario'],
-                        'iva'            => $r['vr_unitario'] * ($r['iva_pct'] / 100),
-                        'vr_total'       => $r['vr_total'],
-                        'created_by'     => 1,
-                        'created_at'     => $now,
-                        'updated_at'     => $now,
+                        'producto_id' => 1, // fallback; will be matched by name in future
+                        'concepto' => $r['concepto'],
+                        'descripcion' => $r['producto'] ?? $r['concepto'] ?? '',
+                        'medida' => $r['medida'],
+                        'cantidad' => $r['cantidad'],
+                        'vr_unitario' => $r['vr_unitario'],
+                        'iva' => $r['vr_unitario'] * ($r['iva_pct'] / 100),
+                        'vr_total' => $r['vr_total'],
+                        'created_by' => 1,
+                        'created_at' => $now,
+                        'updated_at' => $now,
                     ];
 
                     if (count($insertBatch) >= self::CHUNK_SIZE) {
@@ -132,7 +136,7 @@ class DetalleOportunidadCsvSeeder extends Seeder
                 }
             }
 
-            if (!empty($insertBatch)) {
+            if (! empty($insertBatch)) {
                 DB::table('detalle_oportunidad')->insert($insertBatch);
                 $inserted += count($insertBatch);
             }
@@ -154,7 +158,7 @@ class DetalleOportunidadCsvSeeder extends Seeder
         $this->command->info("  Oportunidades total     : {$totalOpps}");
         $this->command->info("  Detalles insertados     : {$totalDetalles}");
         $this->command->info("  Ops con detalle         : {$conDetalle}");
-        $this->command->info("  Ops sin detalle         : " . ($totalOpps - $conDetalle));
+        $this->command->info('  Ops sin detalle         : '.($totalOpps - $conDetalle));
         $this->command->info('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
     }
 
@@ -162,28 +166,38 @@ class DetalleOportunidadCsvSeeder extends Seeder
 
     private function parseCantidad(?string $value): int
     {
-        if (!$value) return 1;
+        if (! $value) {
+            return 1;
+        }
         $value = trim($value);
         // Remove $ and spaces
         $value = str_replace(['$', ' ', ','], '', $value);
+
         return max(1, (int) $value);
     }
 
     private function parseIva(?string $value): float
     {
-        if (!$value) return 0.0;
+        if (! $value) {
+            return 0.0;
+        }
+
         return (float) str_replace(['%', ' '], '', trim($value));
     }
 
     private function parseMonetary(?string $value): float
     {
-        if (!$value) return 0.0;
+        if (! $value) {
+            return 0.0;
+        }
         $value = trim($value);
         // Remove currency symbol and leading/trailing space
         $value = str_replace('$', '', $value);
         $value = trim($value);
 
-        if (empty($value)) return 0.0;
+        if (empty($value)) {
+            return 0.0;
+        }
 
         // Colombian format: "." = thousands, "," = decimal
         if (str_contains($value, ',')) {
@@ -198,15 +212,20 @@ class DetalleOportunidadCsvSeeder extends Seeder
 
     private function cleanStr(?string $value, bool $truncateLong = true): ?string
     {
-        if ($value === null || $value === '') return null;
+        if ($value === null || $value === '') {
+            return null;
+        }
         $cleaned = trim($value);
-        if ($cleaned === '') return null;
+        if ($cleaned === '') {
+            return null;
+        }
         // Clean up excessive whitespace/newlines
         $cleaned = preg_replace('/\s+/', ' ', $cleaned);
         // Truncate very long strings for DB columns
         if ($truncateLong && strlen($cleaned) > 500) {
-            $cleaned = mb_substr($cleaned, 0, 500) . '...';
+            $cleaned = mb_substr($cleaned, 0, 500).'...';
         }
+
         return $cleaned;
     }
 }

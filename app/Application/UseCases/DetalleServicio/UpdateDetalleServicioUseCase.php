@@ -2,19 +2,21 @@
 
 namespace App\Application\UseCases\DetalleServicio;
 
+use App\Application\Services\CalculoDetalleService;
 use App\Domain\Repositories\DetalleServicioRepositoryInterface;
+use App\Models\Producto;
 
 class UpdateDetalleServicioUseCase
 {
     public function __construct(
         private DetalleServicioRepositoryInterface $repository,
-        private \App\Application\Services\CalculoDetalleService $calculoService,
+        private CalculoDetalleService $calculoService,
     ) {}
 
     public function execute(int $id, array $data): mixed
     {
         $existing = $this->repository->findById($id);
-        if (!$existing) {
+        if (! $existing) {
             return null;
         }
 
@@ -28,7 +30,7 @@ class UpdateDetalleServicioUseCase
             $productoId = $data['producto_id'] ?? $existing->producto_id;
             $ivaPorcentaje = 0;
             if ($productoId) {
-                $producto = \App\Models\Producto::find($productoId);
+                $producto = Producto::find($productoId);
                 if ($producto) {
                     $ivaPorcentaje = (float) $producto->iva;
                 }

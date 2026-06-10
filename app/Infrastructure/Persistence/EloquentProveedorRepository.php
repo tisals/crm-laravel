@@ -23,8 +23,8 @@ class EloquentProveedorRepository extends BaseRepository implements ProveedorRep
     {
         return $query->where(function ($q) use ($search) {
             $q->where('nombres', 'like', "%{$search}%")
-              ->orWhere('apellidos', 'like', "%{$search}%")
-              ->orWhere('identificacion', 'like', "%{$search}%");
+                ->orWhere('apellidos', 'like', "%{$search}%")
+                ->orWhere('identificacion', 'like', "%{$search}%");
         });
     }
 }

@@ -37,4 +37,21 @@ return [
 
     ],
 
+    /*
+    |--------------------------------------------------------------------------
+    | N8N Pipeline Webhook Configuration
+    |--------------------------------------------------------------------------
+    |
+    | Configuration for sending pipeline etapa change events to n8n.
+    |
+    */
+
+    'n8n_pipeline' => [
+
+        'url' => env('N8N_PIPELINE_WEBHOOK_URL', 'https://prod-sailus-getway.jsvdny.easypanel.host/api/v1/webhook/crm-outbound'),
+
+        'secret' => env('N8N_PIPELINE_WEBHOOK_SECRET'),
+
+    ],
+
 ];

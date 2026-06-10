@@ -2,13 +2,14 @@
 
 namespace Modules\Shared\Models;
 
-use Illuminate\Database\Eloquent\Factories\HasFactory;
-use Illuminate\Database\Eloquent\SoftDeletes;
-use Illuminate\Foundation\Auth\User as Authenticatable;
+use App\Models\Entidad;
 use Illuminate\Database\Eloquent\Builder;
-use Laravel\Sanctum\HasApiTokens;
+use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Foundation\Auth\User as Authenticatable;
+use Laravel\Sanctum\HasApiTokens;
 
 class Usuario extends Authenticatable
 {
@@ -56,7 +57,7 @@ class Usuario extends Authenticatable
     public function entidades(): BelongsToMany
     {
         // Entidad will be in a different module or shared? We can reference it dynamically or via standard namespace
-        return $this->belongsToMany(\App\Models\Entidad::class, 'entidad_usuario', 'usuario_id', 'entidad_id')
+        return $this->belongsToMany(Entidad::class, 'entidad_usuario', 'usuario_id', 'entidad_id')
             ->withTimestamps();
     }
 }

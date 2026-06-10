@@ -46,7 +46,7 @@ class ApiAccessLogger
         if ($request->attributes->has('organization_id')) {
             $organizationId = $request->attributes->get('organization_id');
             $userType = 'api_key';
-            $userId = 'api_key:' . $organizationId;
+            $userId = 'api_key:'.$organizationId;
         }
 
         return [
@@ -54,16 +54,16 @@ class ApiAccessLogger
             'method' => $request->method(),
             'path' => $request->path(),
             'full_url' => $request->fullUrl(),
-            
+
             // Auth info
             'user_id' => $userId,
             'user_type' => $userType,
             'organization_id' => $organizationId,
-            
+
             // Response info
             'status_code' => $response->getStatusCode(),
             'duration_ms' => $duration,
-            
+
             // Request metadata
             'ip' => $request->ip(),
             'user_agent' => $request->userAgent(),

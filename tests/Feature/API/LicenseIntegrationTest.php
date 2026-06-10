@@ -1,15 +1,17 @@
 <?php
+
 /**
  * License Integration Tests (Strict TDD Mode)
  */
 
 namespace Tests\Feature\API;
 
-use App\Models\Entidad;
 use App\Models\Contacto;
+use App\Models\Entidad;
+use App\Models\Producto;
 use App\Models\Servicio;
 use App\Models\Usuario;
-use App\Models\Producto;
+use Database\Seeders\DatabaseSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Mail;
 use PHPUnit\Framework\Attributes\Test;
@@ -24,7 +26,7 @@ class LicenseIntegrationTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->seed(\Database\Seeders\DatabaseSeeder::class);
+        $this->seed(DatabaseSeeder::class);
 
         // Create a user and Sanctum token for authentication
         $user = Usuario::create([
@@ -56,7 +58,7 @@ class LicenseIntegrationTest extends TestCase
             'currency' => 'COP',
             'subscription_id' => 'fc_sub_67890',
             'billing_interval' => 'monthly',
-            'site_url' => 'https://deseguridad.net'
+            'site_url' => 'https://deseguridad.net',
         ];
 
         $response = $this->withToken($this->token)
@@ -132,7 +134,7 @@ class LicenseIntegrationTest extends TestCase
             'currency' => 'COP',
             'subscription_id' => 'fc_sub_11111',
             'billing_interval' => 'yearly',
-            'site_url' => 'https://deseguridad.net'
+            'site_url' => 'https://deseguridad.net',
         ];
 
         $response = $this->withToken($this->token)
@@ -195,7 +197,7 @@ class LicenseIntegrationTest extends TestCase
                 'username' => 'jane@doe.com',
                 'token' => 'SAILUS-VALID-TOKEN-123',
                 'site_url' => 'https://deseguridad.net',
-                'plugin_version' => '1.0.0'
+                'plugin_version' => '1.0.0',
             ]);
 
         $response->assertStatus(200)
@@ -333,7 +335,7 @@ class LicenseIntegrationTest extends TestCase
             'payment_id' => 'wompi_charge_67890',
             'amount' => 97.00,
             'currency' => 'COP',
-            'payment_method' => 'wompi_subscription'
+            'payment_method' => 'wompi_subscription',
         ];
 
         $newExpiresAt = now()->addMonths(2)->toIso8601String();
@@ -344,7 +346,7 @@ class LicenseIntegrationTest extends TestCase
                 'new_expires_at' => $newExpiresAt,
                 'amount' => 97.00,
                 'currency' => 'COP',
-                'payment_method' => 'wompi_subscription'
+                'payment_method' => 'wompi_subscription',
             ]);
 
         $response->assertStatus(200)
@@ -352,7 +354,7 @@ class LicenseIntegrationTest extends TestCase
                 'success' => true,
             ])
             ->assertJsonStructure([
-                'new_expires_at'
+                'new_expires_at',
             ]);
 
         $servicio->refresh();

@@ -2,6 +2,7 @@
 
 namespace Tests;
 
+use App\Models\Rol;
 use App\Models\Usuario;
 use Illuminate\Foundation\Testing\TestCase as BaseTestCase;
 
@@ -12,7 +13,7 @@ abstract class TestCase extends BaseTestCase
      */
     protected function actingAsUsuario(array $overrides = []): array
     {
-        $rol = \App\Models\Rol::create([
+        $rol = Rol::create([
             'nombre' => $overrides['rol_nombre'] ?? 'Admin',
             'estado' => 'Activo',
         ]);

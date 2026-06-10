@@ -37,7 +37,7 @@ class EntidadControllerTest extends TestCase
         $token = $this->authenticate();
         Ciudad::create(['cod_municipio' => '05001', 'nombre' => 'Medellín', 'departamento' => 'Antioquia']);
 
-        $response = $this->withHeader('Authorization', 'Bearer ' . $token)
+        $response = $this->withHeader('Authorization', 'Bearer '.$token)
             ->getJson('/api/v1/entidad');
 
         $response->assertStatus(200)
@@ -51,7 +51,7 @@ class EntidadControllerTest extends TestCase
         $token = $this->authenticate();
         Ciudad::create(['cod_municipio' => '05001', 'nombre' => 'Medellín', 'departamento' => 'Antioquia']);
 
-        $response = $this->withHeader('Authorization', 'Bearer ' . $token)
+        $response = $this->withHeader('Authorization', 'Bearer '.$token)
             ->postJson('/api/v1/entidad', [
                 'tipo_persona' => 'Juridica',
                 'tipo_id' => 'NIT',
@@ -77,8 +77,8 @@ class EntidadControllerTest extends TestCase
         Ciudad::create(['cod_municipio' => '05001', 'nombre' => 'Medellín', 'departamento' => 'Antioquia']);
         $entidad = Entidad::factory()->create();
 
-        $response = $this->withHeader('Authorization', 'Bearer ' . $token)
-            ->getJson('/api/v1/entidad/' . $entidad->id);
+        $response = $this->withHeader('Authorization', 'Bearer '.$token)
+            ->getJson('/api/v1/entidad/'.$entidad->id);
 
         $response->assertStatus(200)
             ->assertJsonPath('success', true)
@@ -92,8 +92,8 @@ class EntidadControllerTest extends TestCase
         Ciudad::create(['cod_municipio' => '05001', 'nombre' => 'Medellín', 'departamento' => 'Antioquia']);
         $entidad = Entidad::factory()->create();
 
-        $response = $this->withHeader('Authorization', 'Bearer ' . $token)
-            ->putJson('/api/v1/entidad/' . $entidad->id, [
+        $response = $this->withHeader('Authorization', 'Bearer '.$token)
+            ->putJson('/api/v1/entidad/'.$entidad->id, [
                 'nombre' => 'Updated Corp SAS',
                 'identificacion' => $entidad->identificacion,
                 'tipo_persona' => $entidad->tipo_persona,
@@ -111,8 +111,8 @@ class EntidadControllerTest extends TestCase
         Ciudad::create(['cod_municipio' => '05001', 'nombre' => 'Medellín', 'departamento' => 'Antioquia']);
         $entidad = Entidad::factory()->create();
 
-        $response = $this->withHeader('Authorization', 'Bearer ' . $token)
-            ->deleteJson('/api/v1/entidad/' . $entidad->id);
+        $response = $this->withHeader('Authorization', 'Bearer '.$token)
+            ->deleteJson('/api/v1/entidad/'.$entidad->id);
 
         $response->assertStatus(200)
             ->assertJsonPath('success', true);
@@ -126,7 +126,7 @@ class EntidadControllerTest extends TestCase
         Entidad::factory()->create(['nombre' => 'Tech Corp', 'identificacion' => '111111111']);
         Entidad::factory()->create(['nombre' => 'Finance Ltd', 'identificacion' => '222222222']);
 
-        $response = $this->withHeader('Authorization', 'Bearer ' . $token)
+        $response = $this->withHeader('Authorization', 'Bearer '.$token)
             ->getJson('/api/v1/entidad?search=Tech');
 
         $response->assertStatus(200)
@@ -142,7 +142,7 @@ class EntidadControllerTest extends TestCase
     {
         $token = $this->authenticate();
 
-        $response = $this->withHeader('Authorization', 'Bearer ' . $token)
+        $response = $this->withHeader('Authorization', 'Bearer '.$token)
             ->postJson('/api/v1/entidad', []);
 
         $response->assertStatus(422);
@@ -153,7 +153,7 @@ class EntidadControllerTest extends TestCase
     {
         $token = $this->authenticate();
 
-        $response = $this->withHeader('Authorization', 'Bearer ' . $token)
+        $response = $this->withHeader('Authorization', 'Bearer '.$token)
             ->getJson('/api/v1/entidad/9999');
 
         $response->assertStatus(404)

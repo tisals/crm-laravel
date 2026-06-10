@@ -33,7 +33,13 @@ RUN apk add --no-cache nginx
 
 # Extensiones PHP (pre-compiladas, no desde fuente)
 COPY --from=mlocati/php-extension-installer /usr/bin/install-php-extensions /usr/local/bin/
-RUN install-php-extensions pdo_mysql pdo_sqlite bcmath gd >/dev/null 2>&1
+RUN install-php-extensions pdo_mysql pdo_sqlite bcmath gd redis >/dev/null 2>&1
+
+# Aumentar workers de PHP-FPM para soportar concurrencia del frontend
+RUN echo "pm.max_children = 50" >> /usr/local/etc/php-fpm.d/www.conf \
+    && echo "pm.start_servers = 10" >> /usr/local/etc/php-fpm.d/www.conf \
+    && echo "pm.min_spare_servers = 5" >> /usr/local/etc/php-fpm.d/www.conf \
+    && echo "pm.max_spare_servers = 20" >> /usr/local/etc/php-fpm.d/www.conf
 
 # Copiar vendor + código
 COPY --from=vendor /app/vendor /var/www/html/vendor

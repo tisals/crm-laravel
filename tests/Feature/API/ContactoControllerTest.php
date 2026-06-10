@@ -37,7 +37,7 @@ class ContactoControllerTest extends TestCase
     {
         $token = $this->authenticate();
 
-        $response = $this->withHeader('Authorization', 'Bearer ' . $token)
+        $response = $this->withHeader('Authorization', 'Bearer '.$token)
             ->getJson('/api/v1/contacto');
 
         $response->assertStatus(200)
@@ -50,7 +50,7 @@ class ContactoControllerTest extends TestCase
     {
         $token = $this->authenticate();
 
-        $response = $this->withHeader('Authorization', 'Bearer ' . $token)
+        $response = $this->withHeader('Authorization', 'Bearer '.$token)
             ->postJson('/api/v1/contacto', [
                 'nombres' => 'Juan',
                 'apellidos' => 'Pérez',
@@ -73,8 +73,8 @@ class ContactoControllerTest extends TestCase
         $token = $this->authenticate();
         $contacto = Contacto::factory()->create();
 
-        $response = $this->withHeader('Authorization', 'Bearer ' . $token)
-            ->getJson('/api/v1/contacto/' . $contacto->id);
+        $response = $this->withHeader('Authorization', 'Bearer '.$token)
+            ->getJson('/api/v1/contacto/'.$contacto->id);
 
         $response->assertStatus(200)
             ->assertJsonPath('success', true)
@@ -87,8 +87,8 @@ class ContactoControllerTest extends TestCase
         $token = $this->authenticate();
         $contacto = Contacto::factory()->create();
 
-        $response = $this->withHeader('Authorization', 'Bearer ' . $token)
-            ->putJson('/api/v1/contacto/' . $contacto->id, [
+        $response = $this->withHeader('Authorization', 'Bearer '.$token)
+            ->putJson('/api/v1/contacto/'.$contacto->id, [
                 'nombres' => 'Updated Name',
                 'apellidos' => $contacto->apellidos,
             ]);
@@ -104,8 +104,8 @@ class ContactoControllerTest extends TestCase
         $token = $this->authenticate();
         $contacto = Contacto::factory()->create();
 
-        $response = $this->withHeader('Authorization', 'Bearer ' . $token)
-            ->deleteJson('/api/v1/contacto/' . $contacto->id);
+        $response = $this->withHeader('Authorization', 'Bearer '.$token)
+            ->deleteJson('/api/v1/contacto/'.$contacto->id);
 
         $response->assertStatus(200)
             ->assertJsonPath('success', true);
@@ -118,7 +118,7 @@ class ContactoControllerTest extends TestCase
         Ciudad::create(['cod_municipio' => '05001', 'nombre' => 'Medellín', 'departamento' => 'Antioquia']);
         $entidad = Entidad::factory()->create();
 
-        $response = $this->withHeader('Authorization', 'Bearer ' . $token)
+        $response = $this->withHeader('Authorization', 'Bearer '.$token)
             ->postJson('/api/v1/contacto', [
                 'entidad_id' => $entidad->id,
                 'nombres' => 'Carlos',
@@ -137,7 +137,7 @@ class ContactoControllerTest extends TestCase
     {
         $token = $this->authenticate();
 
-        $response = $this->withHeader('Authorization', 'Bearer ' . $token)
+        $response = $this->withHeader('Authorization', 'Bearer '.$token)
             ->postJson('/api/v1/contacto', []);
 
         $response->assertStatus(422);
@@ -148,7 +148,7 @@ class ContactoControllerTest extends TestCase
     {
         $token = $this->authenticate();
 
-        $response = $this->withHeader('Authorization', 'Bearer ' . $token)
+        $response = $this->withHeader('Authorization', 'Bearer '.$token)
             ->getJson('/api/v1/contacto/9999');
 
         $response->assertStatus(404)

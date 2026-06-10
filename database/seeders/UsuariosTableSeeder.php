@@ -2,11 +2,12 @@
 
 namespace Database\Seeders;
 
-use App\Models\Usuario;
 use App\Models\Entidad;
+use App\Models\Rol;
+use App\Models\Usuario;
 use Illuminate\Database\Seeder;
-use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Hash;
 
 class UsuariosTableSeeder extends Seeder
 {
@@ -47,8 +48,8 @@ class UsuariosTableSeeder extends Seeder
         foreach ($users as $userData) {
             $rol = $userData['rol'];
             unset($userData['rol']);
-            
-            $rolModel = \App\Models\Rol::where('nombre', $rol)->first();
+
+            $rolModel = Rol::where('nombre', $rol)->first();
             $userData['rol_id'] = $rolModel ? $rolModel->id : 1; // Fallback to 1
 
             $user = Usuario::updateOrCreate(
@@ -58,11 +59,16 @@ class UsuariosTableSeeder extends Seeder
             $userIds[] = $user->id;
         }
 
-        // Asignar equitativamente a cada usuario las entidades
-        $entidades = Entidad::pluck('id')->toArray();
-        
-        DB::table('entidad_usuario')->truncate(); // Limpiar asignaciones previas
-        
+        // Asignar equitativamente a cada usuario las entidades (excluyendo marcas propias)
+        $propiaIds = Entidad::where('estado', 'Propia')->pluck('id')->toArray();
+        $entidades = Entidad::where('estado', '!=', 'Propia')->pluck('id')->toArray();
+
+        // Limpiar asignaciones previas de estos usuarios, preservando marcas propias
+        DB::table('entidad_usuario')
+            ->whereIn('usuario_id', $userIds)
+            ->whereNotIn('entidad_id', $propiaIds)
+            ->delete();
+
         $insertData = [];
         foreach ($entidades as $index => $entidadId) {
             $assignedUserId = $userIds[$index % count($userIds)];

@@ -37,7 +37,7 @@ return new class extends Migration
             $table->foreignId('parent_id')->nullable()->after('pipeline_etapa_id')->constrained('oportunidad')->onDelete('set null');
             $table->integer('version')->default(1)->after('parent_id');
             $table->boolean('is_latest')->default(true)->after('version');
-            
+
             // Alter estado default to 'Activa' (already varchar(50) from previous migration)
             $table->string('estado', 50)->default('Activa')->change();
         });
@@ -52,9 +52,9 @@ return new class extends Migration
             $table->dropForeign(['pipeline_id']);
             $table->dropForeign(['pipeline_etapa_id']);
             $table->dropForeign(['parent_id']);
-            
+
             $table->dropColumn(['pipeline_id', 'pipeline_etapa_id', 'parent_id', 'version', 'is_latest']);
-            
+
             $table->string('estado', 50)->default('Borrador')->change();
         });
 

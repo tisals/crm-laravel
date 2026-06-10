@@ -2,11 +2,11 @@
 
 namespace App\Application\UseCases\Dashboard;
 
-use App\Models\Oportunidad;
 use App\Models\Contacto;
-use App\Models\Seguimiento;
 use App\Models\DetalleOportunidad;
 use App\Models\Entidad;
+use App\Models\Oportunidad;
+use App\Models\Seguimiento;
 use App\Models\Usuario;
 use Illuminate\Support\Facades\DB;
 
@@ -15,11 +15,10 @@ class GetDashboardUseCase
     /**
      * Execute the dashboard metrics query.
      *
-     * @param  int|null     $comercialId  Filter ventas by commercial's assigned entities (super_admin only).
+     * @param  int|null  $comercialId  Filter ventas by commercial's assigned entities (super_admin only).
      * @param  string|null  $fechaInicio  Optional start date for ALL sections.
-     * @param  string|null  $fechaFin     Optional end date for ALL sections.
-     * @param  Usuario|null $authUser     Authenticated user — role determines auto-filtering.
-     * @return array
+     * @param  string|null  $fechaFin  Optional end date for ALL sections.
+     * @param  Usuario|null  $authUser  Authenticated user — role determines auto-filtering.
      */
     public function execute(
         ?int $comercialId = null,
@@ -36,10 +35,10 @@ class GetDashboardUseCase
         $effectiveComercialId = $this->resolveComercialId($comercialId, $authUser);
 
         return [
-            'prospectos'           => $this->getProspectosData($effectiveComercialId, $fechaInicio, $fechaFin),
-            'ventas'               => $this->getVentasData($effectiveComercialId, $fechaInicio, $fechaFin),
-            'chart'                => $this->getChartData($effectiveComercialId, $fechaInicio, $fechaFin),
-            'comerciales_ventas'   => $this->getComercialesVentas($effectiveComercialId, $fechaInicio, $fechaFin),
+            'prospectos' => $this->getProspectosData($effectiveComercialId, $fechaInicio, $fechaFin),
+            'ventas' => $this->getVentasData($effectiveComercialId, $fechaInicio, $fechaFin),
+            'chart' => $this->getChartData($effectiveComercialId, $fechaInicio, $fechaFin),
+            'comerciales_ventas' => $this->getComercialesVentas($effectiveComercialId, $fechaInicio, $fechaFin),
             'actividades_recientes' => $this->getActividadesRecientes(),
         ];
     }
@@ -74,22 +73,22 @@ class GetDashboardUseCase
         // --- Nuevos leads del mes ---
         $leadsQuery = Contacto::query();
         if ($fechaInicio && $fechaFin) {
-            $leadsQuery->whereBetween('created_at', [$fechaInicio . ' 00:00:00', $fechaFin . ' 23:59:59']);
+            $leadsQuery->whereBetween('created_at', [$fechaInicio.' 00:00:00', $fechaFin.' 23:59:59']);
         } elseif ($fechaInicio) {
             $leadsQuery->whereDate('created_at', '>=', $fechaInicio);
         } elseif ($fechaFin) {
-            $leadsQuery->whereDate('created_at', '<=', $fechaFin . ' 23:59:59');
+            $leadsQuery->whereDate('created_at', '<=', $fechaFin.' 23:59:59');
         } else {
             $leadsQuery->whereMonth('created_at', now()->month)
-                       ->whereYear('created_at', now()->year);
+                ->whereYear('created_at', now()->year);
         }
 
         // Filter leads (contactos) by commercial if specified
         if ($comercialId) {
             $leadsQuery->whereIn('entidad_id', function ($q) use ($comercialId) {
                 $q->select('entidad_id')
-                  ->from('entidad_usuario')
-                  ->where('usuario_id', $comercialId);
+                    ->from('entidad_usuario')
+                    ->where('usuario_id', $comercialId);
             });
         }
 
@@ -99,8 +98,8 @@ class GetDashboardUseCase
         $oppQuery = Oportunidad::query();
         $this->applyDateFilter($oppQuery, $fechaInicio, $fechaFin, 'oportunidad.fecha');
         $this->applyCommercialFilter($oppQuery, $comercialId);
-        $totalOpp  = (int) (clone $oppQuery)->count();
-        $ganadas   = (int) (clone $oppQuery)->whereHas('pipelineEtapa', fn($q) => $q->where('nombre', 'Ganada'))->count();
+        $totalOpp = (int) (clone $oppQuery)->count();
+        $ganadas = (int) (clone $oppQuery)->whereHas('pipelineEtapa', fn ($q) => $q->where('nombre', 'Ganada'))->count();
         $tasaConversion = $totalOpp > 0 ? round(($ganadas / $totalOpp) * 100, 1) : 0.0;
 
         // --- Oportunidades creadas por mes (cantidad) ---
@@ -136,8 +135,8 @@ class GetDashboardUseCase
             if ($comercialId) {
                 $q->whereIn('id', function ($sq) use ($comercialId) {
                     $sq->select('entidad_id')
-                       ->from('entidad_usuario')
-                       ->where('usuario_id', $comercialId);
+                        ->from('entidad_usuario')
+                        ->where('usuario_id', $comercialId);
                 });
             }
             $entidadesPorMes[$this->mesNombre($m)] = (int) $q->count();
@@ -147,7 +146,7 @@ class GetDashboardUseCase
         $entidadesConvertidasMes = [];
         for ($m = 1; $m <= 12; $m++) {
             $q = Oportunidad::query()
-                ->whereHas('pipelineEtapa', fn($q) => $q->where('nombre', 'Ganada'))
+                ->whereHas('pipelineEtapa', fn ($q) => $q->where('nombre', 'Ganada'))
                 ->whereMonth('fecha', $m)
                 ->whereYear('fecha', $year);
             $this->applyDateFilter($q, $fechaInicio, $fechaFin, 'oportunidad.fecha');
@@ -170,13 +169,13 @@ class GetDashboardUseCase
             ->toArray();
 
         return [
-            'nuevos_leads_mes'          => $nuevosLeadsMes,
-            'tasa_conversion'           => $tasaConversion,
-            'entidades_por_mes'         => $entidadesPorMes,
-            'entidades_convertidas_mes'  => $entidadesConvertidasMes,
-            'oportunidades_por_mes'       => $oportunidadesPorMes,
+            'nuevos_leads_mes' => $nuevosLeadsMes,
+            'tasa_conversion' => $tasaConversion,
+            'entidades_por_mes' => $entidadesPorMes,
+            'entidades_convertidas_mes' => $entidadesConvertidasMes,
+            'oportunidades_por_mes' => $oportunidadesPorMes,
             'oportunidades_monto_por_mes' => $oportunidadesMontoPorMes,
-            'oportunidades_por_estado'    => $oportunidadesPorEstado,
+            'oportunidades_por_estado' => $oportunidadesPorEstado,
         ];
     }
 
@@ -246,10 +245,10 @@ class GetDashboardUseCase
             ->toArray();
 
         return [
-            'ventas_mes'     => $ventasMes,
+            'ventas_mes' => $ventasMes,
             'ventas_por_mes' => $ventasPorMes,
-            'ltv'            => $ltv,
-            'funnel'         => $funnel,
+            'ltv' => $ltv,
+            'funnel' => $funnel,
         ];
     }
 
@@ -314,16 +313,16 @@ class GetDashboardUseCase
 
     private function getChartData(?int $comercialId, ?string $fechaInicio, ?string $fechaFin): array
     {
-        $year  = $this->resolveYear($fechaInicio);
+        $year = $this->resolveYear($fechaInicio);
         $meses = $this->getMonthLabels();
 
         $entidadesConvertidas = [];
-        $ventas               = [];
+        $ventas = [];
 
         for ($m = 1; $m <= 12; $m++) {
             // Bars: distinct entities with won opportunities this month
             $eq = Oportunidad::query()
-                ->whereHas('pipelineEtapa', fn($q) => $q->where('nombre', 'Ganada'))
+                ->whereHas('pipelineEtapa', fn ($q) => $q->where('nombre', 'Ganada'))
                 ->whereMonth('fecha', $m)
                 ->whereYear('fecha', $year);
             $this->applyDateFilter($eq, $fechaInicio, $fechaFin, 'oportunidad.fecha');
@@ -338,9 +337,9 @@ class GetDashboardUseCase
         }
 
         return [
-            'meses'                 => $meses,
+            'meses' => $meses,
             'entidades_convertidas' => $entidadesConvertidas,
-            'ventas'                => $ventas,
+            'ventas' => $ventas,
         ];
     }
 
@@ -356,13 +355,13 @@ class GetDashboardUseCase
             ->get()
             ->map(function (Seguimiento $s) {
                 return [
-                    'id'                 => $s->id,
-                    'tipo'               => $s->tipo,
-                    'notas'              => $s->notas,
-                    'fecha'              => $s->fecha,
-                    'hora'               => $s->hora,
+                    'id' => $s->id,
+                    'tipo' => $s->tipo,
+                    'notas' => $s->notas,
+                    'fecha' => $s->fecha,
+                    'hora' => $s->hora,
                     'oportunidad_codigo' => $s->oportunidad?->codigo,
-                    'autor'              => $s->autor?->nombre,
+                    'autor' => $s->autor?->nombre,
                 ];
             })
             ->toArray();
@@ -392,8 +391,8 @@ class GetDashboardUseCase
 
         $query->whereIn('oportunidad.entidad_id', function ($q) use ($comercialId) {
             $q->select('entidad_id')
-              ->from('entidad_usuario')
-              ->where('usuario_id', $comercialId);
+                ->from('entidad_usuario')
+                ->where('usuario_id', $comercialId);
         });
     }
 
@@ -405,11 +404,11 @@ class GetDashboardUseCase
     {
         if ($fechaInicio && $fechaFin) {
             $query->whereBetween($dateField, [$fechaInicio, $fechaFin]);
-        } elseif (!$fechaInicio && !$fechaFin) {
+        } elseif (! $fechaInicio && ! $fechaFin) {
             // Rango por defecto: Enero 1 al día actual del año en curso
             $now = now();
             $query->whereDate($dateField, '>=', $now->copy()->startOfYear()->toDateString())
-                  ->whereDate($dateField, '<=', $now->toDateString());
+                ->whereDate($dateField, '<=', $now->toDateString());
         } elseif ($fechaInicio) {
             $query->whereDate($dateField, '>=', $fechaInicio);
         } elseif ($fechaFin) {

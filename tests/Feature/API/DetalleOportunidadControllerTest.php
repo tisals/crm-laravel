@@ -5,11 +5,11 @@ namespace Tests\Feature\API;
 use App\Models\Ciudad;
 use App\Models\Contacto;
 use App\Models\Entidad;
+use App\Models\Oportunidad;
 use App\Models\Permiso;
 use App\Models\Producto;
 use App\Models\Rol;
 use App\Models\Usuario;
-use App\Models\Oportunidad;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
@@ -55,7 +55,7 @@ class DetalleOportunidadControllerTest extends TestCase
         $token = $this->authenticate();
         $oportunidad = $this->createOportunidad();
 
-        $response = $this->withHeader('Authorization', 'Bearer ' . $token)
+        $response = $this->withHeader('Authorization', 'Bearer '.$token)
             ->getJson("/api/v1/oportunidades/{$oportunidad->id}/detalles");
 
         $response->assertStatus(200)
@@ -70,7 +70,7 @@ class DetalleOportunidadControllerTest extends TestCase
         $oportunidad = $this->createOportunidad();
         $producto = Producto::factory()->create(['iva' => 19]);
 
-        $response = $this->withHeader('Authorization', 'Bearer ' . $token)
+        $response = $this->withHeader('Authorization', 'Bearer '.$token)
             ->postJson("/api/v1/oportunidades/{$oportunidad->id}/detalles", [
                 'producto_id' => $producto->id,
                 'concepto' => 'Consultoría ERP',
@@ -97,7 +97,7 @@ class DetalleOportunidadControllerTest extends TestCase
         $oportunidad = $this->createOportunidad();
         $producto = Producto::factory()->create(['iva' => 19]);
 
-        $createResponse = $this->withHeader('Authorization', 'Bearer ' . $token)
+        $createResponse = $this->withHeader('Authorization', 'Bearer '.$token)
             ->postJson("/api/v1/oportunidades/{$oportunidad->id}/detalles", [
                 'producto_id' => $producto->id,
                 'concepto' => 'Consultoría ERP',
@@ -108,7 +108,7 @@ class DetalleOportunidadControllerTest extends TestCase
 
         $id = $createResponse->json('data.id');
 
-        $response = $this->withHeader('Authorization', 'Bearer ' . $token)
+        $response = $this->withHeader('Authorization', 'Bearer '.$token)
             ->getJson("/api/v1/detalles-oportunidad/{$id}");
 
         $response->assertStatus(200)
@@ -123,7 +123,7 @@ class DetalleOportunidadControllerTest extends TestCase
         $oportunidad = $this->createOportunidad();
         $producto = Producto::factory()->create(['iva' => 19]);
 
-        $createResponse = $this->withHeader('Authorization', 'Bearer ' . $token)
+        $createResponse = $this->withHeader('Authorization', 'Bearer '.$token)
             ->postJson("/api/v1/oportunidades/{$oportunidad->id}/detalles", [
                 'producto_id' => $producto->id,
                 'concepto' => 'Consultoría ERP',
@@ -134,7 +134,7 @@ class DetalleOportunidadControllerTest extends TestCase
 
         $id = $createResponse->json('data.id');
 
-        $response = $this->withHeader('Authorization', 'Bearer ' . $token)
+        $response = $this->withHeader('Authorization', 'Bearer '.$token)
             ->putJson("/api/v1/detalles-oportunidad/{$id}", [
                 'cantidad' => 3,
                 'vr_unitario' => 50000,
@@ -152,7 +152,7 @@ class DetalleOportunidadControllerTest extends TestCase
         $oportunidad = $this->createOportunidad();
         $producto = Producto::factory()->create(['iva' => 19]);
 
-        $createResponse = $this->withHeader('Authorization', 'Bearer ' . $token)
+        $createResponse = $this->withHeader('Authorization', 'Bearer '.$token)
             ->postJson("/api/v1/oportunidades/{$oportunidad->id}/detalles", [
                 'producto_id' => $producto->id,
                 'concepto' => 'Test',
@@ -163,7 +163,7 @@ class DetalleOportunidadControllerTest extends TestCase
 
         $id = $createResponse->json('data.id');
 
-        $response = $this->withHeader('Authorization', 'Bearer ' . $token)
+        $response = $this->withHeader('Authorization', 'Bearer '.$token)
             ->deleteJson("/api/v1/detalles-oportunidad/{$id}");
 
         $response->assertStatus(200)
@@ -176,7 +176,7 @@ class DetalleOportunidadControllerTest extends TestCase
         $token = $this->authenticate();
         $oportunidad = $this->createOportunidad();
 
-        $response = $this->withHeader('Authorization', 'Bearer ' . $token)
+        $response = $this->withHeader('Authorization', 'Bearer '.$token)
             ->postJson("/api/v1/oportunidades/{$oportunidad->id}/detalles", []);
 
         $response->assertStatus(422);
@@ -187,7 +187,7 @@ class DetalleOportunidadControllerTest extends TestCase
     {
         $token = $this->authenticate();
 
-        $response = $this->withHeader('Authorization', 'Bearer ' . $token)
+        $response = $this->withHeader('Authorization', 'Bearer '.$token)
             ->getJson('/api/v1/detalles-oportunidad/9999');
 
         $response->assertStatus(404)
@@ -201,7 +201,7 @@ class DetalleOportunidadControllerTest extends TestCase
         $oportunidad = $this->createOportunidad();
         $producto = Producto::factory()->create(['iva' => 0]);
 
-        $response = $this->withHeader('Authorization', 'Bearer ' . $token)
+        $response = $this->withHeader('Authorization', 'Bearer '.$token)
             ->postJson("/api/v1/oportunidades/{$oportunidad->id}/detalles", [
                 'producto_id' => $producto->id,
                 'concepto' => 'Producto exento',

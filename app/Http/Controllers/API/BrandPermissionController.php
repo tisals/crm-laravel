@@ -10,10 +10,10 @@ class BrandPermissionController extends Controller
 {
     /**
      * GET /api/v1/users/{id}/brands
-     * 
+     *
      * Obtiene las marcas (entidades tipo 'Propia') que un usuario
      * tiene permiso de gestionar para notificaciones de marketing.
-     * 
+     *
      * Consumido por SAIlus FastAPI → services/crm_client.py
      */
     public function index(string $id): JsonResponse
@@ -22,7 +22,7 @@ class BrandPermissionController extends Controller
 
         $usuario = Usuario::with('entidades')->find($userId);
 
-        if (!$usuario) {
+        if (! $usuario) {
             return response()->json([
                 'success' => false,
                 'error' => 'USER_NOT_FOUND',

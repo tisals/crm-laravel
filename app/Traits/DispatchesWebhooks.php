@@ -16,11 +16,11 @@ trait DispatchesWebhooks
         try {
             // Si es un Domain Entity (App\Domain\Entities\Entidad), convertir a Eloquent Model
             if ($entidad instanceof \App\Domain\Entities\Entidad) {
-                $entidad = \App\Models\Entidad::find($entidad->id);
+                $entidad = Entidad::find($entidad->id);
             }
 
             // Si no se encontró o no tiene webhooks, salir
-            if (!$entidad instanceof \App\Models\Entidad || !$entidad->hasWebhooksEnabled()) {
+            if (! $entidad instanceof Entidad || ! $entidad->hasWebhooksEnabled()) {
                 return;
             }
 
@@ -51,7 +51,7 @@ trait DispatchesWebhooks
         }
 
         // Buscar por foreign key
-        if (!empty($model->entidad_id)) {
+        if (! empty($model->entidad_id)) {
             return Entidad::find($model->entidad_id);
         }
 

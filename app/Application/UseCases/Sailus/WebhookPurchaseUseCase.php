@@ -2,14 +2,13 @@
 
 namespace App\Application\UseCases\Sailus;
 
-use App\Models\Entidad;
-use App\Models\Contacto;
-use App\Models\Servicio;
 use App\Mail\LicenseActivated;
+use App\Models\Contacto;
+use App\Models\Entidad;
+use App\Models\Servicio;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Support\Str;
-use Carbon\Carbon;
 
 class WebhookPurchaseUseCase
 {
@@ -40,9 +39,9 @@ class WebhookPurchaseUseCase
                 $entidad = Entidad::create([
                     'tipo_persona' => 'Juridica',
                     'tipo_id' => 'NIT',
-                    'identificacion' => 'PEND-' . strtoupper(substr(md5(uniqid()), 0, 8)),
-                    'nombre' => $customerName . ' Org',
-                    'nombre_comercial' => $customerName . ' Org',
+                    'identificacion' => 'PEND-'.strtoupper(substr(md5(uniqid()), 0, 8)),
+                    'nombre' => $customerName.' Org',
+                    'nombre_comercial' => $customerName.' Org',
                     'estado' => 'Prospecto',
                 ]);
 
@@ -63,7 +62,7 @@ class WebhookPurchaseUseCase
 
             // 2. Map plan to tier and name
             $tier = ($planId === 'pro' || $planId === 'enterprise') ? 'premium' : 'base';
-            $serviceName = ($planId === 'pro') ? 'Plan Pro' : (($planId === 'starter') ? 'Starter Plan' : 'Plan ' . ucfirst($planId));
+            $serviceName = ($planId === 'pro') ? 'Plan Pro' : (($planId === 'starter') ? 'Starter Plan' : 'Plan '.ucfirst($planId));
 
             // 3. Calculate expires at (fecha_fin)
             $expiresAt = now();
@@ -74,7 +73,7 @@ class WebhookPurchaseUseCase
             }
 
             // 4. Generate activation token
-            $activationToken = 'SAILUS-' . (string) Str::uuid();
+            $activationToken = 'SAILUS-'.(string) Str::uuid();
 
             // 5. Create Servicio
             $servicio = Servicio::create([

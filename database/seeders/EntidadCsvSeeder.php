@@ -19,7 +19,7 @@ class EntidadCsvSeeder extends Seeder
      */
     protected function mapEstado(?string $value): string
     {
-        if (!$value) {
+        if (! $value) {
             return 'Prospecto';
         }
 
@@ -39,6 +39,7 @@ class EntidadCsvSeeder extends Seeder
     protected function mapEstadoTexto(string $value): string
     {
         $lower = strtolower(trim($value));
+
         return match ($lower) {
             'activo', 'cliente' => 'Activo',
             'inactivo' => 'Inactivo',
@@ -86,12 +87,13 @@ class EntidadCsvSeeder extends Seeder
         foreach ($cities as $city) {
             $map[strtolower(trim($city->nombre))] = $city->cod_municipio;
         }
+
         return $map;
     }
 
     protected function findCiudadCod(?string $cityName, array $cityMap): ?string
     {
-        if (!$cityName) {
+        if (! $cityName) {
             return null;
         }
 
@@ -156,7 +158,7 @@ class EntidadCsvSeeder extends Seeder
             'sociedad', 'anonima', 'cooperativa', 'asociacion',
         ];
         $words = explode(' ', $name);
-        $words = array_filter($words, fn($w) => !in_array(trim($w), $removeWords));
+        $words = array_filter($words, fn ($w) => ! in_array(trim($w), $removeWords));
         $name = implode(' ', $words);
 
         // Remove special chars and collapse spaces
@@ -166,7 +168,7 @@ class EntidadCsvSeeder extends Seeder
         // Remove Spanish stop words
         $stopWords = ['y', 'de', 'del', 'la', 'los', 'las', 'el', 'en', 'para', 'con', 'sin', 'por', 'e', 'o', 'a', 'su', 'un', 'una'];
         $words = explode(' ', trim($name));
-        $words = array_filter($words, fn($w) => !in_array(trim($w), $stopWords));
+        $words = array_filter($words, fn ($w) => ! in_array(trim($w), $stopWords));
         $name = implode(' ', $words);
 
         return trim(preg_replace('/\s+/', ' ', $name));
@@ -176,8 +178,9 @@ class EntidadCsvSeeder extends Seeder
     {
         $csvFile = $this->csvPath('Entidades.csv');
 
-        if (!file_exists($csvFile)) {
+        if (! file_exists($csvFile)) {
             $this->command->error("CSV file not found: {$csvFile}");
+
             return;
         }
 
@@ -194,6 +197,7 @@ class EntidadCsvSeeder extends Seeder
 
             if (empty($identificacion)) {
                 $skipped++;
+
                 continue;
             }
 
@@ -214,7 +218,7 @@ class EntidadCsvSeeder extends Seeder
                     $isClient = true;
                 }
             }
-            if (!$isClient) {
+            if (! $isClient) {
                 $normalizedName = $this->normalizeEntityName($row['nombre'] ?? '');
                 if (in_array($normalizedName, $clientesFacturacion['names'] ?? [])) {
                     $isClient = true;
@@ -227,7 +231,6 @@ class EntidadCsvSeeder extends Seeder
             $clienteDesde = $isClient ? $fechaCreacion : null;
 
             $rows[] = [
-                'id' => (int) $row['id'],
                 'identificacion' => $identificacion,
                 'tipo_persona' => $this->mapTipoPersona($row['tipo_persona'] ?? null),
                 'tipo_id' => $this->mapTipoId($row['tipo_id'] ?? null),
@@ -245,17 +248,54 @@ class EntidadCsvSeeder extends Seeder
         }
 
         if (empty($rows)) {
-            $this->command->warn("No valid rows found in CSV.");
+            $this->command->warn('No valid rows found in CSV.');
+
             return;
         }
 
         DB::transaction(function () use ($rows) {
             $identificaciones = array_column($rows, 'identificacion');
-            $ids = array_column($rows, 'id');
-            DB::table('entidad')->whereIn('identificacion', $identificaciones)->orWhereIn('id', $ids)->delete();
+
+            // Delete existing entities matching CSV data (by identification), but PRESERVE "Propia" brand entities
+            DB::table('entidad')
+                ->where('estado', '!=', 'Propia')
+                ->whereIn('identificacion', $identificaciones)
+                ->delete();
+
+            // Skip CSV rows that would conflict with existing Propia entities (by NIT)
+            // and remap explicit IDs that collide with Propia entity IDs
+            $propiaNits = DB::table('entidad')
+                ->where('estado', 'Propia')
+                ->pluck('identificacion')
+                ->all();
+
+            $propiaIds = DB::table('entidad')
+                ->where('estado', 'Propia')
+                ->pluck('id')
+                ->all();
+
+            // Find max ID to generate new IDs for conflicting rows
+            $maxId = DB::table('entidad')->max('id') ?? 0;
+            $nextId = $maxId + 1;
+
+            $rows = array_map(function ($r) use ($propiaNits, $propiaIds, &$nextId) {
+                // Skip if no id or if NIT matches an existing Propia entity
+                if (empty($r['id']) || in_array($r['identificacion'], $propiaNits)) {
+                    return null;
+                }
+                // If id conflicts with Propia entity, assign a new auto-increment ID
+                if (in_array($r['id'], $propiaIds)) {
+                    $r['id'] = $nextId++;
+                }
+                return $r;
+            }, $rows);
+
+            // Remove nulls (skipped Propia entities)
+            $rows = array_values(array_filter($rows, fn ($r) => $r !== null));
+
             DB::table('entidad')->insert($rows);
         });
 
-        $this->command->info("Entidades seeded: " . count($rows) . " rows ({$skipped} skipped, {$cityLookups} city lookups).");
+        $this->command->info('Entidades seeded: '.count($rows)." rows ({$skipped} skipped, {$cityLookups} city lookups).");
     }
 }

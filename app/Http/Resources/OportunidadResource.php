@@ -9,7 +9,7 @@ class OportunidadResource extends JsonResource
 {
     public function toArray(Request $request): array
     {
-        if ($this->pipeline_etapa_id && (!$this->relationLoaded('pipelineEtapa') || $this->pipelineEtapa?->id !== $this->pipeline_etapa_id)) {
+        if ($this->pipeline_etapa_id && (! $this->relationLoaded('pipelineEtapa') || $this->pipelineEtapa?->id !== $this->pipeline_etapa_id)) {
             $this->load('pipelineEtapa');
         }
 
@@ -57,7 +57,7 @@ class OportunidadResource extends JsonResource
                 'iva' => $d->iva,
                 'vr_total' => $d->vr_total,
                 'producto' => $d->relationLoaded('producto') && $d->producto
-                    ? ['id' => $d->producto->id, 'nombre' => $d->producto->nombre]
+                    ? ['id' => $d->producto->id, 'nombre' => $d->producto->nombre, 'referencia' => $d->producto->referencia]
                     : null,
             ]);
         }

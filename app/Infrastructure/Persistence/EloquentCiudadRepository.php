@@ -28,7 +28,7 @@ class EloquentCiudadRepository extends BaseRepository implements CiudadRepositor
             $query->where('nombre', 'like', "%{$search}%");
         }
 
-        if (!empty($filters['departamento'])) {
+        if (! empty($filters['departamento'])) {
             $query->where('departamento', $filters['departamento']);
         }
 
@@ -53,7 +53,7 @@ class EloquentCiudadRepository extends BaseRepository implements CiudadRepositor
     {
         $model = EloquentCiudad::find($id);
 
-        if (!$model) {
+        if (! $model) {
             return null;
         }
 
@@ -66,7 +66,7 @@ class EloquentCiudadRepository extends BaseRepository implements CiudadRepositor
     {
         $model = EloquentCiudad::find($id);
 
-        if (!$model) {
+        if (! $model) {
             return false;
         }
 

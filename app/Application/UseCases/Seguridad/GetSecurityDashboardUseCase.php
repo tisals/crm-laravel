@@ -2,10 +2,10 @@
 
 namespace App\Application\UseCases\Seguridad;
 
-use App\Models\Usuario;
-use App\Models\Producto;
-use App\Models\Entidad;
 use App\Models\ActividadLog;
+use App\Models\Entidad;
+use App\Models\Producto;
+use App\Models\Usuario;
 use Illuminate\Support\Facades\DB;
 
 class GetSecurityDashboardUseCase

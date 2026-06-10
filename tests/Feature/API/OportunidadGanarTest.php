@@ -2,12 +2,12 @@
 
 namespace Tests\Feature\API;
 
+use App\Models\Ciudad;
+use App\Models\Contacto;
+use App\Models\Entidad;
 use App\Models\Permiso;
 use App\Models\Rol;
 use App\Models\Usuario;
-use App\Models\Entidad;
-use App\Models\Contacto;
-use App\Models\Ciudad;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
@@ -48,7 +48,7 @@ class OportunidadGanarTest extends TestCase
         $refs = $this->createReferences();
 
         // Create an oportunidad
-        $createResponse = $this->withHeader('Authorization', 'Bearer ' . $token)
+        $createResponse = $this->withHeader('Authorization', 'Bearer '.$token)
             ->postJson('/api/v1/oportunidades', [
                 'entidad_id' => $refs['entidad']->id,
                 'contacto_id' => $refs['contacto']->id,
@@ -59,8 +59,8 @@ class OportunidadGanarTest extends TestCase
         $id = $createResponse->json('data.id');
 
         // Mark as Ganada
-        $updateResponse = $this->withHeader('Authorization', 'Bearer ' . $token)
-            ->putJson('/api/v1/oportunidades/' . $id, [
+        $updateResponse = $this->withHeader('Authorization', 'Bearer '.$token)
+            ->putJson('/api/v1/oportunidades/'.$id, [
                 'estado' => 'Ganada',
             ]);
 

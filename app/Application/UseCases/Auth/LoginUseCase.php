@@ -13,7 +13,7 @@ class LoginUseCase
     {
         $usuario = Usuario::where('email', $request->email)->first();
 
-        if (!$usuario) {
+        if (! $usuario) {
             throw new Exception('Credenciales inválidas.');
         }
 
@@ -21,7 +21,7 @@ class LoginUseCase
             throw new Exception('Usuario inactivo.');
         }
 
-        if (!password_verify($request->password, $usuario->password_hash)) {
+        if (! password_verify($request->password, $usuario->password_hash)) {
             throw new Exception('Credenciales inválidas.');
         }
 

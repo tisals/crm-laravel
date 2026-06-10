@@ -2,13 +2,13 @@
 
 namespace App\Http\Controllers\API;
 
+use App\Application\UseCases\Permiso\DestroyPermisoUseCase;
 use App\Application\UseCases\Permiso\IndexPermisoUseCase;
 use App\Application\UseCases\Permiso\ShowPermisoUseCase;
 use App\Application\UseCases\Permiso\StorePermisoUseCase;
 use App\Application\UseCases\Permiso\UpdatePermisoUseCase;
-use App\Application\UseCases\Permiso\DestroyPermisoUseCase;
-use App\Http\Controllers\Controller;
 use App\Http\Controllers\API\Concerns\ApiResponse;
+use App\Http\Controllers\Controller;
 use App\Http\Requests\PermisoRequest;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -47,7 +47,7 @@ class PermisoController extends Controller
     {
         $result = $this->showUseCase->execute($id);
 
-        if (!$result) {
+        if (! $result) {
             return $this->errorResponse('Permiso no encontrado.', 404);
         }
 
@@ -58,7 +58,7 @@ class PermisoController extends Controller
     {
         $result = $this->updateUseCase->execute($id, $request->validated());
 
-        if (!$result) {
+        if (! $result) {
             return $this->errorResponse('Permiso no encontrado.', 404);
         }
 
@@ -69,7 +69,7 @@ class PermisoController extends Controller
     {
         $result = $this->destroyUseCase->execute($id);
 
-        if (!$result) {
+        if (! $result) {
             return $this->errorResponse('Permiso no encontrado.', 404);
         }
 

@@ -2,8 +2,9 @@
 
 namespace App\Application\UseCases\DetalleServicio;
 
-use App\Domain\Repositories\DetalleServicioRepositoryInterface;
 use App\Application\Services\CalculoDetalleService;
+use App\Domain\Repositories\DetalleServicioRepositoryInterface;
+use App\Models\Producto;
 
 class StoreDetalleServicioUseCase
 {
@@ -19,7 +20,7 @@ class StoreDetalleServicioUseCase
 
         $ivaPorcentaje = 0;
         if (isset($data['producto_id'])) {
-            $producto = \App\Models\Producto::find($data['producto_id']);
+            $producto = Producto::find($data['producto_id']);
             if ($producto) {
                 $ivaPorcentaje = (float) $producto->iva;
             }

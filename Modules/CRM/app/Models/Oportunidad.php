@@ -2,15 +2,19 @@
 
 namespace Modules\CRM\Models;
 
+use App\Models\Entidad;
+use App\Models\Seguimiento;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Modules\Shared\Models\Usuario;
 
 class Oportunidad extends Model
 {
     use HasFactory, SoftDeletes;
 
     protected $table = 'oportunidad';
+
     protected $fillable = [
         'codigo',
         'entidad_id',
@@ -39,14 +43,23 @@ class Oportunidad extends Model
         parent::boot();
 
         static::saving(function ($oportunidad) {
+            // Skip resolution if this is an update that doesn't touch pipeline/estado fields
+            if ($oportunidad->exists
+                && ! $oportunidad->isDirty('pipeline_id')
+                && ! $oportunidad->isDirty('pipeline_etapa_id')
+                && ! $oportunidad->isDirty('estado')
+            ) {
+                return;
+            }
+
             // 1. Resolve pipeline if empty
-            if (!$oportunidad->pipeline_id) {
-                $pipeline = Pipeline::where('codigo', 'llegada')->first();
-                if (!$pipeline) {
+            if (! $oportunidad->pipeline_id) {
+                $pipeline = Pipeline::where('codigo', 'COTIZACION')->first();
+                if (! $pipeline) {
                     // Graceful fallback: create on the fly (important for tests)
                     $pipeline = Pipeline::create([
-                        'nombre' => 'Llegada',
-                        'codigo' => 'llegada',
+                        'nombre' => 'Cotización',
+                        'codigo' => 'COTIZACION',
                         'habilitado' => true,
                     ]);
                 }
@@ -55,16 +68,16 @@ class Oportunidad extends Model
 
             // 2. Validate pipeline
             $pipeline = Pipeline::find($oportunidad->pipeline_id);
-            if (!$pipeline) {
-                throw new \InvalidArgumentException("Pipeline no encontrado.");
+            if (! $pipeline) {
+                throw new \InvalidArgumentException('Pipeline no encontrado.');
             }
 
-            // 3. Resolve stage from stage name (if passed in 'estado' and it's a stage name)
-            if ($oportunidad->estado && !in_array($oportunidad->estado, ['Activa', 'Inactiva'])) {
+            // 3. Resolve stage from stage name (only when 'estado' is being actively changed)
+            if ($oportunidad->isDirty('estado') && $oportunidad->estado && ! in_array($oportunidad->estado, ['Activa', 'Inactiva'])) {
                 $etapa = PipelineEtapa::where('pipeline_id', $oportunidad->pipeline_id)
                     ->where('nombre', $oportunidad->estado)
                     ->first();
-                if (!$etapa) {
+                if (! $etapa) {
                     // Graceful fallback: create stage on the fly (important for tests)
                     $etapa = PipelineEtapa::create([
                         'pipeline_id' => $oportunidad->pipeline_id,
@@ -77,11 +90,11 @@ class Oportunidad extends Model
             }
 
             // 4. Default stage if none resolved
-            if (!$oportunidad->pipeline_etapa_id) {
+            if (! $oportunidad->pipeline_etapa_id) {
                 $firstEtapa = PipelineEtapa::where('pipeline_id', $oportunidad->pipeline_id)
                     ->orderBy('orden')
                     ->first();
-                if (!$firstEtapa) {
+                if (! $firstEtapa) {
                     // Graceful fallback: create stage on the fly (important for tests)
                     $firstEtapa = PipelineEtapa::create([
                         'pipeline_id' => $oportunidad->pipeline_id,
@@ -95,8 +108,8 @@ class Oportunidad extends Model
             // 5. Ensure stage matches pipeline
             if ($oportunidad->pipeline_etapa_id) {
                 $etapa = PipelineEtapa::find($oportunidad->pipeline_etapa_id);
-                if (!$etapa || $etapa->pipeline_id !== $oportunidad->pipeline_id) {
-                    throw new \InvalidArgumentException("La etapa no pertenece al pipeline seleccionado.");
+                if (! $etapa || $etapa->pipeline_id !== $oportunidad->pipeline_id) {
+                    throw new \InvalidArgumentException('La etapa no pertenece al pipeline seleccionado.');
                 }
             }
         });
@@ -131,7 +144,7 @@ class Oportunidad extends Model
 
     public function entidad()
     {
-        return $this->belongsTo(\App\Models\Entidad::class, 'entidad_id');
+        return $this->belongsTo(Entidad::class, 'entidad_id');
     }
 
     public function contacto()
@@ -146,11 +159,11 @@ class Oportunidad extends Model
 
     public function creador()
     {
-        return $this->belongsTo(\Modules\Shared\Models\Usuario::class, 'created_by');
+        return $this->belongsTo(Usuario::class, 'created_by');
     }
 
     public function seguimientos()
     {
-        return $this->hasMany(\App\Models\Seguimiento::class, 'oportunidad_id');
+        return $this->hasMany(Seguimiento::class, 'oportunidad_id');
     }
 }

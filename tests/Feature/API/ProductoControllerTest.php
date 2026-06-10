@@ -35,7 +35,7 @@ class ProductoControllerTest extends TestCase
     {
         $token = $this->authenticate();
 
-        $response = $this->withHeader('Authorization', 'Bearer ' . $token)
+        $response = $this->withHeader('Authorization', 'Bearer '.$token)
             ->getJson('/api/v1/productos');
 
         $response->assertStatus(200)
@@ -48,7 +48,7 @@ class ProductoControllerTest extends TestCase
     {
         $token = $this->authenticate();
 
-        $response = $this->withHeader('Authorization', 'Bearer ' . $token)
+        $response = $this->withHeader('Authorization', 'Bearer '.$token)
             ->postJson('/api/v1/productos', [
                 'nombre' => 'Servicio de Consultoría',
                 'linea_negocio' => 'Consultoría',
@@ -67,8 +67,8 @@ class ProductoControllerTest extends TestCase
         $token = $this->authenticate();
         $producto = Producto::factory()->create();
 
-        $response = $this->withHeader('Authorization', 'Bearer ' . $token)
-            ->getJson('/api/v1/productos/' . $producto->id);
+        $response = $this->withHeader('Authorization', 'Bearer '.$token)
+            ->getJson('/api/v1/productos/'.$producto->id);
 
         $response->assertStatus(200)
             ->assertJsonPath('success', true)
@@ -81,8 +81,8 @@ class ProductoControllerTest extends TestCase
         $token = $this->authenticate();
         $producto = Producto::factory()->create();
 
-        $response = $this->withHeader('Authorization', 'Bearer ' . $token)
-            ->putJson('/api/v1/productos/' . $producto->id, [
+        $response = $this->withHeader('Authorization', 'Bearer '.$token)
+            ->putJson('/api/v1/productos/'.$producto->id, [
                 'nombre' => 'Updated Product',
             ]);
 
@@ -97,8 +97,8 @@ class ProductoControllerTest extends TestCase
         $token = $this->authenticate();
         $producto = Producto::factory()->create();
 
-        $response = $this->withHeader('Authorization', 'Bearer ' . $token)
-            ->deleteJson('/api/v1/productos/' . $producto->id);
+        $response = $this->withHeader('Authorization', 'Bearer '.$token)
+            ->deleteJson('/api/v1/productos/'.$producto->id);
 
         $response->assertStatus(200)
             ->assertJsonPath('success', true);
@@ -111,7 +111,7 @@ class ProductoControllerTest extends TestCase
         Producto::create(['nombre' => 'Servicio Web', 'linea_negocio' => 'Tecnología', 'iva' => 19, 'estado' => 'Activo']);
         Producto::create(['nombre' => 'Consultoría ERP', 'linea_negocio' => 'Consultoría', 'iva' => 19, 'estado' => 'Activo']);
 
-        $response = $this->withHeader('Authorization', 'Bearer ' . $token)
+        $response = $this->withHeader('Authorization', 'Bearer '.$token)
             ->getJson('/api/v1/productos?search=Web');
 
         $response->assertStatus(200)
@@ -127,7 +127,7 @@ class ProductoControllerTest extends TestCase
     {
         $token = $this->authenticate();
 
-        $response = $this->withHeader('Authorization', 'Bearer ' . $token)
+        $response = $this->withHeader('Authorization', 'Bearer '.$token)
             ->postJson('/api/v1/productos', [
                 'nombre' => 'Test',
                 'iva' => 150,

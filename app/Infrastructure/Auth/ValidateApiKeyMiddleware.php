@@ -18,7 +18,7 @@ class ValidateApiKeyMiddleware
     {
         $apiKey = $request->header('X-API-Key');
 
-        if (!$apiKey) {
+        if (! $apiKey) {
             return response()->json([
                 'valid' => false,
                 'error' => 'API key no proporcionada',
@@ -27,7 +27,7 @@ class ValidateApiKeyMiddleware
 
         $result = $this->validateApiKeyUseCase->execute($apiKey);
 
-        if (!$result) {
+        if (! $result) {
             return response()->json([
                 'valid' => false,
                 'error' => 'API key inválida',
@@ -38,7 +38,7 @@ class ValidateApiKeyMiddleware
         $originDomain = $this->extractDomain($request);
         if ($originDomain) {
             $entidad = Entidad::where('dominio', $apiKey)->first();
-            if ($entidad && !$entidad->isDomainAllowed($originDomain)) {
+            if ($entidad && ! $entidad->isDomainAllowed($originDomain)) {
                 return response()->json([
                     'valid' => false,
                     'error' => 'Dominio no autorizado',
@@ -71,6 +71,7 @@ class ValidateApiKeyMiddleware
     private function parseDomain(string $url): ?string
     {
         $parsed = parse_url($url);
+
         return $parsed['host'] ?? null;
     }
 }

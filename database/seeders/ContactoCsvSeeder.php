@@ -15,9 +15,10 @@ class ContactoCsvSeeder extends Seeder
      */
     protected function mapEtapa(?string $value): ?string
     {
-        if (!$value) {
+        if (! $value) {
             return null;
         }
+
         return match ($value) {
             '24' => 'Prospecto',
             '25' => 'Cliente',
@@ -33,6 +34,7 @@ class ContactoCsvSeeder extends Seeder
     protected function looksLikeNit(string $value): bool
     {
         $clean = preg_replace('/[\.\-\s]/', '', $value);
+
         return ctype_digit($clean) && strlen($clean) >= 5;
     }
 
@@ -92,10 +94,11 @@ class ContactoCsvSeeder extends Seeder
             ' fundacion', ' corporacion', ' cooperativa',
         ];
         foreach ($suffixes as $suffix) {
-            $name = preg_replace('/' . preg_quote($suffix, '/') . '$/', '', $name);
+            $name = preg_replace('/'.preg_quote($suffix, '/').'$/', '', $name);
         }
         $name = preg_replace('/[^\p{L}\p{N}\s]/u', '', $name);
         $name = preg_replace('/\s+/', ' ', $name);
+
         return trim($name);
     }
 
@@ -108,16 +111,17 @@ class ContactoCsvSeeder extends Seeder
         $words = [];
         foreach ($parts as $part) {
             $part = trim($part);
-            if (strlen($part) >= 3 && !in_array($part, $stopWords)) {
+            if (strlen($part) >= 3 && ! in_array($part, $stopWords)) {
                 $words[$part] = $part;
             }
         }
+
         return array_values($words);
     }
 
     protected function findEntidadId(?string $value, array $entidadMap): ?int
     {
-        if (!$value) {
+        if (! $value) {
             return null;
         }
 
@@ -193,8 +197,9 @@ class ContactoCsvSeeder extends Seeder
     {
         $csvFile = $this->csvPath('contactos.csv');
 
-        if (!file_exists($csvFile)) {
+        if (! file_exists($csvFile)) {
             $this->command->error("CSV file not found: {$csvFile}");
+
             return;
         }
 
@@ -211,6 +216,7 @@ class ContactoCsvSeeder extends Seeder
 
             if (empty($email)) {
                 $skippedNoEmail++;
+
                 continue;
             }
 
@@ -219,6 +225,7 @@ class ContactoCsvSeeder extends Seeder
 
             if (empty($email)) {
                 $skippedNoEmail++;
+
                 continue;
             }
 
@@ -226,19 +233,20 @@ class ContactoCsvSeeder extends Seeder
             $entidadRef = $row['entidad'] ?? null;
             $entidadId = $entidadRef ? $this->findEntidadId($entidadRef, $entidadMap) : null;
 
-            if (!$entidadId && !empty($entidadRef) && $entidadRef !== '#N/D' && $entidadRef !== '0') {
+            if (! $entidadId && ! empty($entidadRef) && $entidadRef !== '#N/D' && $entidadRef !== '0') {
                 // Had a reference but couldn't match — still create contact with null entidad_id
                 $withNullEntidad++;
             }
 
-            if (!$entidadId) {
+            if (! $entidadId) {
                 $withNullEntidad++;
             }
 
             // Deduplicate by (entidad_id, email_contacto) — null entidad_id is OK
-            $dedupKey = ($entidadId ?? 'null') . ":{$email}";
+            $dedupKey = ($entidadId ?? 'null').":{$email}";
             if (isset($seen[$dedupKey])) {
                 $skippedDuplicate++;
+
                 continue;
             }
             $seen[$dedupKey] = true;
@@ -270,15 +278,16 @@ class ContactoCsvSeeder extends Seeder
         }
 
         if (empty($rows)) {
-            $this->command->warn("No valid rows found in CSV.");
+            $this->command->warn('No valid rows found in CSV.');
+
             return;
         }
 
         DB::transaction(function () use ($rows) {
             // Delete existing contacts for matched entities OR all contacts with null entidad_id
             $entidadIds = array_unique(array_column($rows, 'entidad_id'));
-            $nonNullIds = array_filter($entidadIds, fn($id) => $id !== null);
-            if (!empty($nonNullIds)) {
+            $nonNullIds = array_filter($entidadIds, fn ($id) => $id !== null);
+            if (! empty($nonNullIds)) {
                 DB::table('contacto')->whereIn('entidad_id', $nonNullIds)->delete();
             }
             // Delete contacts with null entidad_id
@@ -287,6 +296,6 @@ class ContactoCsvSeeder extends Seeder
             DB::table('contacto')->insert($rows);
         });
 
-        $this->command->info("Contactos seeded: " . count($rows) . " rows ({$skippedNoEmail} no email, {$skippedNoEntidad} unmatched ref, {$skippedDuplicate} duplicates, {$withNullEntidad} without entidad).");
+        $this->command->info('Contactos seeded: '.count($rows)." rows ({$skippedNoEmail} no email, {$skippedNoEntidad} unmatched ref, {$skippedDuplicate} duplicates, {$withNullEntidad} without entidad).");
     }
 }

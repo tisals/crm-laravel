@@ -2,13 +2,17 @@
 
 namespace Tests\Feature\API;
 
-use App\Models\Oportunidad;
-use App\Models\Entidad;
 use App\Models\Contacto;
 use App\Models\DetalleOportunidad;
+use App\Models\Entidad;
+use App\Models\Oportunidad;
+use App\Models\Permiso;
 use App\Models\Producto;
-use App\Models\Usuario;
 use App\Models\Rol;
+use App\Models\Usuario;
+use Database\Seeders\CiudadSeeder;
+use Database\Seeders\PermisoSeeder;
+use Database\Seeders\RoleSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
@@ -18,20 +22,22 @@ class CotizacionControllerTest extends TestCase
     use RefreshDatabase;
 
     private Usuario $user;
+
     private string $token;
+
     private Oportunidad $oportunidad;
 
     protected function setUp(): void
     {
         parent::setUp();
         $this->seed([
-            \Database\Seeders\RoleSeeder::class,
-            \Database\Seeders\PermisoSeeder::class,
-            \Database\Seeders\CiudadSeeder::class,
+            RoleSeeder::class,
+            PermisoSeeder::class,
+            CiudadSeeder::class,
         ]);
 
         $superAdmin = Rol::where('nombre', 'SuperAdmin')->first() ?? Rol::create(['nombre' => 'SuperAdmin', 'estado' => 'Activo']);
-        \App\Models\Permiso::firstOrCreate([
+        Permiso::firstOrCreate([
             'rol_id' => $superAdmin->id,
             'vista' => '*',
         ]);

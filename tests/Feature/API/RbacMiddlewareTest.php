@@ -2,7 +2,6 @@
 
 namespace Tests\Feature\API;
 
-use App\Application\Services\RbacService;
 use App\Models\Permiso;
 use App\Models\Rol;
 use App\Models\Usuario;
@@ -30,7 +29,7 @@ class RbacMiddlewareTest extends TestCase
 
         $token = $usuario->createToken('test-token')->plainTextToken;
 
-        $response = $this->withHeader('Authorization', 'Bearer ' . $token)
+        $response = $this->withHeader('Authorization', 'Bearer '.$token)
             ->getJson('/api/v1/roles');
 
         $response->assertStatus(200);
@@ -52,7 +51,7 @@ class RbacMiddlewareTest extends TestCase
 
         $token = $usuario->createToken('test-token')->plainTextToken;
 
-        $response = $this->withHeader('Authorization', 'Bearer ' . $token)
+        $response = $this->withHeader('Authorization', 'Bearer '.$token)
             ->getJson('/api/v1/roles');
 
         // GET without permission returns empty data (200) instead of 403
@@ -77,7 +76,7 @@ class RbacMiddlewareTest extends TestCase
 
         $token = $usuario->createToken('test-token')->plainTextToken;
 
-        $response = $this->withHeader('Authorization', 'Bearer ' . $token)
+        $response = $this->withHeader('Authorization', 'Bearer '.$token)
             ->postJson('/api/v1/roles', ['nombre' => 'New Role']);
 
         // POST without permission still returns 403

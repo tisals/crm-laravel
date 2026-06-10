@@ -7,11 +7,11 @@ use App\Application\UseCases\Maestro\IndexMaestroUseCase;
 use App\Application\UseCases\Maestro\ShowMaestroUseCase;
 use App\Application\UseCases\Maestro\StoreMaestroUseCase;
 use App\Application\UseCases\Maestro\UpdateMaestroUseCase;
-use App\Infrastructure\Services\ActividadLogger;
-use App\Http\Controllers\Controller;
 use App\Http\Controllers\API\Concerns\ApiResponse;
+use App\Http\Controllers\Controller;
 use App\Http\Requests\MaestroRequest;
 use App\Http\Resources\MaestroResource;
+use App\Infrastructure\Services\ActividadLogger;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -61,7 +61,7 @@ class MaestroController extends Controller
     {
         $maestro = $this->showUseCase->execute($id);
 
-        if (!$maestro) {
+        if (! $maestro) {
             return $this->errorResponse('Maestro no encontrado.', 404);
         }
 
@@ -72,7 +72,7 @@ class MaestroController extends Controller
     {
         $maestro = $this->updateUseCase->execute($id, $request->validated());
 
-        if (!$maestro) {
+        if (! $maestro) {
             return $this->errorResponse('Maestro no encontrado.', 404);
         }
 
@@ -94,7 +94,7 @@ class MaestroController extends Controller
     {
         $deleted = $this->deleteUseCase->execute($id);
 
-        if (!$deleted) {
+        if (! $deleted) {
             return $this->errorResponse('Maestro no encontrado.', 404);
         }
 

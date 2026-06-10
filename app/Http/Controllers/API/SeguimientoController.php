@@ -2,15 +2,16 @@
 
 namespace App\Http\Controllers\API;
 
+use App\Application\UseCases\Seguimiento\DestroySeguimientoUseCase;
 use App\Application\UseCases\Seguimiento\IndexSeguimientoUseCase;
 use App\Application\UseCases\Seguimiento\ShowSeguimientoUseCase;
 use App\Application\UseCases\Seguimiento\StoreSeguimientoUseCase;
 use App\Application\UseCases\Seguimiento\UpdateSeguimientoUseCase;
-use App\Application\UseCases\Seguimiento\DestroySeguimientoUseCase;
-use App\Http\Controllers\Controller;
 use App\Http\Controllers\API\Concerns\ApiResponse;
+use App\Http\Controllers\Controller;
 use App\Http\Requests\SeguimientoRequest;
 use App\Models\Seguimiento;
+use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Response;
@@ -51,7 +52,7 @@ class SeguimientoController extends Controller
     {
         $result = $this->showUseCase->execute($id);
 
-        if (!$result) {
+        if (! $result) {
             return $this->errorResponse('Seguimiento no encontrado.', 404);
         }
 
@@ -62,7 +63,7 @@ class SeguimientoController extends Controller
     {
         $result = $this->updateUseCase->execute($id, $request->validated());
 
-        if (!$result) {
+        if (! $result) {
             return $this->errorResponse('Seguimiento no encontrado.', 404);
         }
 
@@ -73,7 +74,7 @@ class SeguimientoController extends Controller
     {
         $result = $this->destroyUseCase->execute($id);
 
-        if (!$result) {
+        if (! $result) {
             return $this->errorResponse('Seguimiento no encontrado.', 404);
         }
 
@@ -89,7 +90,7 @@ class SeguimientoController extends Controller
         $seguimiento = Seguimiento::with(['contacto', 'oportunidad', 'autor'])
             ->find($id);
 
-        if (!$seguimiento) {
+        if (! $seguimiento) {
             return response()->json(['success' => false, 'error' => 'No encontrado.'], 404);
         }
 
@@ -116,7 +117,7 @@ class SeguimientoController extends Controller
     {
         $mes = $request->input('mes', now()->format('Y-m'));
         [$year, $month] = explode('-', $mes);
-        $startOfMonth = \Carbon\Carbon::createFromDate($year, $month, 1)->startOfMonth();
+        $startOfMonth = Carbon::createFromDate($year, $month, 1)->startOfMonth();
         $endOfMonth = $startOfMonth->copy()->endOfMonth()->endOfDay();
 
         $query = Seguimiento::with(['contacto', 'oportunidad', 'autor'])
@@ -183,7 +184,7 @@ class SeguimientoController extends Controller
             : $this->addMinutes($dtStart, 30);
 
         $summary = "[{$seg->tipo}] Seguimiento"
-            . ($seg->oportunidad?->codigo ? " - {$seg->oportunidad->codigo}" : '');
+            .($seg->oportunidad?->codigo ? " - {$seg->oportunidad->codigo}" : '');
 
         $description = $seg->notas ?? '';
 
@@ -194,10 +195,10 @@ class SeguimientoController extends Controller
             $description .= "\nAsignado por: {$seg->autor->nombre}";
         }
 
-        $description = str_replace(["\r\n", "\n", "\r"], "\\n", $description);
+        $description = str_replace(["\r\n", "\n", "\r"], '\\n', $description);
 
         $createdAt = $seg->created_at
-            ? \Carbon\Carbon::parse($seg->created_at)->format('Ymd\THis\Z')
+            ? Carbon::parse($seg->created_at)->format('Ymd\THis\Z')
             : now()->format('Ymd\THis\Z');
 
         $lines = [
@@ -217,18 +218,20 @@ class SeguimientoController extends Controller
 
     private function formatIcsDate(string $date, ?string $time): string
     {
-        $base = \Carbon\Carbon::parse($date)->format('Ymd');
-        if (!$time) {
+        $base = Carbon::parse($date)->format('Ymd');
+        if (! $time) {
             return "{$base}T090000"; // default 9am
         }
         // Strip seconds if present (H:i:s → H:i)
         $time = substr($time, 0, 5);
-        return "{$base}T" . str_replace(':', '', $time) . '00';
+
+        return "{$base}T".str_replace(':', '', $time).'00';
     }
 
     private function addMinutes(string $icsDateTime, int $minutes): string
     {
-        $dt = \Carbon\Carbon::createFromFormat('Ymd\THis', $icsDateTime)->addMinutes($minutes);
+        $dt = Carbon::createFromFormat('Ymd\THis', $icsDateTime)->addMinutes($minutes);
+
         return $dt->format('Ymd\THis');
     }
 }

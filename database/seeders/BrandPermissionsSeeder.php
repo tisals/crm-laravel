@@ -3,8 +3,8 @@
 namespace Database\Seeders;
 
 use App\Models\Entidad;
-use App\Models\Usuario;
 use App\Models\Rol;
+use App\Models\Usuario;
 use Illuminate\Database\Seeder;
 
 class BrandPermissionsSeeder extends Seeder
@@ -102,6 +102,15 @@ class BrandPermissionsSeeder extends Seeder
                 $this->command->info("✅ Usuario ID {$user->id} ({$user->nombre}) vinculado a: {$tecnoinnsoft->dominio}, {$deseguridad->dominio}");
             }
         }
+
+        // Verify brand entities are correctly set as Propia
+        if (isset($this->command)) {
+            $this->command->info('');
+            $this->command->info('📋 Verificación de entidades Propia:');
+            $propias = Entidad::where('estado', 'Propia')->get();
+            foreach ($propias as $p) {
+                $this->command->info("  → ID {$p->id}: {$p->nombre} (NIT: {$p->identificacion}) - {$p->estado}");
+            }
+        }
     }
 }
-

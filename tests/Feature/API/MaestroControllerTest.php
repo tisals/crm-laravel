@@ -35,7 +35,7 @@ class MaestroControllerTest extends TestCase
     {
         $token = $this->authenticate();
 
-        $response = $this->withHeader('Authorization', 'Bearer ' . $token)
+        $response = $this->withHeader('Authorization', 'Bearer '.$token)
             ->getJson('/api/v1/maestros');
 
         $response->assertStatus(200)
@@ -48,7 +48,7 @@ class MaestroControllerTest extends TestCase
     {
         $token = $this->authenticate();
 
-        $response = $this->withHeader('Authorization', 'Bearer ' . $token)
+        $response = $this->withHeader('Authorization', 'Bearer '.$token)
             ->postJson('/api/v1/maestros', [
                 'nombre' => 'Consultoría TI',
                 'campo' => 'linea_negocio',
@@ -70,8 +70,8 @@ class MaestroControllerTest extends TestCase
             'habilitado' => 'Y',
         ]);
 
-        $response = $this->withHeader('Authorization', 'Bearer ' . $token)
-            ->getJson('/api/v1/maestros/' . $maestro->id);
+        $response = $this->withHeader('Authorization', 'Bearer '.$token)
+            ->getJson('/api/v1/maestros/'.$maestro->id);
 
         $response->assertStatus(200)
             ->assertJsonPath('success', true)
@@ -88,8 +88,8 @@ class MaestroControllerTest extends TestCase
             'habilitado' => 'Y',
         ]);
 
-        $response = $this->withHeader('Authorization', 'Bearer ' . $token)
-            ->putJson('/api/v1/maestros/' . $maestro->id, [
+        $response = $this->withHeader('Authorization', 'Bearer '.$token)
+            ->putJson('/api/v1/maestros/'.$maestro->id, [
                 'nombre' => 'Consultoría ERP',
             ]);
 
@@ -108,8 +108,8 @@ class MaestroControllerTest extends TestCase
             'habilitado' => 'Y',
         ]);
 
-        $response = $this->withHeader('Authorization', 'Bearer ' . $token)
-            ->deleteJson('/api/v1/maestros/' . $maestro->id);
+        $response = $this->withHeader('Authorization', 'Bearer '.$token)
+            ->deleteJson('/api/v1/maestros/'.$maestro->id);
 
         $response->assertStatus(200)
             ->assertJsonPath('success', true);
@@ -123,7 +123,7 @@ class MaestroControllerTest extends TestCase
         $token = $this->authenticate();
 
         // Missing nombre
-        $response = $this->withHeader('Authorization', 'Bearer ' . $token)
+        $response = $this->withHeader('Authorization', 'Bearer '.$token)
             ->postJson('/api/v1/maestros', [
                 'campo' => 'linea_negocio',
                 'habilitado' => 'Y',
@@ -132,7 +132,7 @@ class MaestroControllerTest extends TestCase
         $response->assertStatus(422);
 
         // Invalid habilitado value
-        $response = $this->withHeader('Authorization', 'Bearer ' . $token)
+        $response = $this->withHeader('Authorization', 'Bearer '.$token)
             ->postJson('/api/v1/maestros', [
                 'nombre' => 'Test',
                 'campo' => 'linea_negocio',
@@ -148,17 +148,17 @@ class MaestroControllerTest extends TestCase
         $token = $this->authenticate();
 
         // Show
-        $response = $this->withHeader('Authorization', 'Bearer ' . $token)
+        $response = $this->withHeader('Authorization', 'Bearer '.$token)
             ->getJson('/api/v1/maestros/99999');
         $response->assertStatus(404);
 
         // Update
-        $response = $this->withHeader('Authorization', 'Bearer ' . $token)
+        $response = $this->withHeader('Authorization', 'Bearer '.$token)
             ->putJson('/api/v1/maestros/99999', ['nombre' => 'Test']);
         $response->assertStatus(404);
 
         // Delete
-        $response = $this->withHeader('Authorization', 'Bearer ' . $token)
+        $response = $this->withHeader('Authorization', 'Bearer '.$token)
             ->deleteJson('/api/v1/maestros/99999');
         $response->assertStatus(404);
     }

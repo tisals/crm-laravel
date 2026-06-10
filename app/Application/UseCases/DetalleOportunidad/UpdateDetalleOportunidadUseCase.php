@@ -4,6 +4,7 @@ namespace App\Application\UseCases\DetalleOportunidad;
 
 use App\Application\Services\CalculoDetalleService;
 use App\Domain\Repositories\DetalleOportunidadRepositoryInterface;
+use App\Models\Producto;
 
 class UpdateDetalleOportunidadUseCase
 {
@@ -21,7 +22,7 @@ class UpdateDetalleOportunidadUseCase
                 $vrUnitario = $data['vr_unitario'] ?? $existing->vr_unitario;
 
                 $productoId = $data['producto_id'] ?? $existing->producto_id;
-                $producto = \App\Models\Producto::findOrFail($productoId);
+                $producto = Producto::findOrFail($productoId);
 
                 $calculos = $this->calculoService->calculate(
                     (float) $cantidad,

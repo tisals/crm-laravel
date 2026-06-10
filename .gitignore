@@ -37,4 +37,14 @@ Thumbs.db
 /tmp_csv_head.php
 /tmp_db_state.php
 /tmp_test.php
+/tmp_check_limit.php
+/tmp_db_counts.php
+/test_contacto.php
+/_fix_db.php
+/_reset_db.php
+/_drop_tables.sql
+/verify_data.php
+/database/cleanup_dupes.php
+/database/investigate_dupes.php
+/storage/framework/.seeded
 

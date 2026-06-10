@@ -17,7 +17,7 @@ class UsuarioRequest extends FormRequest
 
         return [
             'nombre' => 'required|string|max:150',
-            'email' => 'required|email|max:150|unique:usuarios,email' . ($userId ? ",{$userId}" : ''),
+            'email' => 'required|email|max:150|unique:usuarios,email'.($userId ? ",{$userId}" : ''),
             'password' => $this->isMethod('POST') ? 'required|string|min:8' : 'nullable|string|min:8',
             'rol_id' => 'required|exists:roles,id',
             'estado' => 'nullable|string|max:20',

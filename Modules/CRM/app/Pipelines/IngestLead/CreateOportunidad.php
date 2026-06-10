@@ -2,11 +2,11 @@
 
 namespace Modules\CRM\Pipelines\IngestLead;
 
+use App\Infrastructure\Persistence\EloquentOportunidadRepository;
+use Closure;
 use Modules\CRM\Models\Oportunidad;
 use Modules\CRM\Models\Pipeline;
 use Modules\CRM\Models\PipelineEtapa;
-use App\Infrastructure\Persistence\EloquentOportunidadRepository;
-use Closure;
 
 class CreateOportunidad
 {
@@ -23,14 +23,14 @@ class CreateOportunidad
             ->first();
 
         // If none exists, create one
-        if (!$oportunidad) {
-            $pipeline = Pipeline::where('codigo', 'llegada')->first();
+        if (! $oportunidad) {
+            $pipeline = Pipeline::where('codigo', 'COTIZACION')->first();
             $etapa = PipelineEtapa::where('pipeline_id', $pipeline->id)
                 ->where('nombre', 'Borrador')
                 ->first();
 
             // Resolve next sequence code GC-...
-            $repo = new EloquentOportunidadRepository();
+            $repo = new EloquentOportunidadRepository;
             $codigo = $repo->getNextCodigo();
 
             $oportunidad = Oportunidad::create([

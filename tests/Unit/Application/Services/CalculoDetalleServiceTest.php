@@ -13,7 +13,7 @@ class CalculoDetalleServiceTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->service = new CalculoDetalleService();
+        $this->service = new CalculoDetalleService;
     }
 
     #[Test]

@@ -35,7 +35,7 @@ class ColaboradorControllerTest extends TestCase
     {
         $token = $this->authenticate();
 
-        $response = $this->withHeader('Authorization', 'Bearer ' . $token)
+        $response = $this->withHeader('Authorization', 'Bearer '.$token)
             ->getJson('/api/v1/colaboradores');
 
         $response->assertStatus(200)
@@ -48,7 +48,7 @@ class ColaboradorControllerTest extends TestCase
     {
         $token = $this->authenticate();
 
-        $response = $this->withHeader('Authorization', 'Bearer ' . $token)
+        $response = $this->withHeader('Authorization', 'Bearer '.$token)
             ->postJson('/api/v1/colaboradores', [
                 'nombres' => 'Pedro',
                 'apellidos' => 'Ramírez',
@@ -73,8 +73,8 @@ class ColaboradorControllerTest extends TestCase
         $token = $this->authenticate();
         $colaborador = Colaborador::factory()->create();
 
-        $response = $this->withHeader('Authorization', 'Bearer ' . $token)
-            ->getJson('/api/v1/colaboradores/' . $colaborador->id);
+        $response = $this->withHeader('Authorization', 'Bearer '.$token)
+            ->getJson('/api/v1/colaboradores/'.$colaborador->id);
 
         $response->assertStatus(200)
             ->assertJsonPath('success', true)
@@ -87,8 +87,8 @@ class ColaboradorControllerTest extends TestCase
         $token = $this->authenticate();
         $colaborador = Colaborador::factory()->create();
 
-        $response = $this->withHeader('Authorization', 'Bearer ' . $token)
-            ->putJson('/api/v1/colaboradores/' . $colaborador->id, [
+        $response = $this->withHeader('Authorization', 'Bearer '.$token)
+            ->putJson('/api/v1/colaboradores/'.$colaborador->id, [
                 'nombres' => 'Updated Name',
                 'apellidos' => $colaborador->apellidos,
                 'identificacion' => $colaborador->identificacion,
@@ -105,8 +105,8 @@ class ColaboradorControllerTest extends TestCase
         $token = $this->authenticate();
         $colaborador = Colaborador::factory()->create();
 
-        $response = $this->withHeader('Authorization', 'Bearer ' . $token)
-            ->deleteJson('/api/v1/colaboradores/' . $colaborador->id);
+        $response = $this->withHeader('Authorization', 'Bearer '.$token)
+            ->deleteJson('/api/v1/colaboradores/'.$colaborador->id);
 
         $response->assertStatus(200)
             ->assertJsonPath('success', true);
@@ -119,7 +119,7 @@ class ColaboradorControllerTest extends TestCase
         Colaborador::factory()->create(['nombres' => 'Ana', 'apellidos' => 'Martínez', 'identificacion' => '1111111111']);
         Colaborador::factory()->create(['nombres' => 'Luis', 'apellidos' => 'García', 'identificacion' => '2222222222']);
 
-        $response = $this->withHeader('Authorization', 'Bearer ' . $token)
+        $response = $this->withHeader('Authorization', 'Bearer '.$token)
             ->getJson('/api/v1/colaboradores?search=Ana');
 
         $response->assertStatus(200)
@@ -135,7 +135,7 @@ class ColaboradorControllerTest extends TestCase
     {
         $token = $this->authenticate();
 
-        $response = $this->withHeader('Authorization', 'Bearer ' . $token)
+        $response = $this->withHeader('Authorization', 'Bearer '.$token)
             ->postJson('/api/v1/colaboradores', []);
 
         $response->assertStatus(422);
@@ -146,7 +146,7 @@ class ColaboradorControllerTest extends TestCase
     {
         $token = $this->authenticate();
 
-        $response = $this->withHeader('Authorization', 'Bearer ' . $token)
+        $response = $this->withHeader('Authorization', 'Bearer '.$token)
             ->getJson('/api/v1/colaboradores/9999');
 
         $response->assertStatus(404)

@@ -2,15 +2,15 @@
 
 namespace App\Http\Controllers\API;
 
+use App\Application\UseCases\Producto\DestroyProductoUseCase;
 use App\Application\UseCases\Producto\IndexProductoUseCase;
 use App\Application\UseCases\Producto\ShowProductoUseCase;
 use App\Application\UseCases\Producto\StoreProductoUseCase;
 use App\Application\UseCases\Producto\UpdateProductoUseCase;
-use App\Application\UseCases\Producto\DestroyProductoUseCase;
-use App\Infrastructure\Services\ActividadLogger;
-use App\Http\Controllers\Controller;
 use App\Http\Controllers\API\Concerns\ApiResponse;
+use App\Http\Controllers\Controller;
 use App\Http\Requests\ProductoRequest;
+use App\Infrastructure\Services\ActividadLogger;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -56,7 +56,7 @@ class ProductoController extends Controller
     {
         $result = $this->showUseCase->execute($id);
 
-        if (!$result) {
+        if (! $result) {
             return $this->errorResponse('Producto no encontrado.', 404);
         }
 
@@ -67,7 +67,7 @@ class ProductoController extends Controller
     {
         $result = $this->updateUseCase->execute($id, $request->validated());
 
-        if (!$result) {
+        if (! $result) {
             return $this->errorResponse('Producto no encontrado.', 404);
         }
 
@@ -85,7 +85,7 @@ class ProductoController extends Controller
     {
         $result = $this->destroyUseCase->execute($id);
 
-        if (!$result) {
+        if (! $result) {
             return $this->errorResponse('Producto no encontrado.', 404);
         }
 

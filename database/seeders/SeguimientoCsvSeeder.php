@@ -27,8 +27,9 @@ class SeguimientoCsvSeeder extends Seeder
     {
         $csvFile = $this->csvPath('oportunidades.csv');
 
-        if (!file_exists($csvFile)) {
+        if (! file_exists($csvFile)) {
             $this->command->error("CSV not found: {$csvFile}");
+
             return;
         }
 
@@ -38,7 +39,7 @@ class SeguimientoCsvSeeder extends Seeder
             ->select('id', 'codigo', 'contacto_id', 'entidad_id', 'fecha')
             ->get()
             ->keyBy(fn ($o) => trim($o->codigo));
-        $this->command->info('  → ' . $opps->count() . ' oportunidades loaded.');
+        $this->command->info('  → '.$opps->count().' oportunidades loaded.');
 
         // Parse CSV and collect seguimiento records
         $this->command->info('Parsing CSV for seguimiento data...');
@@ -52,11 +53,14 @@ class SeguimientoCsvSeeder extends Seeder
             $totalCsvRows++;
 
             $codigo = trim($row['codigo'] ?? '');
-            if (empty($codigo)) continue;
+            if (empty($codigo)) {
+                continue;
+            }
 
             $opp = $opps->get($codigo);
-            if (!$opp) {
+            if (! $opp) {
                 $skippedCodigos[$codigo] = true;
+
                 continue;
             }
 
@@ -76,14 +80,15 @@ class SeguimientoCsvSeeder extends Seeder
         $this->command->info("  CSV rows scanned: {$totalCsvRows}");
         $this->command->info("  Seguimientos from col 1: {$totalSeguimiento1}");
         $this->command->info("  Seguimientos from col 2: {$totalSeguimiento2}");
-        $this->command->info('  Total to insert: ' . count($seguimientos));
+        $this->command->info('  Total to insert: '.count($seguimientos));
 
-        if (!empty($skippedCodigos)) {
-            $this->command->warn('  → ' . count($skippedCodigos) . ' codigos NOT found in oportunidades table (skipped).');
+        if (! empty($skippedCodigos)) {
+            $this->command->warn('  → '.count($skippedCodigos).' codigos NOT found in oportunidades table (skipped).');
         }
 
         if (empty($seguimientos)) {
             $this->command->warn('No seguimiento data found in CSV.');
+
             return;
         }
 
@@ -121,7 +126,7 @@ class SeguimientoCsvSeeder extends Seeder
                 }
             }
 
-            if (!empty($insertBatch)) {
+            if (! empty($insertBatch)) {
                 DB::table('seguimiento')->insert($insertBatch);
                 $inserted += count($insertBatch);
             }
@@ -131,9 +136,9 @@ class SeguimientoCsvSeeder extends Seeder
 
         // Report
         $this->command->info('');
-        $this->command->info("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-        $this->command->info("📊 SEGUIMIENTO IMPORT RESULT");
-        $this->command->info("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+        $this->command->info('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+        $this->command->info('📊 SEGUIMIENTO IMPORT RESULT');
+        $this->command->info('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
         $totalSegs = DB::table('seguimiento')->count();
         $totalOpps = DB::table('oportunidad')->count();
         $conSeg = DB::table('oportunidad')
@@ -143,8 +148,8 @@ class SeguimientoCsvSeeder extends Seeder
         $this->command->info("  Oportunidades total      : {$totalOpps}");
         $this->command->info("  Seguimientos total       : {$totalSegs}");
         $this->command->info("  Ops con seguimiento      : {$conSeg}");
-        $this->command->info("  Ops sin seguimiento      : " . ($totalOpps - $conSeg));
-        $this->command->info("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+        $this->command->info('  Ops sin seguimiento      : '.($totalOpps - $conSeg));
+        $this->command->info('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
     }
 
     /**
@@ -156,17 +161,17 @@ class SeguimientoCsvSeeder extends Seeder
 
         return [
             'oportunidad_id' => $opp->id,
-            'contacto_id'    => $opp->contacto_id,
-            'entidad_id'     => $opp->entidad_id,
-            'tipo'           => 'Llamada',
-            'fecha'          => $fecha,
-            'hora'           => null,
-            'fecha_fin'      => null,
-            'notas'          => $raw,
-            'autor_id'       => 1,
-            'estado'         => 'Completado',
-            'created_by'     => 1,
-            'updated_by'     => 1,
+            'contacto_id' => $opp->contacto_id,
+            'entidad_id' => $opp->entidad_id,
+            'tipo' => 'Llamada',
+            'fecha' => $fecha,
+            'hora' => null,
+            'fecha_fin' => null,
+            'notas' => $raw,
+            'autor_id' => 1,
+            'estado' => 'Completado',
+            'created_by' => 1,
+            'updated_by' => 1,
         ];
     }
 
@@ -186,12 +191,12 @@ class SeguimientoCsvSeeder extends Seeder
 
         // Match dd/mm/yyyy or d/m/yy or dd/m/yyyy etc.
         if (preg_match('/(\d{1,2})\/(\d{1,2})\/(\d{2,4})/', $normalized, $m)) {
-            $day   = str_pad($m[1], 2, '0', STR_PAD_LEFT);
+            $day = str_pad($m[1], 2, '0', STR_PAD_LEFT);
             $month = str_pad($m[2], 2, '0', STR_PAD_LEFT);
-            $year  = $m[3];
+            $year = $m[3];
 
             if (strlen($year) === 2) {
-                $year = '20' . $year;
+                $year = '20'.$year;
             }
 
             $dateStr = "{$year}-{$month}-{$day}";
@@ -201,6 +206,6 @@ class SeguimientoCsvSeeder extends Seeder
         }
 
         // Fallback: opp fecha + 7 days
-        return date('Y-m-d', strtotime($oppFecha . ' +7 days'));
+        return date('Y-m-d', strtotime($oppFecha.' +7 days'));
     }
 }

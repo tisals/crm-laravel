@@ -83,7 +83,6 @@
                             <td>
                                 <h2 style="margin-bottom: 4px;">Dirigida a:</h2>
                                 <p style="font-size: 11pt; font-weight: bold; color: #333333;">{{ $entity['name'] }}</p>
-                                <p style="font-size: 11pt; font-weight: bold; color: #333333;">{{ $entity['city'] }}</p>
                                 @if(isset($client_contact) && $client_contact['name'] !== '—')
                                     <p style="font-size: 8pt; color: #4b5563; margin-top: 4px;"><strong>Atención:</strong> {{ $client_contact['name'] }}</p>
                                     <p style="font-size: 8pt; color: #6b7280;">Email: {{ $client_contact['email'] }}</p>
@@ -97,9 +96,13 @@
                     <table width="100%" cellpadding="6" cellspacing="0">
                         <tr>
                             <td>
-                                <h2 style="margin-bottom: 4px;">Responsable:</h2>
+                                <h2 style="margin-bottom: 4px;">Responsable Comercial:</h2>
+                                <p style="font-size: 8pt; color: #6b7280;">Nombre usuario:</p>
                                 <p style="font-size: 11pt; font-weight: bold; color: #333333;">{{ $contact['user']['name'] }}</p>
-                                <p style="font-size: 8pt; color: #4b5563; margin-top: 2px;">{{ $contact['user']['email'] }}</p>
+                                <p style="font-size: 8pt; color: #6b7280; margin-top: 4px;">Tel:</p>
+                                <p style="font-size: 9pt; color: #333333;">{{ $contact['user']['telefono'] ?? '—' }}</p>
+                                <p style="font-size: 8pt; color: #6b7280; margin-top: 4px;">Email:</p>
+                                <p style="font-size: 9pt; color: #333333;">{{ $contact['user']['email'] }}</p>
                             </td>
                         </tr>
                     </table>
@@ -208,12 +211,12 @@
                 </table>
             </td>
 
-            <!-- Right: Brand -->
+            <!-- Right: Firma (siempre Tecnoinnsoft) -->
             <td width="40%" valign="top" align="center">
-                @if($brand['email'])<p style="font-size: 7pt; color: #6b7280;">{{ $brand['email'] }}</p>@endif
-                @if($brand['direccion'])<p style="font-size: 7pt; color: #9ca3af;">{{ $brand['direccion'] }}</p>@endif
-                @if($brand['telefono'])<p style="font-size: 7pt; color: #9ca3af;">{{ $brand['telefono'] }}</p>@endif
-                @if($brand['dominio'])<p style="font-size: 7pt; color: #9ca3af;">{{ $brand['dominio'] }}</p>@endif
+                @if($firma['email'])<p style="font-size: 7pt; color: #6b7280;">{{ $firma['email'] }}</p>@endif
+                @if($firma['direccion'])<p style="font-size: 7pt; color: #9ca3af;">{{ $firma['direccion'] }}</p>@endif
+                @if($firma['telefono'])<p style="font-size: 7pt; color: #9ca3af;">{{ $firma['telefono'] }}</p>@endif
+                @if($firma['dominio'])<p style="font-size: 7pt; color: #9ca3af;">{{ $firma['dominio'] }}</p>@endif
             </td>
         </tr>
     </table>

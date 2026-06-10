@@ -7,11 +7,11 @@ use App\Application\UseCases\Ciudad\IndexCiudadUseCase;
 use App\Application\UseCases\Ciudad\ShowCiudadUseCase;
 use App\Application\UseCases\Ciudad\StoreCiudadUseCase;
 use App\Application\UseCases\Ciudad\UpdateCiudadUseCase;
-use App\Infrastructure\Services\ActividadLogger;
-use App\Http\Controllers\Controller;
 use App\Http\Controllers\API\Concerns\ApiResponse;
+use App\Http\Controllers\Controller;
 use App\Http\Requests\CiudadRequest;
 use App\Http\Resources\CiudadResource;
+use App\Infrastructure\Services\ActividadLogger;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -60,7 +60,7 @@ class CiudadController extends Controller
     {
         $result = $this->showUseCase->execute($codMunicipio);
 
-        if (!$result) {
+        if (! $result) {
             return $this->errorResponse('Ciudad no encontrada.', 404);
         }
 
@@ -71,7 +71,7 @@ class CiudadController extends Controller
     {
         $ciudad = $this->updateUseCase->execute($codMunicipio, $request->validated());
 
-        if (!$ciudad) {
+        if (! $ciudad) {
             return $this->errorResponse('Ciudad no encontrada.', 404);
         }
 
@@ -92,7 +92,7 @@ class CiudadController extends Controller
     {
         $deleted = $this->deleteUseCase->execute($codMunicipio);
 
-        if (!$deleted) {
+        if (! $deleted) {
             return $this->errorResponse('Ciudad no encontrada.', 404);
         }
 

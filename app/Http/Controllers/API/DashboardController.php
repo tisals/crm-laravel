@@ -3,8 +3,8 @@
 namespace App\Http\Controllers\API;
 
 use App\Application\UseCases\Dashboard\GetDashboardUseCase;
-use App\Http\Controllers\Controller;
 use App\Http\Controllers\API\Concerns\ApiResponse;
+use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 

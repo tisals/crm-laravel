@@ -2,8 +2,8 @@
 
 namespace App\Http\Controllers\API;
 
-use App\Http\Controllers\Controller;
 use App\Http\Controllers\API\Concerns\ApiResponse;
+use App\Http\Controllers\Controller;
 use App\Models\Entidad;
 use App\Models\Usuario;
 use Illuminate\Http\JsonResponse;
@@ -20,9 +20,10 @@ class EntidadUsuarioController extends Controller
     public function index(int $entidadId): JsonResponse
     {
         $entidad = Entidad::with('usuarios')->find($entidadId);
-        if (!$entidad) {
+        if (! $entidad) {
             return $this->errorResponse('Entidad no encontrada.', 404);
         }
+
         return $this->successResponse($entidad->usuarios);
     }
 
@@ -39,12 +40,12 @@ class EntidadUsuarioController extends Controller
         ]);
 
         $usuario = Usuario::with('rol')->find($validated['usuario_id']);
-        
+
         // Only allow assigning users with Admin (rol_id=1) or Ventas (rol_nombre='Ventas') roles
         $rolNombre = $usuario->rol?->nombre;
         $allowedRoles = ['Admin', 'Ventas'];
-        
-        if (!in_array($rolNombre, $allowedRoles)) {
+
+        if (! in_array($rolNombre, $allowedRoles)) {
             return $this->errorResponse(
                 'Solo usuarios con roles Admin o Ventas pueden ser asignados a entidades.',
                 403
@@ -82,7 +83,7 @@ class EntidadUsuarioController extends Controller
         $entidad = Entidad::find($validated['entidad_id']);
 
         // Check if assignment exists
-        if (!$entidad->usuarios()->where('usuario_id', $validated['usuario_id'])->exists()) {
+        if (! $entidad->usuarios()->where('usuario_id', $validated['usuario_id'])->exists()) {
             return $this->errorResponse('La asignación no existe.', 404);
         }
 

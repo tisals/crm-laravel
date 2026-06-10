@@ -13,8 +13,9 @@ class CiudadSeeder extends Seeder
     {
         $csvFile = $this->csvPath('ciudades.csv');
 
-        if (!file_exists($csvFile)) {
+        if (! file_exists($csvFile)) {
             $this->command->error("CSV file not found: {$csvFile}");
+
             return;
         }
 
@@ -26,6 +27,7 @@ class CiudadSeeder extends Seeder
 
             if (empty($code)) {
                 $skipped++;
+
                 continue;
             }
 
@@ -34,6 +36,7 @@ class CiudadSeeder extends Seeder
 
             if (empty($nombre)) {
                 $skipped++;
+
                 continue;
             }
 
@@ -47,7 +50,8 @@ class CiudadSeeder extends Seeder
         }
 
         if (empty($rows)) {
-            $this->command->warn("No valid rows found in CSV.");
+            $this->command->warn('No valid rows found in CSV.');
+
             return;
         }
 
@@ -67,6 +71,6 @@ class CiudadSeeder extends Seeder
             }
         });
 
-        $this->command->info("Ciudades seeded: " . count($rows) . " rows ({$skipped} skipped).");
+        $this->command->info('Ciudades seeded: '.count($rows)." rows ({$skipped} skipped).");
     }
 }

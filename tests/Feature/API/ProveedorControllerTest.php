@@ -36,7 +36,7 @@ class ProveedorControllerTest extends TestCase
     {
         $token = $this->authenticate();
 
-        $response = $this->withHeader('Authorization', 'Bearer ' . $token)
+        $response = $this->withHeader('Authorization', 'Bearer '.$token)
             ->getJson('/api/v1/proveedores');
 
         $response->assertStatus(200)
@@ -50,7 +50,7 @@ class ProveedorControllerTest extends TestCase
         $token = $this->authenticate();
         Ciudad::create(['cod_municipio' => '05001', 'nombre' => 'Medellín', 'departamento' => 'Antioquia']);
 
-        $response = $this->withHeader('Authorization', 'Bearer ' . $token)
+        $response = $this->withHeader('Authorization', 'Bearer '.$token)
             ->postJson('/api/v1/proveedores', [
                 'tipo_id' => 'NIT',
                 'identificacion' => '800123456',
@@ -78,8 +78,8 @@ class ProveedorControllerTest extends TestCase
         Ciudad::create(['cod_municipio' => '05001', 'nombre' => 'Medellín', 'departamento' => 'Antioquia']);
         $proveedor = Proveedor::factory()->create();
 
-        $response = $this->withHeader('Authorization', 'Bearer ' . $token)
-            ->getJson('/api/v1/proveedores/' . $proveedor->id);
+        $response = $this->withHeader('Authorization', 'Bearer '.$token)
+            ->getJson('/api/v1/proveedores/'.$proveedor->id);
 
         $response->assertStatus(200)
             ->assertJsonPath('success', true)
@@ -93,8 +93,8 @@ class ProveedorControllerTest extends TestCase
         Ciudad::create(['cod_municipio' => '05001', 'nombre' => 'Medellín', 'departamento' => 'Antioquia']);
         $proveedor = Proveedor::factory()->create();
 
-        $response = $this->withHeader('Authorization', 'Bearer ' . $token)
-            ->putJson('/api/v1/proveedores/' . $proveedor->id, [
+        $response = $this->withHeader('Authorization', 'Bearer '.$token)
+            ->putJson('/api/v1/proveedores/'.$proveedor->id, [
                 'nombres' => 'Updated Name',
                 'identificacion' => $proveedor->identificacion,
             ]);
@@ -111,8 +111,8 @@ class ProveedorControllerTest extends TestCase
         Ciudad::create(['cod_municipio' => '05001', 'nombre' => 'Medellín', 'departamento' => 'Antioquia']);
         $proveedor = Proveedor::factory()->create();
 
-        $response = $this->withHeader('Authorization', 'Bearer ' . $token)
-            ->deleteJson('/api/v1/proveedores/' . $proveedor->id);
+        $response = $this->withHeader('Authorization', 'Bearer '.$token)
+            ->deleteJson('/api/v1/proveedores/'.$proveedor->id);
 
         $response->assertStatus(200)
             ->assertJsonPath('success', true);
@@ -126,7 +126,7 @@ class ProveedorControllerTest extends TestCase
         Proveedor::factory()->create(['nombres' => 'Proveedor Uno', 'identificacion' => '1111111111']);
         Proveedor::factory()->create(['nombres' => 'Proveedor Dos', 'identificacion' => '2222222222']);
 
-        $response = $this->withHeader('Authorization', 'Bearer ' . $token)
+        $response = $this->withHeader('Authorization', 'Bearer '.$token)
             ->getJson('/api/v1/proveedores?search=Uno');
 
         $response->assertStatus(200)
@@ -142,7 +142,7 @@ class ProveedorControllerTest extends TestCase
     {
         $token = $this->authenticate();
 
-        $response = $this->withHeader('Authorization', 'Bearer ' . $token)
+        $response = $this->withHeader('Authorization', 'Bearer '.$token)
             ->postJson('/api/v1/proveedores', []);
 
         $response->assertStatus(422);
@@ -153,7 +153,7 @@ class ProveedorControllerTest extends TestCase
     {
         $token = $this->authenticate();
 
-        $response = $this->withHeader('Authorization', 'Bearer ' . $token)
+        $response = $this->withHeader('Authorization', 'Bearer '.$token)
             ->getJson('/api/v1/proveedores/9999');
 
         $response->assertStatus(404)

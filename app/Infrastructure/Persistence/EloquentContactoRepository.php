@@ -6,6 +6,7 @@ use App\Domain\Entities\Contacto as ContactoEntity;
 use App\Domain\Repositories\ContactoRepositoryInterface;
 use App\Models\Contacto as EloquentContacto;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Pagination\LengthAwarePaginator;
 
 class EloquentContactoRepository extends BaseRepository implements ContactoRepositoryInterface
 {
@@ -23,8 +24,8 @@ class EloquentContactoRepository extends BaseRepository implements ContactoRepos
     {
         return $query->where(function ($q) use ($search) {
             $q->where('nombres', 'like', "%{$search}%")
-              ->orWhere('apellidos', 'like', "%{$search}%")
-              ->orWhere('email_contacto', 'like', "%{$search}%");
+                ->orWhere('apellidos', 'like', "%{$search}%")
+                ->orWhere('email_contacto', 'like', "%{$search}%");
         });
     }
 
@@ -38,7 +39,7 @@ class EloquentContactoRepository extends BaseRepository implements ContactoRepos
             ->select('contacto.*', 'entidad.nombre as entidad_nombre');
     }
 
-    public function paginate(int $perPage = 15, ?string $search = null, array $filters = [], ?string $sortBy = null, ?string $sortOrder = 'desc'): \Illuminate\Pagination\LengthAwarePaginator
+    public function paginate(int $perPage = 15, ?string $search = null, array $filters = [], ?string $sortBy = null, ?string $sortOrder = 'desc'): LengthAwarePaginator
     {
         $query = $this->newQueryWithEntidad();
 
@@ -46,7 +47,7 @@ class EloquentContactoRepository extends BaseRepository implements ContactoRepos
             $query = $this->applySearch($query, $search);
         }
 
-        if (!empty($filters)) {
+        if (! empty($filters)) {
             $query = $this->applyFilters($query, $filters);
         }
 

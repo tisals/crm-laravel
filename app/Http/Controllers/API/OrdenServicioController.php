@@ -2,13 +2,13 @@
 
 namespace App\Http\Controllers\API;
 
+use App\Application\UseCases\OrdenServicio\DestroyOrdenServicioUseCase;
 use App\Application\UseCases\OrdenServicio\IndexOrdenServicioUseCase;
 use App\Application\UseCases\OrdenServicio\ShowOrdenServicioUseCase;
 use App\Application\UseCases\OrdenServicio\StoreOrdenServicioUseCase;
 use App\Application\UseCases\OrdenServicio\UpdateOrdenServicioUseCase;
-use App\Application\UseCases\OrdenServicio\DestroyOrdenServicioUseCase;
-use App\Http\Controllers\Controller;
 use App\Http\Controllers\API\Concerns\ApiResponse;
+use App\Http\Controllers\Controller;
 use App\Http\Requests\OrdenServicioRequest;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -46,7 +46,7 @@ class OrdenServicioController extends Controller
     {
         $result = $this->showUseCase->execute($id);
 
-        if (!$result) {
+        if (! $result) {
             return $this->errorResponse('Orden de servicio no encontrada.', 404);
         }
 
@@ -57,7 +57,7 @@ class OrdenServicioController extends Controller
     {
         $result = $this->updateUseCase->execute($id, $request->validated());
 
-        if (!$result) {
+        if (! $result) {
             return $this->errorResponse('Orden de servicio no encontrada.', 404);
         }
 
@@ -68,7 +68,7 @@ class OrdenServicioController extends Controller
     {
         $result = $this->destroyUseCase->execute($id);
 
-        if (!$result) {
+        if (! $result) {
             return $this->errorResponse('Orden de servicio no encontrada.', 404);
         }
 

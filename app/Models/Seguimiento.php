@@ -11,6 +11,7 @@ class Seguimiento extends Model
     use HasFactory, SoftDeletes;
 
     protected $table = 'seguimiento';
+
     protected $fillable = [
         'oportunidad_id',
         'contacto_id',

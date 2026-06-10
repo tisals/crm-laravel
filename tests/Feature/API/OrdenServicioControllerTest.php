@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\API;
 
+use App\Models\Ciudad;
 use App\Models\Colaborador;
 use App\Models\Contacto;
 use App\Models\DetalleServicio;
@@ -12,7 +13,6 @@ use App\Models\Proveedor;
 use App\Models\Rol;
 use App\Models\Servicio;
 use App\Models\Usuario;
-use App\Models\Ciudad;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
@@ -65,7 +65,7 @@ class OrdenServicioControllerTest extends TestCase
     {
         $token = $this->authenticate();
 
-        $response = $this->withHeader('Authorization', 'Bearer ' . $token)
+        $response = $this->withHeader('Authorization', 'Bearer '.$token)
             ->getJson('/api/v1/ordenes-servicio');
 
         $response->assertStatus(200)
@@ -79,7 +79,7 @@ class OrdenServicioControllerTest extends TestCase
         $token = $this->authenticate();
         $refs = $this->createReferences();
 
-        $response = $this->withHeader('Authorization', 'Bearer ' . $token)
+        $response = $this->withHeader('Authorization', 'Bearer '.$token)
             ->postJson('/api/v1/ordenes-servicio', [
                 'detalle_srv_id' => $refs['detalleServicio']->id,
                 'colaborador_id' => $refs['colaborador']->id,
@@ -106,7 +106,7 @@ class OrdenServicioControllerTest extends TestCase
         $token = $this->authenticate();
         $refs = $this->createReferences();
 
-        $response = $this->withHeader('Authorization', 'Bearer ' . $token)
+        $response = $this->withHeader('Authorization', 'Bearer '.$token)
             ->postJson('/api/v1/ordenes-servicio', [
                 'detalle_srv_id' => $refs['detalleServicio']->id,
                 'proveedor_id' => $refs['proveedor']->id,
@@ -127,7 +127,7 @@ class OrdenServicioControllerTest extends TestCase
         $token = $this->authenticate();
         $refs = $this->createReferences();
 
-        $response = $this->withHeader('Authorization', 'Bearer ' . $token)
+        $response = $this->withHeader('Authorization', 'Bearer '.$token)
             ->postJson('/api/v1/ordenes-servicio', [
                 'detalle_srv_id' => $refs['detalleServicio']->id,
                 'contacto_id' => $refs['contacto']->id,
@@ -144,7 +144,7 @@ class OrdenServicioControllerTest extends TestCase
         $token = $this->authenticate();
         $refs = $this->createReferences();
 
-        $createResponse = $this->withHeader('Authorization', 'Bearer ' . $token)
+        $createResponse = $this->withHeader('Authorization', 'Bearer '.$token)
             ->postJson('/api/v1/ordenes-servicio', [
                 'colaborador_id' => $refs['colaborador']->id,
                 'descripcion' => 'Testing show',
@@ -153,8 +153,8 @@ class OrdenServicioControllerTest extends TestCase
 
         $id = $createResponse->json('data.id');
 
-        $response = $this->withHeader('Authorization', 'Bearer ' . $token)
-            ->getJson('/api/v1/ordenes-servicio/' . $id);
+        $response = $this->withHeader('Authorization', 'Bearer '.$token)
+            ->getJson('/api/v1/ordenes-servicio/'.$id);
 
         $response->assertStatus(200)
             ->assertJsonPath('success', true)
@@ -167,7 +167,7 @@ class OrdenServicioControllerTest extends TestCase
         $token = $this->authenticate();
         $refs = $this->createReferences();
 
-        $createResponse = $this->withHeader('Authorization', 'Bearer ' . $token)
+        $createResponse = $this->withHeader('Authorization', 'Bearer '.$token)
             ->postJson('/api/v1/ordenes-servicio', [
                 'colaborador_id' => $refs['colaborador']->id,
                 'descripcion' => 'Estado inicial',
@@ -176,8 +176,8 @@ class OrdenServicioControllerTest extends TestCase
 
         $id = $createResponse->json('data.id');
 
-        $response = $this->withHeader('Authorization', 'Bearer ' . $token)
-            ->putJson('/api/v1/ordenes-servicio/' . $id, [
+        $response = $this->withHeader('Authorization', 'Bearer '.$token)
+            ->putJson('/api/v1/ordenes-servicio/'.$id, [
                 'estado' => 'EnProgreso',
                 'descripcion' => 'En ejecución',
             ]);
@@ -193,7 +193,7 @@ class OrdenServicioControllerTest extends TestCase
         $token = $this->authenticate();
         $refs = $this->createReferences();
 
-        $createResponse = $this->withHeader('Authorization', 'Bearer ' . $token)
+        $createResponse = $this->withHeader('Authorization', 'Bearer '.$token)
             ->postJson('/api/v1/ordenes-servicio', [
                 'colaborador_id' => $refs['colaborador']->id,
                 'descripcion' => 'A eliminar',
@@ -202,8 +202,8 @@ class OrdenServicioControllerTest extends TestCase
 
         $id = $createResponse->json('data.id');
 
-        $response = $this->withHeader('Authorization', 'Bearer ' . $token)
-            ->deleteJson('/api/v1/ordenes-servicio/' . $id);
+        $response = $this->withHeader('Authorization', 'Bearer '.$token)
+            ->deleteJson('/api/v1/ordenes-servicio/'.$id);
 
         $response->assertStatus(200)
             ->assertJsonPath('success', true);
@@ -214,7 +214,7 @@ class OrdenServicioControllerTest extends TestCase
     {
         $token = $this->authenticate();
 
-        $response = $this->withHeader('Authorization', 'Bearer ' . $token)
+        $response = $this->withHeader('Authorization', 'Bearer '.$token)
             ->getJson('/api/v1/ordenes-servicio/9999');
 
         $response->assertStatus(404)

@@ -3,6 +3,8 @@
 namespace Database\Factories;
 
 use App\Models\DetalleServicio;
+use App\Models\Producto;
+use App\Models\Servicio;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 class DetalleServicioFactory extends Factory
@@ -17,8 +19,8 @@ class DetalleServicioFactory extends Factory
         $iva = round($subTotal * 0.19, 2);
 
         return [
-            'servicio_id' => \App\Models\Servicio::factory(),
-            'producto_id' => \App\Models\Producto::factory(),
+            'servicio_id' => Servicio::factory(),
+            'producto_id' => Producto::factory(),
             'observacion' => fake()->optional(0.5)->sentence(),
             'cantidad' => $cantidad,
             'precio' => $precio,

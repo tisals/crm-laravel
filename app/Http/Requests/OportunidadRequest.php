@@ -18,6 +18,8 @@ class OportunidadRequest extends FormRequest
         $rules = [
             'entidad_id' => 'required|integer|exists:entidad,id',
             'contacto_id' => 'nullable|integer|exists:contacto,id',
+            'pipeline_id' => 'nullable|integer|exists:pipelines,id',
+            'pipeline_etapa_id' => 'nullable|integer|exists:pipeline_etapas,id',
             'fecha' => 'required|date',
             'fuente_canal' => 'nullable|string|max:100',
             'estado' => 'nullable|string|max:100', // Relaxed state validation to allow custom CRM states

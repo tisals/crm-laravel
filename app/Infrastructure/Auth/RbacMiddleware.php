@@ -17,17 +17,17 @@ class RbacMiddleware
     {
         $user = $request->user();
 
-        if (!$user) {
+        if (! $user) {
             return response()->json(['success' => false, 'error' => 'Unauthenticated.'], 401);
         }
 
         $routeName = $request->route()->getName();
 
-        if (!$routeName) {
+        if (! $routeName) {
             return $next($request);
         }
 
-        if (!$this->rbacService->hasPermission($user->rol_id, $routeName)) {
+        if (! $this->rbacService->hasPermission($user->rol_id, $routeName)) {
             // GET requests sin permiso → respuesta vacía en silencio (sin 403)
             if ($request->isMethod('GET')) {
                 $isIndex = str_ends_with($routeName, '.index');
@@ -37,6 +37,7 @@ class RbacMiddleware
                         'data' => ['data' => [], 'total' => 0, 'current_page' => 1, 'last_page' => 1],
                     ]);
                 }
+
                 return response()->json(['success' => true, 'data' => null]);
             }
 

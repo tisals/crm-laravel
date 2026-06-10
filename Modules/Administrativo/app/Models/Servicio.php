@@ -2,15 +2,18 @@
 
 namespace Modules\Administrativo\Models;
 
+use App\Models\Entidad;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Modules\CRM\Models\Oportunidad;
 
 class Servicio extends Model
 {
     use HasFactory, SoftDeletes;
 
     protected $table = 'servicios';
+
     protected $fillable = [
         'oportunidad_id',
         'entidad_id',
@@ -37,12 +40,12 @@ class Servicio extends Model
 
     public function oportunidad()
     {
-        return $this->belongsTo(\Modules\CRM\Models\Oportunidad::class, 'oportunidad_id');
+        return $this->belongsTo(Oportunidad::class, 'oportunidad_id');
     }
 
     public function entidad()
     {
-        return $this->belongsTo(\App\Models\Entidad::class, 'entidad_id');
+        return $this->belongsTo(Entidad::class, 'entidad_id');
     }
 
     public function prestador()

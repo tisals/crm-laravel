@@ -6,9 +6,9 @@ class Seguimiento
 {
     public function __construct(
         public int $id,
-        public ?int $oportunidad_id = null,
-        public ?int $contacto_id = null,
-        public ?int $entidad_id = null,
+        public ?int $oportunidad_id,
+        public ?int $contacto_id,
+        public ?int $entidad_id,
         public string $tipo,
         public string $fecha,
         public ?string $hora = null,

@@ -2,13 +2,13 @@
 
 namespace App\Http\Controllers\API;
 
+use App\Application\UseCases\Proveedor\DestroyProveedorUseCase;
 use App\Application\UseCases\Proveedor\IndexProveedorUseCase;
 use App\Application\UseCases\Proveedor\ShowProveedorUseCase;
 use App\Application\UseCases\Proveedor\StoreProveedorUseCase;
 use App\Application\UseCases\Proveedor\UpdateProveedorUseCase;
-use App\Application\UseCases\Proveedor\DestroyProveedorUseCase;
-use App\Http\Controllers\Controller;
 use App\Http\Controllers\API\Concerns\ApiResponse;
+use App\Http\Controllers\Controller;
 use App\Http\Requests\ProveedorRequest;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -47,7 +47,7 @@ class ProveedorController extends Controller
     {
         $result = $this->showUseCase->execute($id);
 
-        if (!$result) {
+        if (! $result) {
             return $this->errorResponse('Proveedor no encontrado.', 404);
         }
 
@@ -58,7 +58,7 @@ class ProveedorController extends Controller
     {
         $result = $this->updateUseCase->execute($id, $request->validated());
 
-        if (!$result) {
+        if (! $result) {
             return $this->errorResponse('Proveedor no encontrado.', 404);
         }
 
@@ -69,7 +69,7 @@ class ProveedorController extends Controller
     {
         $result = $this->destroyUseCase->execute($id);
 
-        if (!$result) {
+        if (! $result) {
             return $this->errorResponse('Proveedor no encontrado.', 404);
         }
 

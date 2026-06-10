@@ -6,9 +6,9 @@ use App\Application\DTOs\LoginRequest;
 use App\Application\UseCases\Auth\LoginUseCase;
 use App\Application\UseCases\Auth\LogoutUseCase;
 use App\Application\UseCases\ValidateApiKeyUseCase;
-use App\Infrastructure\Services\ActividadLogger;
-use App\Http\Controllers\Controller;
 use App\Http\Controllers\API\Concerns\ApiResponse;
+use App\Http\Controllers\Controller;
+use App\Infrastructure\Services\ActividadLogger;
 use Exception;
 use Illuminate\Auth\Events\PasswordReset;
 use Illuminate\Http\JsonResponse;
@@ -117,7 +117,7 @@ class AuthController extends Controller
     {
         $apiKey = $request->header('X-API-Key');
 
-        if (!$apiKey) {
+        if (! $apiKey) {
             return response()->json([
                 'valid' => false,
                 'error' => 'API key no proporcionada',
@@ -126,7 +126,7 @@ class AuthController extends Controller
 
         $result = $this->validateKeyUseCase->execute($apiKey);
 
-        if (!$result) {
+        if (! $result) {
             return response()->json([
                 'valid' => false,
                 'error' => 'API key inválida',

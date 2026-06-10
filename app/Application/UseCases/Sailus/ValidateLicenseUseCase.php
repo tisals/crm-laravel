@@ -12,7 +12,7 @@ class ValidateLicenseUseCase
     {
         // 1. Find the service by activation token
         $servicio = Servicio::where('activation_token', $token)->first();
-        if (!$servicio) {
+        if (! $servicio) {
             return null; // unauthorized
         }
 
@@ -21,7 +21,7 @@ class ValidateLicenseUseCase
             ->where('email_contacto', $username)
             ->first();
 
-        if (!$contacto) {
+        if (! $contacto) {
             return null; // unauthorized
         }
 

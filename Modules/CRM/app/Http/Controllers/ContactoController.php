@@ -2,13 +2,13 @@
 
 namespace Modules\CRM\Http\Controllers;
 
+use App\Application\UseCases\Contacto\DestroyContactoUseCase;
 use App\Application\UseCases\Contacto\IndexContactoUseCase;
 use App\Application\UseCases\Contacto\ShowContactoUseCase;
 use App\Application\UseCases\Contacto\StoreContactoUseCase;
 use App\Application\UseCases\Contacto\UpdateContactoUseCase;
-use App\Application\UseCases\Contacto\DestroyContactoUseCase;
-use App\Http\Controllers\Controller;
 use App\Http\Controllers\API\Concerns\ApiResponse;
+use App\Http\Controllers\Controller;
 use App\Http\Requests\ContactoRequest;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -47,7 +47,7 @@ class ContactoController extends Controller
     {
         $result = $this->showUseCase->execute($id);
 
-        if (!$result) {
+        if (! $result) {
             return $this->errorResponse('Contacto no encontrado.', 404);
         }
 
@@ -58,7 +58,7 @@ class ContactoController extends Controller
     {
         $result = $this->updateUseCase->execute($id, $request->validated());
 
-        if (!$result) {
+        if (! $result) {
             return $this->errorResponse('Contacto no encontrado.', 404);
         }
 
@@ -69,7 +69,7 @@ class ContactoController extends Controller
     {
         $result = $this->destroyUseCase->execute($id);
 
-        if (!$result) {
+        if (! $result) {
             return $this->errorResponse('Contacto no encontrado.', 404);
         }
 

@@ -16,7 +16,7 @@ class EtiquetaRequest extends FormRequest
         $etiquetaId = $this->route('id');
 
         return [
-            'nombre' => 'required|string|max:100|unique:etiquetas,nombre' . ($etiquetaId ? ",{$etiquetaId}" : ''),
+            'nombre' => 'required|string|max:100|unique:etiquetas,nombre'.($etiquetaId ? ",{$etiquetaId}" : ''),
             'estado' => 'nullable|string|max:20',
         ];
     }

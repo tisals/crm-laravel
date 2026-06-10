@@ -2,15 +2,15 @@
 
 namespace App\Http\Controllers\API;
 
+use App\Application\UseCases\Entidad\DestroyEntidadUseCase;
 use App\Application\UseCases\Entidad\IndexEntidadUseCase;
 use App\Application\UseCases\Entidad\ShowEntidadUseCase;
 use App\Application\UseCases\Entidad\StoreEntidadUseCase;
 use App\Application\UseCases\Entidad\UpdateEntidadUseCase;
-use App\Application\UseCases\Entidad\DestroyEntidadUseCase;
-use App\Infrastructure\Services\ActividadLogger;
-use App\Http\Controllers\Controller;
 use App\Http\Controllers\API\Concerns\ApiResponse;
+use App\Http\Controllers\Controller;
 use App\Http\Requests\EntidadRequest;
+use App\Infrastructure\Services\ActividadLogger;
 use App\Traits\DispatchesWebhooks;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -62,7 +62,7 @@ class EntidadController extends Controller
     {
         $result = $this->showUseCase->execute($id);
 
-        if (!$result) {
+        if (! $result) {
             return $this->errorResponse('Entidad no encontrada.', 404);
         }
 
@@ -73,7 +73,7 @@ class EntidadController extends Controller
     {
         $result = $this->updateUseCase->execute($id, $request->validated());
 
-        if (!$result) {
+        if (! $result) {
             return $this->errorResponse('Entidad no encontrada.', 404);
         }
 
@@ -95,7 +95,7 @@ class EntidadController extends Controller
 
         $result = $this->destroyUseCase->execute($id);
 
-        if (!$result) {
+        if (! $result) {
             return $this->errorResponse('Entidad no encontrada.', 404);
         }
 

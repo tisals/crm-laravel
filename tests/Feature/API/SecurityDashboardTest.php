@@ -6,7 +6,6 @@ use App\Models\Entidad;
 use App\Models\Permiso;
 use App\Models\Producto;
 use App\Models\Rol;
-use App\Models\Seguimiento;
 use App\Models\Usuario;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use PHPUnit\Framework\Attributes\Test;
@@ -68,7 +67,7 @@ class SecurityDashboardTest extends TestCase
             'tipo_persona' => 'Jurídica',
         ]);
 
-        $response = $this->withHeader('Authorization', 'Bearer ' . $token)
+        $response = $this->withHeader('Authorization', 'Bearer '.$token)
             ->getJson('/api/v1/seguridad/dashboard');
 
         $response->assertStatus(200)
@@ -93,7 +92,7 @@ class SecurityDashboardTest extends TestCase
     {
         $token = $this->authenticate();
 
-        $response = $this->withHeader('Authorization', 'Bearer ' . $token)
+        $response = $this->withHeader('Authorization', 'Bearer '.$token)
             ->getJson('/api/v1/seguridad/dashboard');
 
         $response->assertStatus(200)

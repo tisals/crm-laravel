@@ -11,6 +11,7 @@ class Permiso extends Model
     use HasFactory, SoftDeletes;
 
     protected $table = 'permisos';
+
     protected $fillable = ['rol_id', 'vista', 'created_by', 'updated_by'];
 
     public function rol()

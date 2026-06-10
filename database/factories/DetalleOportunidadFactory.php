@@ -3,6 +3,8 @@
 namespace Database\Factories;
 
 use App\Models\DetalleOportunidad;
+use App\Models\Oportunidad;
+use App\Models\Producto;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 class DetalleOportunidadFactory extends Factory
@@ -17,8 +19,8 @@ class DetalleOportunidadFactory extends Factory
         $iva = $vrTotal * 0.19;
 
         return [
-            'oportunidad_id' => \App\Models\Oportunidad::factory(),
-            'producto_id' => \App\Models\Producto::factory(),
+            'oportunidad_id' => Oportunidad::factory(),
+            'producto_id' => Producto::factory(),
             'concepto' => fake()->optional(0.7)->sentence(3),
             'medida' => fake()->randomElement(['Und', 'Hrs', 'Srv']),
             'cantidad' => $cantidad,

@@ -2,13 +2,13 @@
 
 namespace App\Http\Controllers\API;
 
+use App\Application\UseCases\Rol\DestroyRolUseCase;
 use App\Application\UseCases\Rol\IndexRolUseCase;
 use App\Application\UseCases\Rol\ShowRolUseCase;
 use App\Application\UseCases\Rol\StoreRolUseCase;
 use App\Application\UseCases\Rol\UpdateRolUseCase;
-use App\Application\UseCases\Rol\DestroyRolUseCase;
-use App\Http\Controllers\Controller;
 use App\Http\Controllers\API\Concerns\ApiResponse;
+use App\Http\Controllers\Controller;
 use App\Http\Requests\RolRequest;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -47,7 +47,7 @@ class RolController extends Controller
     {
         $result = $this->showUseCase->execute($id);
 
-        if (!$result) {
+        if (! $result) {
             return $this->errorResponse('Rol no encontrado.', 404);
         }
 
@@ -58,7 +58,7 @@ class RolController extends Controller
     {
         $result = $this->updateUseCase->execute($id, $request->validated());
 
-        if (!$result) {
+        if (! $result) {
             return $this->errorResponse('Rol no encontrado.', 404);
         }
 
@@ -69,7 +69,7 @@ class RolController extends Controller
     {
         $result = $this->destroyUseCase->execute($id);
 
-        if (!$result) {
+        if (! $result) {
             return $this->errorResponse('Rol no encontrado.', 404);
         }
 

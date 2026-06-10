@@ -6,8 +6,8 @@ class Contacto
 {
     public function __construct(
         public int $id,
-        public ?int $entidad_id = null,
-        public ?string $entidad_nombre = null,
+        public ?int $entidad_id,
+        public ?string $entidad_nombre,
         public string $nombres,
         public string $apellidos,
         public ?string $area = null,

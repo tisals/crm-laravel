@@ -10,6 +10,7 @@ class Movimiento extends Model
     use HasFactory;
 
     protected $table = 'movimientos';
+
     protected $fillable = [
         'fecha',
         'valor_debito',

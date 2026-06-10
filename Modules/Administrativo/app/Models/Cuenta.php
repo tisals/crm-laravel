@@ -10,6 +10,7 @@ class Cuenta extends Model
     use HasFactory;
 
     protected $table = 'cuentas';
+
     protected $fillable = [
         'proveedor_id',
         'banco',

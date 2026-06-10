@@ -2,12 +2,11 @@
 
 namespace Tests\Feature\API;
 
+use App\Models\Contacto;
+use App\Models\Entidad;
 use App\Models\Permiso;
 use App\Models\Rol;
 use App\Models\Usuario;
-use App\Models\Entidad;
-use App\Models\Contacto;
-use App\Models\Oportunidad;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
@@ -40,7 +39,7 @@ class OportunidadClienteDesdeTest extends TestCase
         $contacto = Contacto::factory()->create(['entidad_id' => $entidad->id]);
 
         // Create opp in Aceptada state
-        $createResponse = $this->withHeader('Authorization', 'Bearer ' . $token)
+        $createResponse = $this->withHeader('Authorization', 'Bearer '.$token)
             ->postJson('/api/v1/oportunidades', [
                 'entidad_id' => $entidad->id,
                 'contacto_id' => $contacto->id,
@@ -50,8 +49,8 @@ class OportunidadClienteDesdeTest extends TestCase
         $id = $createResponse->json('data.id');
 
         // Mark as Ganada
-        $this->withHeader('Authorization', 'Bearer ' . $token)
-            ->putJson('/api/v1/oportunidades/' . $id, [
+        $this->withHeader('Authorization', 'Bearer '.$token)
+            ->putJson('/api/v1/oportunidades/'.$id, [
                 'estado' => 'Ganada',
             ]);
 
@@ -70,7 +69,7 @@ class OportunidadClienteDesdeTest extends TestCase
         $contacto = Contacto::factory()->create(['entidad_id' => $entidad->id]);
 
         // First opp won
-        $r1 = $this->withHeader('Authorization', 'Bearer ' . $token)
+        $r1 = $this->withHeader('Authorization', 'Bearer '.$token)
             ->postJson('/api/v1/oportunidades', [
                 'entidad_id' => $entidad->id,
                 'contacto_id' => $contacto->id,
@@ -79,8 +78,8 @@ class OportunidadClienteDesdeTest extends TestCase
             ]);
         $id1 = $r1->json('data.id');
 
-        $this->withHeader('Authorization', 'Bearer ' . $token)
-            ->putJson('/api/v1/oportunidades/' . $id1, ['estado' => 'Ganada']);
+        $this->withHeader('Authorization', 'Bearer '.$token)
+            ->putJson('/api/v1/oportunidades/'.$id1, ['estado' => 'Ganada']);
 
         $originalClienteDesde = Entidad::find($entidad->id)->cliente_desde;
 
@@ -88,7 +87,7 @@ class OportunidadClienteDesdeTest extends TestCase
         sleep(1);
 
         // Second opp won for same entity
-        $r2 = $this->withHeader('Authorization', 'Bearer ' . $token)
+        $r2 = $this->withHeader('Authorization', 'Bearer '.$token)
             ->postJson('/api/v1/oportunidades', [
                 'entidad_id' => $entidad->id,
                 'contacto_id' => $contacto->id,
@@ -97,8 +96,8 @@ class OportunidadClienteDesdeTest extends TestCase
             ]);
         $id2 = $r2->json('data.id');
 
-        $this->withHeader('Authorization', 'Bearer ' . $token)
-            ->putJson('/api/v1/oportunidades/' . $id2, ['estado' => 'Ganada']);
+        $this->withHeader('Authorization', 'Bearer '.$token)
+            ->putJson('/api/v1/oportunidades/'.$id2, ['estado' => 'Ganada']);
 
         $this->assertEquals(
             $originalClienteDesde,
@@ -115,7 +114,7 @@ class OportunidadClienteDesdeTest extends TestCase
         $contacto = Contacto::factory()->create(['entidad_id' => $entidad->id]);
 
         // Win an opp
-        $r = $this->withHeader('Authorization', 'Bearer ' . $token)
+        $r = $this->withHeader('Authorization', 'Bearer '.$token)
             ->postJson('/api/v1/oportunidades', [
                 'entidad_id' => $entidad->id,
                 'contacto_id' => $contacto->id,
@@ -124,14 +123,14 @@ class OportunidadClienteDesdeTest extends TestCase
             ]);
         $id = $r->json('data.id');
 
-        $this->withHeader('Authorization', 'Bearer ' . $token)
-            ->putJson('/api/v1/oportunidades/' . $id, ['estado' => 'Ganada']);
+        $this->withHeader('Authorization', 'Bearer '.$token)
+            ->putJson('/api/v1/oportunidades/'.$id, ['estado' => 'Ganada']);
 
         $this->assertNotNull(Entidad::find($entidad->id)->cliente_desde);
 
         // Change estado from Ganada to something else
-        $this->withHeader('Authorization', 'Bearer ' . $token)
-            ->putJson('/api/v1/oportunidades/' . $id, ['estado' => 'Perdida']);
+        $this->withHeader('Authorization', 'Bearer '.$token)
+            ->putJson('/api/v1/oportunidades/'.$id, ['estado' => 'Perdida']);
 
         $this->assertNull(
             Entidad::find($entidad->id)->cliente_desde,

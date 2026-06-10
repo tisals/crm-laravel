@@ -3,12 +3,13 @@
 namespace App\Http\Controllers\API;
 
 use App\Application\UseCases\Oportunidad\ShowOportunidadUseCase;
-use App\Http\Controllers\Controller;
 use App\Http\Controllers\API\Concerns\ApiResponse;
-use App\Models\Oportunidad;
-use App\Models\DetalleOportunidad;
-use App\Models\Seguimiento;
+use App\Http\Controllers\Controller;
 use App\Mail\CotizacionMail;
+use App\Models\Contacto;
+use App\Models\Entidad;
+use App\Models\Oportunidad;
+use App\Models\Seguimiento;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -97,17 +98,17 @@ class CotizacionController extends Controller
         $contacto = $oportunidad->contacto;
 
         if ($request->filled('contacto_id')) {
-            $overrideContacto = \App\Models\Contacto::find($validated['contacto_id']);
+            $overrideContacto = Contacto::find($validated['contacto_id']);
 
             // Validate it belongs to the opportunity's entidad
-            if (!$overrideContacto || $overrideContacto->entidad_id !== $oportunidad->entidad_id) {
+            if (! $overrideContacto || $overrideContacto->entidad_id !== $oportunidad->entidad_id) {
                 return $this->errorResponse(
                     'El contacto debe pertenecer a la entidad de esta oportunidad.',
                     422
                 );
             }
 
-            if (!$overrideContacto->email_contacto) {
+            if (! $overrideContacto->email_contacto) {
                 return $this->errorResponse(
                     'El contacto seleccionado no tiene email.',
                     422
@@ -118,7 +119,7 @@ class CotizacionController extends Controller
         }
 
         // Guard: necesita contacto con email
-        if (!$contacto || !$contacto->email_contacto) {
+        if (! $contacto || ! $contacto->email_contacto) {
             return $this->errorResponse(
                 'La oportunidad debe tener un contacto con email.',
                 422
@@ -171,13 +172,15 @@ class CotizacionController extends Controller
     private function buildPdfData(Oportunidad $oportunidad): array
     {
         $oportunidad->loadMissing('creador');
+        // Load entidad with its assigned users (comercial via entidad_usuario pivot)
+        $oportunidad->loadMissing('entidad.usuarios');
         $detalles = $oportunidad->detalles->map(fn ($d) => [
             'producto' => $d->producto?->nombre ?? '—',
             'descripcion' => $d->descripcion ?? $d->concepto ?? '—',
             'unidad' => $d->medida ?? 'Und',
             'qty' => number_format((float) $d->cantidad, 2),
-            'unit_value' => '$' . number_format((float) $d->vr_unitario, 0),
-            'total' => '$' . number_format((float) $d->vr_total, 0),
+            'unit_value' => '$'.number_format((float) $d->vr_unitario, 0),
+            'total' => '$'.number_format((float) $d->vr_total, 0),
             'iva' => (float) $d->iva,
         ]);
 
@@ -196,27 +199,30 @@ class CotizacionController extends Controller
             ->unique();
 
         $hasTecnoinnsoft = $lineas->contains(fn ($ln) => stripos($ln, 'tecnoinnsoft') !== false);
-        $hasDeseguridad  = $lineas->contains(fn ($ln) => stripos($ln, 'deseguridad') !== false);
+        $hasDeseguridad = $lineas->contains(fn ($ln) => stripos($ln, 'deseguridad') !== false);
 
         if ($hasTecnoinnsoft) {
-            $brandEntity = \App\Models\Entidad::where('estado', 'Propia')
+            $brandEntity = Entidad::where('estado', 'Propia')
                 ->where(function ($q) {
                     $q->where('nombre', 'like', '%Tecnoinnsoft%')
-                      ->orWhere('nombre_comercial', 'like', '%Tecnoinnsoft%');
+                        ->orWhere('nombre_comercial', 'like', '%Tecnoinnsoft%');
                 })->first();
         }
 
-        if (!$brandEntity && $hasDeseguridad) {
-            $brandEntity = \App\Models\Entidad::where('estado', 'Propia')
+        if (! $brandEntity && $hasDeseguridad) {
+            $brandEntity = Entidad::where('estado', 'Propia')
                 ->where(function ($q) {
                     $q->where('nombre', 'like', '%Deseguridad%')
-                      ->orWhere('nombre_comercial', 'like', '%Deseguridad%');
+                        ->orWhere('nombre_comercial', 'like', '%Deseguridad%');
                 })->first();
         }
 
-        if (!$brandEntity) {
-            $brandEntity = \App\Models\Entidad::where('estado', 'Propia')->first();
+        if (! $brandEntity) {
+            $brandEntity = Entidad::where('estado', 'Propia')->first();
         }
+
+        // Firma: siempre Tecnoinnsoft (entidad Propia id=1)
+        $firmaEntity = Entidad::find(1);
 
         return [
             'cotizacion_no' => $oportunidad->codigo,
@@ -250,19 +256,29 @@ class CotizacionController extends Controller
             ],
             'contact' => [
                 'user' => [
-                    'name' => $oportunidad->creador?->nombre ?? '—',
-                    'email' => $oportunidad->creador?->email ?? '—',
+                    'name' => $oportunidad->entidad?->usuarios?->first()?->nombre ?? $oportunidad->creador?->nombre ?? '—',
+                    'email' => $oportunidad->entidad?->usuarios?->first()?->email ?? $oportunidad->creador?->email ?? '—',
+                    'telefono' => $oportunidad->entidad?->usuarios?->first()?->telefono ?? '—',
                 ],
             ],
             'client_contact' => [
-                'name' => $oportunidad->contacto ? ($oportunidad->contacto->nombres . ' ' . $oportunidad->contacto->apellidos) : '—',
+                'name' => $oportunidad->contacto ? ($oportunidad->contacto->nombres.' '.$oportunidad->contacto->apellidos) : '—',
                 'email' => $oportunidad->contacto?->email_contacto ?? '—',
                 'telefono' => $oportunidad->contacto?->movil ?? $oportunidad->contacto?->tel_contacto ?? '—',
             ],
+            'firma' => [
+                'nombre' => $firmaEntity?->nombre ?? 'Tecnoinnsoft SAS BIC',
+                'nombre_comercial' => $firmaEntity?->nombre_comercial ?? 'Tecnoinnsoft',
+                'nit' => $firmaEntity?->identificacion ?? '',
+                'direccion' => $firmaEntity?->direccion ?? '',
+                'telefono' => $firmaEntity?->telefono ?? '',
+                'dominio' => $firmaEntity?->dominio ?? '',
+                'email' => $firmaEntity?->email ?? '',
+            ],
             'detalle_oportunidad' => $detalles,
-            'subtotal' => '$' . number_format($subtotal, 0),
-            'iva' => '$' . number_format($iva, 0),
-            'total_general' => '$' . number_format($total, 0),
+            'subtotal' => '$'.number_format($subtotal, 0),
+            'iva' => '$'.number_format($iva, 0),
+            'total_general' => '$'.number_format($total, 0),
         ];
     }
 }

@@ -27,8 +27,8 @@ class FollowUpNotification extends Notification implements ShouldQueue
         $hora = $this->seguimiento->hora?->slice(0, 5) ?? '';
 
         return (new MailMessage)
-            ->subject('⏰ Recordatorio de Seguimiento - ' . $this->seguimiento->tipo)
-            ->line("Tienes un seguimiento programado para el {$fecha}" . ($hora ? " a las {$hora}" : ''))
+            ->subject('⏰ Recordatorio de Seguimiento - '.$this->seguimiento->tipo)
+            ->line("Tienes un seguimiento programado para el {$fecha}".($hora ? " a las {$hora}" : ''))
             ->line($this->seguimiento->notas ?? '')
             ->action('Ver en CRM', url('/crm'));
     }

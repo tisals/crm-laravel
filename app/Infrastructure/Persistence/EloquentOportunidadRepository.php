@@ -5,9 +5,9 @@ namespace App\Infrastructure\Persistence;
 use App\Domain\Entities\Oportunidad as OportunidadEntity;
 use App\Domain\Repositories\OportunidadRepositoryInterface;
 use App\Models\Oportunidad as EloquentOportunidad;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Pagination\LengthAwarePaginator;
-use Illuminate\Support\Facades\DB;
 
 class EloquentOportunidadRepository extends BaseRepository implements OportunidadRepositoryInterface
 {
@@ -32,7 +32,7 @@ class EloquentOportunidadRepository extends BaseRepository implements Oportunida
             $query = $this->applySearch($query, $search);
         }
 
-        if (!empty($filters)) {
+        if (! empty($filters)) {
             $query = $this->applyFilters($query, $filters);
         }
 
@@ -54,9 +54,9 @@ class EloquentOportunidadRepository extends BaseRepository implements Oportunida
     {
         return $query->where(function ($q) use ($search) {
             $q->where('codigo', 'like', "%{$search}%")
-              ->orWhereHas('entidad', function ($sq) use ($search) {
-                  $sq->where('nombre', 'like', "%{$search}%");
-              });
+                ->orWhereHas('entidad', function ($sq) use ($search) {
+                    $sq->where('nombre', 'like', "%{$search}%");
+                });
         });
     }
 
@@ -72,15 +72,16 @@ class EloquentOportunidadRepository extends BaseRepository implements Oportunida
             ->lockForUpdate()
             ->first();
 
-        if (!$last) {
-            return $prefix . '001';
+        if (! $last) {
+            return $prefix.'001';
         }
 
         $lastConsec = (int) substr($last->codigo, strlen($prefix));
-        return $prefix . str_pad((string) ($lastConsec + 1), 3, '0', STR_PAD_LEFT);
+
+        return $prefix.str_pad((string) ($lastConsec + 1), 3, '0', STR_PAD_LEFT);
     }
 
-    protected function applyFilters($query, array $filters): \Illuminate\Database\Eloquent\Builder
+    protected function applyFilters($query, array $filters): Builder
     {
         foreach ($filters as $field => $value) {
             if ($value === null || $value === '') {
@@ -91,8 +92,8 @@ class EloquentOportunidadRepository extends BaseRepository implements Oportunida
                 'fecha_desde' => $query->whereDate('fecha', '>=', $value),
                 'fecha_hasta' => $query->whereDate('fecha', '<=', $value),
                 'codigo' => $query->where('codigo', 'like', "%{$value}%"),
-                'producto_id' => $query->whereHas('detalles', fn($q) => $q->where('producto_id', $value)),
-                'estado' => $query->whereHas('pipelineEtapa', fn($q) => $q->where('nombre', $value)),
+                'producto_id' => $query->whereHas('detalles', fn ($q) => $q->where('producto_id', $value)),
+                'estado' => $query->whereHas('pipelineEtapa', fn ($q) => $q->where('nombre', $value)),
                 default => $query->where($field, $value),
             };
         }

@@ -17,6 +17,7 @@ class EloquentSeguimientoRepository extends BaseRepository implements Seguimient
     protected function newQuery()
     {
         $modelClass = $this->getModelClass();
+
         return $modelClass::with(['autor', 'contacto', 'entidad', 'oportunidad']);
     }
 

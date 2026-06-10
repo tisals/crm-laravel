@@ -4,6 +4,7 @@ namespace App\Application\UseCases\Oportunidad;
 
 use App\Domain\Repositories\DetalleOportunidadRepositoryInterface;
 use App\Domain\Repositories\OportunidadRepositoryInterface;
+use App\Models\Oportunidad;
 
 class ClonarOportunidadUseCase
 {
@@ -16,13 +17,13 @@ class ClonarOportunidadUseCase
     {
         // Find source oportunidad
         $source = $this->oportunidadRepository->findById($id);
-        if (!$source) {
+        if (! $source) {
             return null;
         }
 
         // Load detalles from the model directly (repository returns entity without relaciones)
-        $sourceModel = \App\Models\Oportunidad::with('detalles')->find($id);
-        if (!$sourceModel) {
+        $sourceModel = Oportunidad::with('detalles')->find($id);
+        if (! $sourceModel) {
             return null;
         }
 
@@ -41,7 +42,7 @@ class ClonarOportunidadUseCase
             'aclaraciones' => $source->aclaraciones,
         ]);
 
-        if (!$newOportunidad) {
+        if (! $newOportunidad) {
             return null;
         }
 

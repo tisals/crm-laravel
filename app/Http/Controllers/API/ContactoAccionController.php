@@ -3,16 +3,16 @@
 namespace App\Http\Controllers\API;
 
 use App\Application\UseCases\Seguimiento\StoreSeguimientoUseCase;
-use App\Http\Controllers\Controller;
 use App\Http\Controllers\API\Concerns\ApiResponse;
-use App\Http\Requests\SeguimientoRequest;
+use App\Http\Controllers\Controller;
 use App\Models\Seguimiento;
 use App\Models\Usuario;
 use App\Notifications\FollowUpNotification;
+use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-use Illuminate\Support\Facades\Notification;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Notification;
 
 class ContactoAccionController extends Controller
 {
@@ -128,11 +128,12 @@ class ContactoAccionController extends Controller
     {
         $fecha = $seguimiento->fecha;
         $hora = $seguimiento->hora ?? '09:00';
-        $scheduledAt = \Carbon\Carbon::parse("{$fecha} {$hora}");
+        $scheduledAt = Carbon::parse("{$fecha} {$hora}");
 
         if ($scheduledAt->isPast()) {
             // Ya venció → notificar de inmediato
             $this->sendToUser($seguimiento);
+
             return;
         }
 

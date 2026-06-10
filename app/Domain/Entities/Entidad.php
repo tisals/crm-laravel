@@ -7,8 +7,8 @@ class Entidad
     public function __construct(
         public int $id,
         public string $tipo_persona,
-        public ?string $tipo_id = null,
-        public ?string $identificacion = null,
+        public ?string $tipo_id,
+        public ?string $identificacion,
         public string $nombre,
         public ?string $nombre_comercial = null,
         public ?string $direccion = null,
@@ -21,6 +21,10 @@ class Entidad
         public ?int $updated_by = null,
         public ?string $created_at = null,
         public ?string $updated_at = null,
+        public ?int $contactos_count = null,
+        public ?int $oportunidades_count = null,
+        public ?string $comercial_asignado = null,
+        public ?string $ciudad_nombre = null,
     ) {}
 
     public static function fromArray(array $data): self
@@ -42,6 +46,10 @@ class Entidad
             updated_by: $data['updated_by'] ?? null,
             created_at: $data['created_at'] ?? null,
             updated_at: $data['updated_at'] ?? null,
+            contactos_count: $data['contactos_count'] ?? null,
+            oportunidades_count: $data['oportunidades_count'] ?? null,
+            comercial_asignado: $data['comercial_asignado'] ?? null,
+            ciudad_nombre: $data['ciudad_nombre'] ?? null,
         );
     }
 
@@ -64,6 +72,10 @@ class Entidad
             'updated_by' => $this->updated_by,
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
+            'contactos_count' => $this->contactos_count,
+            'oportunidades_count' => $this->oportunidades_count,
+            'comercial_asignado' => $this->comercial_asignado,
+            'ciudad_nombre' => $this->ciudad_nombre,
         ];
     }
 }

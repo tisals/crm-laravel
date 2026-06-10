@@ -2,6 +2,7 @@
 
 namespace Modules\Administrativo\Models;
 
+use App\Models\Producto;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -11,6 +12,7 @@ class DetalleServicio extends Model
     use HasFactory, SoftDeletes;
 
     protected $table = 'detalle_servicios';
+
     protected $fillable = [
         'servicio_id',
         'producto_id',
@@ -32,6 +34,6 @@ class DetalleServicio extends Model
 
     public function producto()
     {
-        return $this->belongsTo(\App\Models\Producto::class, 'producto_id');
+        return $this->belongsTo(Producto::class, 'producto_id');
     }
 }

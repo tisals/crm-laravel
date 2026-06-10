@@ -2,13 +2,13 @@
 
 namespace App\Http\Controllers\API;
 
+use App\Application\UseCases\Cuenta\DestroyCuentaUseCase;
 use App\Application\UseCases\Cuenta\IndexCuentaUseCase;
 use App\Application\UseCases\Cuenta\ShowCuentaUseCase;
 use App\Application\UseCases\Cuenta\StoreCuentaUseCase;
 use App\Application\UseCases\Cuenta\UpdateCuentaUseCase;
-use App\Application\UseCases\Cuenta\DestroyCuentaUseCase;
-use App\Http\Controllers\Controller;
 use App\Http\Controllers\API\Concerns\ApiResponse;
+use App\Http\Controllers\Controller;
 use App\Http\Requests\CuentaRequest;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -46,7 +46,7 @@ class CuentaController extends Controller
     {
         $result = $this->showUseCase->execute($id);
 
-        if (!$result) {
+        if (! $result) {
             return $this->errorResponse('Cuenta no encontrada.', 404);
         }
 
@@ -57,7 +57,7 @@ class CuentaController extends Controller
     {
         $result = $this->updateUseCase->execute($id, $request->validated());
 
-        if (!$result) {
+        if (! $result) {
             return $this->errorResponse('Cuenta no encontrada.', 404);
         }
 
@@ -68,7 +68,7 @@ class CuentaController extends Controller
     {
         $result = $this->destroyUseCase->execute($id);
 
-        if (!$result) {
+        if (! $result) {
             return $this->errorResponse('Cuenta no encontrada.', 404);
         }
 

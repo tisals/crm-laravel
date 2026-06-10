@@ -2,6 +2,7 @@
 
 namespace Modules\CRM\Models;
 
+use App\Models\Entidad;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -11,6 +12,7 @@ class Contacto extends Model
     use HasFactory, SoftDeletes;
 
     protected $table = 'contacto';
+
     protected $fillable = [
         'entidad_id',
         'nombres',
@@ -40,6 +42,6 @@ class Contacto extends Model
 
     public function entidad()
     {
-        return $this->belongsTo(\App\Models\Entidad::class, 'entidad_id');
+        return $this->belongsTo(Entidad::class, 'entidad_id');
     }
 }

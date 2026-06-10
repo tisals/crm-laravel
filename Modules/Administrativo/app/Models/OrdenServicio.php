@@ -5,12 +5,14 @@ namespace Modules\Administrativo\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Modules\CRM\Models\Contacto;
 
 class OrdenServicio extends Model
 {
     use HasFactory, SoftDeletes;
 
     protected $table = 'orden_servicio';
+
     protected $fillable = [
         'detalle_srv_id',
         'colaborador_id',
@@ -44,6 +46,6 @@ class OrdenServicio extends Model
 
     public function contacto()
     {
-        return $this->belongsTo(\Modules\CRM\Models\Contacto::class, 'contacto_id');
+        return $this->belongsTo(Contacto::class, 'contacto_id');
     }
 }

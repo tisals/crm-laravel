@@ -1,8 +1,17 @@
 <?php
 
+use App\Http\Middleware\ApiAccessLogger;
+use App\Http\Middleware\ExtractTokenFromQuery;
+use App\Http\Middleware\ThrottleMutations;
+use App\Infrastructure\Auth\RbacMiddleware;
+use App\Infrastructure\Auth\ValidateApiKeyMiddleware;
+use App\Providers\EventServiceProvider;
+use Illuminate\Auth\AuthenticationException;
 use Illuminate\Foundation\Application;
 use Illuminate\Foundation\Configuration\Exceptions;
 use Illuminate\Foundation\Configuration\Middleware;
+use Illuminate\Http\Request;
+use Symfony\Component\HttpKernel\Exception\NotFoundHttpException;
 
 return Application::configure(basePath: dirname(__DIR__))
     ->withRouting(
@@ -12,33 +21,40 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
-        $middleware->redirectGuestsTo(function (\Illuminate\Http\Request $request) {
+        $middleware->redirectGuestsTo(function (Request $request) {
             if ($request->is('api/*') || $request->expectsJson()) {
                 return null;
             }
+
             return '/login';
         });
 
         $middleware->alias([
-            'api-key' => \App\Infrastructure\Auth\ValidateApiKeyMiddleware::class,
-            'rbac' => \App\Infrastructure\Auth\RbacMiddleware::class,
-            'api-logger' => \App\Http\Middleware\ApiAccessLogger::class,
-            'extract-token' => \App\Http\Middleware\ExtractTokenFromQuery::class,
-            'throttle-mutations' => \App\Http\Middleware\ThrottleMutations::class,
+            'api-key' => ValidateApiKeyMiddleware::class,
+            'rbac' => RbacMiddleware::class,
+            'api-logger' => ApiAccessLogger::class,
+            'extract-token' => ExtractTokenFromQuery::class,
+            'throttle-mutations' => ThrottleMutations::class,
         ]);
-        
+
         // Agregar logger como middleware global para todas las rutas API
         $middleware->api(prepend: [
-            \App\Http\Middleware\ApiAccessLogger::class,
+            ApiAccessLogger::class,
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions): void {
-        $exceptions->render(function (\Illuminate\Auth\AuthenticationException $e, \Illuminate\Http\Request $request) {
+        $exceptions->render(function (AuthenticationException $e, Request $request) {
             if ($request->expectsJson() || $request->is('api/*')) {
                 return response()->json(['success' => false, 'error' => 'No autenticado.'], 401);
             }
         });
+
+        $exceptions->render(function (NotFoundHttpException $e, Request $request) {
+            if ($request->expectsJson() || $request->is('api/*')) {
+                return response()->json(['success' => false, 'error' => $e->getMessage() ?: 'Recurso no encontrado.'], 404);
+            }
+        });
     })
     ->withProviders([
-        \App\Providers\EventServiceProvider::class,
+        EventServiceProvider::class,
     ])->create();

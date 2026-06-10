@@ -2,13 +2,13 @@
 
 namespace App\Http\Controllers\API;
 
+use App\Application\UseCases\Etiqueta\DestroyEtiquetaUseCase;
 use App\Application\UseCases\Etiqueta\IndexEtiquetaUseCase;
 use App\Application\UseCases\Etiqueta\ShowEtiquetaUseCase;
 use App\Application\UseCases\Etiqueta\StoreEtiquetaUseCase;
 use App\Application\UseCases\Etiqueta\UpdateEtiquetaUseCase;
-use App\Application\UseCases\Etiqueta\DestroyEtiquetaUseCase;
-use App\Http\Controllers\Controller;
 use App\Http\Controllers\API\Concerns\ApiResponse;
+use App\Http\Controllers\Controller;
 use App\Http\Requests\EtiquetaRequest;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -47,7 +47,7 @@ class EtiquetaController extends Controller
     {
         $result = $this->showUseCase->execute($id);
 
-        if (!$result) {
+        if (! $result) {
             return $this->errorResponse('Etiqueta no encontrada.', 404);
         }
 
@@ -58,7 +58,7 @@ class EtiquetaController extends Controller
     {
         $result = $this->updateUseCase->execute($id, $request->validated());
 
-        if (!$result) {
+        if (! $result) {
             return $this->errorResponse('Etiqueta no encontrada.', 404);
         }
 
@@ -69,7 +69,7 @@ class EtiquetaController extends Controller
     {
         $result = $this->destroyUseCase->execute($id);
 
-        if (!$result) {
+        if (! $result) {
             return $this->errorResponse('Etiqueta no encontrada.', 404);
         }
 

@@ -28,7 +28,7 @@ class PermisoSeeder extends Seeder
             'etiquetas' => ['index', 'store', 'show', 'update', 'destroy'],
             'entidad' => ['index', 'store', 'show', 'update', 'destroy'],
             'contacto' => ['index', 'store', 'show', 'update', 'destroy', 'acciones'],
-            'oportunidades' => ['index', 'store', 'show', 'update', 'destroy', 'ganar', 'clonar', 'version'],
+            'oportunidades' => ['index', 'store', 'show', 'update', 'destroy', 'ganar', 'clonar', 'version', 'bulk-move'],
             'seguimientos' => ['index', 'store', 'show', 'update', 'destroy'],
             'maestros' => ['index', 'store', 'show', 'update', 'destroy'],
             'servicios' => ['index', 'store', 'show', 'update', 'destroy', 'renew', 'byEntidad'],
@@ -37,7 +37,8 @@ class PermisoSeeder extends Seeder
             'cuentas' => ['index', 'store', 'show', 'update', 'destroy'],
             'movimientos' => ['index', 'store', 'show', 'update', 'destroy'],
             'entidad-usuario' => ['index', 'store', 'destroy'],
-            'pipelines' => ['index'],
+            'pipelines' => ['index', 'store', 'show', 'update', 'destroy'],
+            'pipeline-etapas' => ['index', 'store', 'show', 'update', 'destroy'],
         ];
 
         $roles = Rol::whereNotIn('nombre', ['SuperAdmin', 'Admin'])->get();

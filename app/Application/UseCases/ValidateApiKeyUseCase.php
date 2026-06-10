@@ -12,7 +12,7 @@ class ValidateApiKeyUseCase
             ->where('estado', 'Activo')
             ->first();
 
-        if (!$entidad) {
+        if (! $entidad) {
             return null;
         }
 

@@ -3,8 +3,8 @@
 namespace App\Http\Controllers\API;
 
 use App\Application\UseCases\Seguridad\GetSecurityDashboardUseCase;
-use App\Http\Controllers\Controller;
 use App\Http\Controllers\API\Concerns\ApiResponse;
+use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
 
 class SecurityDashboardController extends Controller

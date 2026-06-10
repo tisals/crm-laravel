@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Log;
 
 class CrmWebhookSender
 {
-    public function send(string $event, array $data): void
+    public function send(string $event, array $data, string $configPrefix = 'outbound'): void
     {
         $payload = [
             'event' => $event,
@@ -16,10 +16,10 @@ class CrmWebhookSender
         ];
 
         $body = json_encode($payload);
-        $secret = config('webhook.outbound.secret');
-        $signature = 'sha256=' . hash_hmac('sha256', $body, $secret);
+        $secret = config("webhook.{$configPrefix}.secret");
+        $signature = 'sha256='.hash_hmac('sha256', $body, $secret);
 
-        $url = config('webhook.outbound.url');
+        $url = config("webhook.{$configPrefix}.url");
 
         try {
             Http::withHeaders([

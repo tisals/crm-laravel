@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\API;
 
+use App\Models\Ciudad;
 use App\Models\Colaborador;
 use App\Models\Entidad;
 use App\Models\Permiso;
@@ -9,7 +10,6 @@ use App\Models\Proveedor;
 use App\Models\Rol;
 use App\Models\Servicio;
 use App\Models\Usuario;
-use App\Models\Ciudad;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
@@ -55,7 +55,7 @@ class MovimientoControllerTest extends TestCase
     {
         $token = $this->authenticate();
 
-        $response = $this->withHeader('Authorization', 'Bearer ' . $token)
+        $response = $this->withHeader('Authorization', 'Bearer '.$token)
             ->getJson('/api/v1/movimientos');
 
         $response->assertStatus(200)
@@ -69,7 +69,7 @@ class MovimientoControllerTest extends TestCase
         $token = $this->authenticate();
         $refs = $this->createReferences();
 
-        $response = $this->withHeader('Authorization', 'Bearer ' . $token)
+        $response = $this->withHeader('Authorization', 'Bearer '.$token)
             ->postJson('/api/v1/movimientos', [
                 'fecha' => '2026-05-10',
                 'valor_debito' => 500000,
@@ -91,7 +91,7 @@ class MovimientoControllerTest extends TestCase
         $token = $this->authenticate();
         $refs = $this->createReferences();
 
-        $response = $this->withHeader('Authorization', 'Bearer ' . $token)
+        $response = $this->withHeader('Authorization', 'Bearer '.$token)
             ->postJson('/api/v1/movimientos', [
                 'fecha' => '2026-05-10',
                 'valor_debito' => 0,
@@ -110,7 +110,7 @@ class MovimientoControllerTest extends TestCase
     {
         $token = $this->authenticate();
 
-        $response = $this->withHeader('Authorization', 'Bearer ' . $token)
+        $response = $this->withHeader('Authorization', 'Bearer '.$token)
             ->postJson('/api/v1/movimientos', [
                 'fecha' => '2026-05-10',
                 'valor_debito' => 0,
@@ -125,7 +125,7 @@ class MovimientoControllerTest extends TestCase
     {
         $token = $this->authenticate();
 
-        $response = $this->withHeader('Authorization', 'Bearer ' . $token)
+        $response = $this->withHeader('Authorization', 'Bearer '.$token)
             ->postJson('/api/v1/movimientos', [
                 'fecha' => '2026-05-10',
                 'valor_debito' => 500000,
@@ -141,7 +141,7 @@ class MovimientoControllerTest extends TestCase
         $token = $this->authenticate();
         $refs = $this->createReferences();
 
-        $createResponse = $this->withHeader('Authorization', 'Bearer ' . $token)
+        $createResponse = $this->withHeader('Authorization', 'Bearer '.$token)
             ->postJson('/api/v1/movimientos', [
                 'fecha' => '2026-05-10',
                 'valor_debito' => 250000,
@@ -150,8 +150,8 @@ class MovimientoControllerTest extends TestCase
 
         $id = $createResponse->json('data.id');
 
-        $response = $this->withHeader('Authorization', 'Bearer ' . $token)
-            ->getJson('/api/v1/movimientos/' . $id);
+        $response = $this->withHeader('Authorization', 'Bearer '.$token)
+            ->getJson('/api/v1/movimientos/'.$id);
 
         $response->assertStatus(200)
             ->assertJsonPath('success', true)
@@ -164,7 +164,7 @@ class MovimientoControllerTest extends TestCase
         $token = $this->authenticate();
         $refs = $this->createReferences();
 
-        $createResponse = $this->withHeader('Authorization', 'Bearer ' . $token)
+        $createResponse = $this->withHeader('Authorization', 'Bearer '.$token)
             ->postJson('/api/v1/movimientos', [
                 'fecha' => '2026-05-10',
                 'valor_debito' => 100000,
@@ -173,8 +173,8 @@ class MovimientoControllerTest extends TestCase
 
         $id = $createResponse->json('data.id');
 
-        $response = $this->withHeader('Authorization', 'Bearer ' . $token)
-            ->putJson('/api/v1/movimientos/' . $id, [
+        $response = $this->withHeader('Authorization', 'Bearer '.$token)
+            ->putJson('/api/v1/movimientos/'.$id, [
                 'valor_debito' => 150000,
                 'observaciones' => 'Actualizado',
             ]);
@@ -190,7 +190,7 @@ class MovimientoControllerTest extends TestCase
         $token = $this->authenticate();
         $refs = $this->createReferences();
 
-        $createResponse = $this->withHeader('Authorization', 'Bearer ' . $token)
+        $createResponse = $this->withHeader('Authorization', 'Bearer '.$token)
             ->postJson('/api/v1/movimientos', [
                 'fecha' => '2026-05-10',
                 'valor_debito' => 50000,
@@ -199,8 +199,8 @@ class MovimientoControllerTest extends TestCase
 
         $id = $createResponse->json('data.id');
 
-        $response = $this->withHeader('Authorization', 'Bearer ' . $token)
-            ->deleteJson('/api/v1/movimientos/' . $id);
+        $response = $this->withHeader('Authorization', 'Bearer '.$token)
+            ->deleteJson('/api/v1/movimientos/'.$id);
 
         $response->assertStatus(200)
             ->assertJsonPath('success', true);
@@ -211,7 +211,7 @@ class MovimientoControllerTest extends TestCase
     {
         $token = $this->authenticate();
 
-        $response = $this->withHeader('Authorization', 'Bearer ' . $token)
+        $response = $this->withHeader('Authorization', 'Bearer '.$token)
             ->getJson('/api/v1/movimientos/9999');
 
         $response->assertStatus(404)

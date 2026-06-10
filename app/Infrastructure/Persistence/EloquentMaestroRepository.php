@@ -27,11 +27,11 @@ class EloquentMaestroRepository extends BaseRepository implements MaestroReposit
         if ($search) {
             $query->where(function ($q) use ($search) {
                 $q->where('nombre', 'like', "%{$search}%")
-                  ->orWhere('campo', 'like', "%{$search}%");
+                    ->orWhere('campo', 'like', "%{$search}%");
             });
         }
 
-        if (!empty($filters['campo'])) {
+        if (! empty($filters['campo'])) {
             $query->where('campo', $filters['campo']);
         }
 
@@ -56,7 +56,7 @@ class EloquentMaestroRepository extends BaseRepository implements MaestroReposit
     {
         $model = EloquentMaestro::find($id);
 
-        if (!$model) {
+        if (! $model) {
             return null;
         }
 
@@ -69,7 +69,7 @@ class EloquentMaestroRepository extends BaseRepository implements MaestroReposit
     {
         $model = EloquentMaestro::find($id);
 
-        if (!$model) {
+        if (! $model) {
             return false;
         }
 

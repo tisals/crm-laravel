@@ -2,6 +2,7 @@
 
 namespace App\Mail;
 
+use App\Models\Entidad;
 use App\Models\Oportunidad;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Bus\Queueable;
@@ -52,26 +53,26 @@ class CotizacionMail extends Mailable
             ->unique();
 
         $hasTecnoinnsoft = $lineas->contains(fn ($ln) => stripos($ln, 'tecnoinnsoft') !== false);
-        $hasDeseguridad  = $lineas->contains(fn ($ln) => stripos($ln, 'deseguridad') !== false);
+        $hasDeseguridad = $lineas->contains(fn ($ln) => stripos($ln, 'deseguridad') !== false);
 
         if ($hasTecnoinnsoft) {
-            $brandEntity = \App\Models\Entidad::where('estado', 'Propia')
+            $brandEntity = Entidad::where('estado', 'Propia')
                 ->where(function ($q) {
                     $q->where('nombre', 'like', '%Tecnoinnsoft%')
-                      ->orWhere('nombre_comercial', 'like', '%Tecnoinnsoft%');
+                        ->orWhere('nombre_comercial', 'like', '%Tecnoinnsoft%');
                 })->first();
         }
 
-        if (!$brandEntity && $hasDeseguridad) {
-            $brandEntity = \App\Models\Entidad::where('estado', 'Propia')
+        if (! $brandEntity && $hasDeseguridad) {
+            $brandEntity = Entidad::where('estado', 'Propia')
                 ->where(function ($q) {
                     $q->where('nombre', 'like', '%Deseguridad%')
-                      ->orWhere('nombre_comercial', 'like', '%Deseguridad%');
+                        ->orWhere('nombre_comercial', 'like', '%Deseguridad%');
                 })->first();
         }
 
-        if (!$brandEntity) {
-            $brandEntity = \App\Models\Entidad::where('estado', 'Propia')->first();
+        if (! $brandEntity) {
+            $brandEntity = Entidad::where('estado', 'Propia')->first();
         }
         // ── Fin brand resolution ──
 
@@ -120,13 +121,13 @@ class CotizacionMail extends Mailable
                 'descripcion' => $d->descripcion ?? $d->concepto ?? '—',
                 'unidad' => $d->medida ?? 'Und',
                 'qty' => number_format((float) $d->cantidad, 2),
-                'unit_value' => '$' . number_format((float) $d->vr_unitario, 0),
-                'total' => '$' . number_format((float) $d->vr_total, 0),
+                'unit_value' => '$'.number_format((float) $d->vr_unitario, 0),
+                'total' => '$'.number_format((float) $d->vr_total, 0),
                 'iva' => (float) $d->iva,
             ]),
-            'subtotal' => '$' . number_format($subtotal, 0),
-            'iva' => '$' . number_format($iva, 0),
-            'total_general' => '$' . number_format($total, 0),
+            'subtotal' => '$'.number_format($subtotal, 0),
+            'iva' => '$'.number_format($iva, 0),
+            'total_general' => '$'.number_format($total, 0),
         ];
 
         $pdf = Pdf::loadView('pdf.cotizacion', $data);

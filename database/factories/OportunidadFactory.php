@@ -2,8 +2,9 @@
 
 namespace Database\Factories;
 
-use App\Models\Oportunidad;
+use App\Models\Entidad;
 use Illuminate\Database\Eloquent\Factories\Factory;
+use Modules\CRM\Models\Oportunidad;
 
 class OportunidadFactory extends Factory
 {
@@ -13,7 +14,7 @@ class OportunidadFactory extends Factory
     {
         return [
             'codigo' => fake()->unique()->regexify('COT-[0-9]{6}'),
-            'entidad_id' => \App\Models\Entidad::factory(),
+            'entidad_id' => Entidad::factory(),
             'contacto_id' => null,
             'fecha' => now()->format('Y-m-d'),
             'fuente_canal' => fake()->optional(0.6)->randomElement(['Web', 'Referido', 'Llamada', 'Email', 'Otro']),

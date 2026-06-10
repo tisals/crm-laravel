@@ -34,7 +34,7 @@ class UsuarioControllerTest extends TestCase
     {
         $token = $this->authenticate();
 
-        $response = $this->withHeader('Authorization', 'Bearer ' . $token)
+        $response = $this->withHeader('Authorization', 'Bearer '.$token)
             ->getJson('/api/v1/usuarios');
 
         $response->assertStatus(200)
@@ -48,7 +48,7 @@ class UsuarioControllerTest extends TestCase
         $token = $this->authenticate();
         $rol = Rol::create(['nombre' => 'Ventas', 'estado' => 'Activo']);
 
-        $response = $this->withHeader('Authorization', 'Bearer ' . $token)
+        $response = $this->withHeader('Authorization', 'Bearer '.$token)
             ->postJson('/api/v1/usuarios', [
                 'nombre' => 'New User',
                 'email' => 'newuser@test.com',
@@ -75,8 +75,8 @@ class UsuarioControllerTest extends TestCase
             'estado' => 'Activo',
         ]);
 
-        $response = $this->withHeader('Authorization', 'Bearer ' . $token)
-            ->getJson('/api/v1/usuarios/' . $usuario->id);
+        $response = $this->withHeader('Authorization', 'Bearer '.$token)
+            ->getJson('/api/v1/usuarios/'.$usuario->id);
 
         $response->assertStatus(200)
             ->assertJsonPath('success', true)
@@ -96,8 +96,8 @@ class UsuarioControllerTest extends TestCase
             'estado' => 'Activo',
         ]);
 
-        $response = $this->withHeader('Authorization', 'Bearer ' . $token)
-            ->putJson('/api/v1/usuarios/' . $usuario->id, [
+        $response = $this->withHeader('Authorization', 'Bearer '.$token)
+            ->putJson('/api/v1/usuarios/'.$usuario->id, [
                 'nombre' => 'Updated Name',
                 'email' => 'old@test.com',
                 'rol_id' => $rol->id,
@@ -121,8 +121,8 @@ class UsuarioControllerTest extends TestCase
             'estado' => 'Activo',
         ]);
 
-        $response = $this->withHeader('Authorization', 'Bearer ' . $token)
-            ->deleteJson('/api/v1/usuarios/' . $usuario->id);
+        $response = $this->withHeader('Authorization', 'Bearer '.$token)
+            ->deleteJson('/api/v1/usuarios/'.$usuario->id);
 
         $response->assertStatus(200)
             ->assertJsonPath('success', true);
@@ -141,8 +141,8 @@ class UsuarioControllerTest extends TestCase
             'estado' => 'Activo',
         ]);
 
-        $response = $this->withHeader('Authorization', 'Bearer ' . $token)
-            ->putJson('/api/v1/usuarios/' . $usuario->id . '/status');
+        $response = $this->withHeader('Authorization', 'Bearer '.$token)
+            ->putJson('/api/v1/usuarios/'.$usuario->id.'/status');
 
         $response->assertStatus(200)
             ->assertJsonPath('success', true)
@@ -154,7 +154,7 @@ class UsuarioControllerTest extends TestCase
     {
         $token = $this->authenticate();
 
-        $response = $this->withHeader('Authorization', 'Bearer ' . $token)
+        $response = $this->withHeader('Authorization', 'Bearer '.$token)
             ->postJson('/api/v1/usuarios', []);
 
         $response->assertStatus(422);

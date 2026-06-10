@@ -2,17 +2,18 @@
 
 namespace Modules\CRM\Http\Controllers;
 
-use App\Http\Controllers\Controller;
+use App\Application\UseCases\Sailus\ValidateLicenseUseCase;
+use App\Application\UseCases\Sailus\WebhookPurchaseUseCase;
 use App\Http\Controllers\API\Concerns\ApiResponse;
+use App\Http\Controllers\Controller;
 use App\Http\Requests\WebhookRegistrationRequest;
-use Modules\CRM\Models\Contacto;
-use App\Models\Entidad;
 use App\Models\Producto;
 use App\Models\Servicio;
-use Illuminate\Support\Facades\DB;
-use App\Application\UseCases\Sailus\WebhookPurchaseUseCase;
-use App\Application\UseCases\Sailus\ValidateLicenseUseCase;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
+use Modules\CRM\Actions\IngestLeadAction;
+use Modules\CRM\Models\Contacto;
 
 class SailusWebhookController extends Controller
 {
@@ -21,9 +22,10 @@ class SailusWebhookController extends Controller
     public function __construct(
         private WebhookPurchaseUseCase $purchaseUseCase,
         private ValidateLicenseUseCase $validateLicenseUseCase,
+        private IngestLeadAction $ingestLeadAction,
     ) {}
 
-    public function purchase(Request $request): \Illuminate\Http\JsonResponse
+    public function purchase(Request $request): JsonResponse
     {
         $data = $request->validate([
             'source' => 'required|string',
@@ -43,7 +45,7 @@ class SailusWebhookController extends Controller
         return response()->json($result, 200);
     }
 
-    public function validateLicense(Request $request): \Illuminate\Http\JsonResponse
+    public function validateLicense(Request $request): JsonResponse
     {
         $data = $request->validate([
             'username' => 'required|string',
@@ -59,51 +61,38 @@ class SailusWebhookController extends Controller
             $data['plugin_version'] ?? null
         );
 
-        if (!$result) {
+        if (! $result) {
             return $this->errorResponse('Licencia inválida o usuario no autorizado.', 401);
         }
 
         return response()->json($result, 200);
     }
 
-    public function registration(WebhookRegistrationRequest $request): \Illuminate\Http\JsonResponse
+    public function registration(WebhookRegistrationRequest $request): JsonResponse
     {
-        // Check duplicate email
+        // Check duplicate email (global, cross-org)
         $existing = Contacto::where('email_contacto', $request->contact_email)->first();
         if ($existing) {
             return $this->errorResponse('El email del contacto ya está registrado', 409);
         }
 
         $result = DB::transaction(function () use ($request) {
-            // Parse contact name
             $nameParts = explode(' ', $request->contact_name, 2);
-            $nombres = $nameParts[0];
-            $apellidos = $nameParts[1] ?? '';
 
-            // 1. Create Entidad (organization)
-            $entidad = Entidad::create([
-                'tipo_persona' => 'Juridica',
-                'tipo_id' => 'NIT',
-                'identificacion' => 'PEND-' . strtoupper(substr(md5(uniqid()), 0, 8)),
-                'nombre' => $request->organization_name,
-                'nombre_comercial' => $request->organization_name,
-                'estado' => 'Prospecto',
-            ]);
-
-            // 2. Create Contacto
-            $contacto = Contacto::create([
-                'entidad_id' => $entidad->id,
-                'nombres' => $nombres,
-                'apellidos' => $apellidos,
-                'email_contacto' => $request->contact_email,
-                'rol' => 'Contacto WP',
-                'etapa' => 'Nuevo',
-                'estado' => 'Activo',
-                'diagnostico_data' => $request->diagnostico_data,
+            $data = [
+                'email' => $request->contact_email,
+                'nombres' => $nameParts[0],
+                'apellidos' => $nameParts[1] ?? '',
+                'nombre_empresa' => $request->organization_name,
                 'fuente' => $request->source ?? 'wordpress',
-            ]);
+                'diagnostico_data' => $request->diagnostico_data,
+                'plan_type' => $request->plan_type,
+                'service_name' => $request->service_name,
+            ];
 
-            // 3. Lookup plan
+            $passable = $this->ingestLeadAction->execute($data);
+
+            // Plan lookup for response
             $planId = null;
             if ($request->plan_type) {
                 $plan = Producto::where('tipo', 'suscripcion')
@@ -112,17 +101,17 @@ class SailusWebhookController extends Controller
                 $planId = $plan?->id;
             }
 
-            // 4. Create Servicio
+            // Create Servicio
             $servicio = Servicio::create([
-                'entidad_id' => $entidad->id,
-                'nombre' => $request->service_name ?? 'Servicio - ' . $request->organization_name,
+                'entidad_id' => $passable['entidad_id'],
+                'nombre' => $request->service_name ?? 'Servicio - '.$request->organization_name,
                 'vr_servicio' => 0,
                 'estado' => 'Nuevo',
             ]);
 
             return [
-                'org_id' => $entidad->id,
-                'contact_id' => $contacto->id,
+                'org_id' => $passable['entidad_id'],
+                'contact_id' => $passable['contacto_id'],
                 'plan_id' => $planId,
                 'status' => 'active',
                 'pdf_url' => null,

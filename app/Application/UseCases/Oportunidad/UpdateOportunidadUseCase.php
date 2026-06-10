@@ -3,6 +3,8 @@
 namespace App\Application\UseCases\Oportunidad;
 
 use App\Domain\Repositories\OportunidadRepositoryInterface;
+use App\Models\Entidad;
+use App\Models\Oportunidad;
 
 class UpdateOportunidadUseCase
 {
@@ -22,16 +24,16 @@ class UpdateOportunidadUseCase
         if (isset($data['estado']) && $data['estado'] !== 'Ganada') {
             $oportunidad = $this->repository->findById($id);
             if ($oportunidad && $oportunidad->estado === 'Ganada') {
-                $hasOtherWon = \App\Models\Oportunidad::where('entidad_id', $oportunidad->entidad_id)
+                $hasOtherWon = Oportunidad::where('entidad_id', $oportunidad->entidad_id)
                     ->where('estado', 'Ganada')
                     ->where('id', '!=', $oportunidad->id)
                     ->exists();
 
-                if (!$hasOtherWon) {
-                    \App\Models\Entidad::where('id', $oportunidad->entidad_id)
+                if (! $hasOtherWon) {
+                    Entidad::where('id', $oportunidad->entidad_id)
                         ->update([
                             'cliente_desde' => null,
-                            'estado' => 'Activo'
+                            'estado' => 'Activo',
                         ]);
                 }
             }

@@ -2,14 +2,14 @@
 
 namespace App\Http\Controllers\API;
 
+use App\Application\UseCases\Usuario\DestroyUsuarioUseCase;
 use App\Application\UseCases\Usuario\IndexUsuarioUseCase;
 use App\Application\UseCases\Usuario\ShowUsuarioUseCase;
 use App\Application\UseCases\Usuario\StoreUsuarioUseCase;
-use App\Application\UseCases\Usuario\UpdateUsuarioUseCase;
-use App\Application\UseCases\Usuario\DestroyUsuarioUseCase;
 use App\Application\UseCases\Usuario\ToggleStatusUsuarioUseCase;
-use App\Http\Controllers\Controller;
+use App\Application\UseCases\Usuario\UpdateUsuarioUseCase;
 use App\Http\Controllers\API\Concerns\ApiResponse;
+use App\Http\Controllers\Controller;
 use App\Http\Requests\UsuarioRequest;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -49,7 +49,7 @@ class UsuarioController extends Controller
     {
         $result = $this->showUseCase->execute($id);
 
-        if (!$result) {
+        if (! $result) {
             return $this->errorResponse('Usuario no encontrado.', 404);
         }
 
@@ -60,7 +60,7 @@ class UsuarioController extends Controller
     {
         $result = $this->updateUseCase->execute($id, $request->validated());
 
-        if (!$result) {
+        if (! $result) {
             return $this->errorResponse('Usuario no encontrado.', 404);
         }
 
@@ -72,7 +72,7 @@ class UsuarioController extends Controller
         try {
             $result = $this->destroyUseCase->execute($id, auth()->id());
 
-            if (!$result) {
+            if (! $result) {
                 return $this->errorResponse('Usuario no encontrado.', 404);
             }
 

@@ -2,13 +2,13 @@
 
 namespace App\Http\Controllers\API;
 
+use App\Application\UseCases\Movimiento\DestroyMovimientoUseCase;
 use App\Application\UseCases\Movimiento\IndexMovimientoUseCase;
 use App\Application\UseCases\Movimiento\ShowMovimientoUseCase;
 use App\Application\UseCases\Movimiento\StoreMovimientoUseCase;
 use App\Application\UseCases\Movimiento\UpdateMovimientoUseCase;
-use App\Application\UseCases\Movimiento\DestroyMovimientoUseCase;
-use App\Http\Controllers\Controller;
 use App\Http\Controllers\API\Concerns\ApiResponse;
+use App\Http\Controllers\Controller;
 use App\Http\Requests\MovimientoRequest;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -46,7 +46,7 @@ class MovimientoController extends Controller
     {
         $result = $this->showUseCase->execute($id);
 
-        if (!$result) {
+        if (! $result) {
             return $this->errorResponse('Movimiento no encontrado.', 404);
         }
 
@@ -57,7 +57,7 @@ class MovimientoController extends Controller
     {
         $result = $this->updateUseCase->execute($id, $request->validated());
 
-        if (!$result) {
+        if (! $result) {
             return $this->errorResponse('Movimiento no encontrado.', 404);
         }
 
@@ -68,7 +68,7 @@ class MovimientoController extends Controller
     {
         $result = $this->destroyUseCase->execute($id);
 
-        if (!$result) {
+        if (! $result) {
             return $this->errorResponse('Movimiento no encontrado.', 404);
         }
 

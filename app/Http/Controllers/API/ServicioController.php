@@ -2,19 +2,18 @@
 
 namespace App\Http\Controllers\API;
 
+use App\Application\UseCases\Servicio\DestroyServicioUseCase;
 use App\Application\UseCases\Servicio\IndexServicioUseCase;
+use App\Application\UseCases\Servicio\RenewServicioUseCase;
 use App\Application\UseCases\Servicio\ShowServicioUseCase;
 use App\Application\UseCases\Servicio\StoreServicioUseCase;
 use App\Application\UseCases\Servicio\UpdateServicioUseCase;
-use App\Application\UseCases\Servicio\DestroyServicioUseCase;
-use App\Http\Controllers\Controller;
 use App\Http\Controllers\API\Concerns\ApiResponse;
+use App\Http\Controllers\Controller;
 use App\Http\Requests\ServicioRequest;
 use App\Models\Servicio;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
-
-use App\Application\UseCases\Servicio\RenewServicioUseCase;
 
 class ServicioController extends Controller
 {
@@ -51,7 +50,7 @@ class ServicioController extends Controller
     {
         $result = $this->showUseCase->execute($id);
 
-        if (!$result) {
+        if (! $result) {
             return $this->errorResponse('Servicio no encontrado.', 404);
         }
 
@@ -62,7 +61,7 @@ class ServicioController extends Controller
     {
         $result = $this->updateUseCase->execute($id, $request->validated());
 
-        if (!$result) {
+        if (! $result) {
             return $this->errorResponse('Servicio no encontrado.', 404);
         }
 
@@ -73,7 +72,7 @@ class ServicioController extends Controller
     {
         $result = $this->destroyUseCase->execute($id);
 
-        if (!$result) {
+        if (! $result) {
             return $this->errorResponse('Servicio no encontrado.', 404);
         }
 
@@ -111,7 +110,7 @@ class ServicioController extends Controller
 
         $result = $this->renewUseCase->execute($id, $data);
 
-        if (!$result) {
+        if (! $result) {
             return $this->errorResponse('Servicio no encontrado.', 404);
         }
 

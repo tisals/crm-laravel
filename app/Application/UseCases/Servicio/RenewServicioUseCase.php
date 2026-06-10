@@ -10,7 +10,7 @@ class RenewServicioUseCase
     public function execute(int $id, array $data): ?array
     {
         $servicio = Servicio::find($id);
-        if (!$servicio) {
+        if (! $servicio) {
             return null;
         }
 
@@ -26,7 +26,7 @@ class RenewServicioUseCase
             'currency' => $data['currency'] ?? null,
             'payment_method' => $data['payment_method'] ?? null,
         ];
-        
+
         $servicio->metadata = array_merge($existingMetadata, $paymentMetadata);
         $servicio->save();
 

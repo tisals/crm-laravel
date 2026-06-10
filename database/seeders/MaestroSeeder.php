@@ -13,8 +13,9 @@ class MaestroSeeder extends Seeder
     {
         $csvFile = $this->csvPath('maestros.csv');
 
-        if (!file_exists($csvFile)) {
+        if (! file_exists($csvFile)) {
             $this->command->warn("Maestros CSV not found: {$csvFile}. Skipping.");
+
             return;
         }
 
@@ -40,7 +41,8 @@ class MaestroSeeder extends Seeder
         }
 
         if (empty($rows)) {
-            $this->command->warn("No valid maestros rows found.");
+            $this->command->warn('No valid maestros rows found.');
+
             return;
         }
 
@@ -55,9 +57,21 @@ class MaestroSeeder extends Seeder
         }
 
         foreach ($byCampo as $campo => $nombres) {
-            $this->command->info("  {$campo}: " . implode(', ', $nombres));
+            $this->command->info("  {$campo}: ".implode(', ', $nombres));
         }
 
-        $this->command->info("Maestros seeded: " . count($rows) . " rows in " . count($byCampo) . " groups.");
+        $this->command->info('Maestros seeded: '.count($rows).' rows in '.count($byCampo).' groups.');
+
+        // Ensure n8n_webhook_url maestro entry exists (for dynamic webhook configuration)
+        DB::table('maestros')->updateOrInsert(
+            ['campo' => 'n8n_webhook_url'],
+            [
+                'nombre' => 'N8N Pipeline Webhook URL',
+                'habilitado' => '1',
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]
+        );
+        $this->command->info('  n8n_webhook_url: N8N Pipeline Webhook URL');
     }
 }

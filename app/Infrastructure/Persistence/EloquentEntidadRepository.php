@@ -5,6 +5,7 @@ namespace App\Infrastructure\Persistence;
 use App\Domain\Entities\Entidad as EntidadEntity;
 use App\Domain\Repositories\EntidadRepositoryInterface;
 use App\Models\Entidad as EloquentEntidad;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Facades\DB;
 
@@ -15,20 +16,33 @@ class EloquentEntidadRepository extends BaseRepository implements EntidadReposit
         return EloquentEntidad::class;
     }
 
+    protected function newQuery()
+    {
+        return EloquentEntidad::query()
+            ->withCount(['contactos', 'oportunidades'])
+            ->with(['usuarios', 'ciudad']);
+    }
+
     protected function mapModelToEntity(Model $model): mixed
     {
-        return EntidadEntity::fromArray($model->toArray());
+        $data = $model->toArray();
+        $data['contactos_count'] = $model->contactos_count ?? 0;
+        $data['oportunidades_count'] = $model->oportunidades_count ?? 0;
+        $data['comercial_asignado'] = $model->usuarios->first() ? $model->usuarios->first()->nombre : 'Sin asignar';
+        $data['ciudad_nombre'] = $model->ciudad ? $model->ciudad->nombre : ($model->ciudad_cod ?? '');
+
+        return EntidadEntity::fromArray($data);
     }
 
     protected function applySearch($query, string $search)
     {
         return $query->where(function ($q) use ($search) {
             $q->where('nombre', 'like', "%{$search}%")
-              ->orWhere('identificacion', 'like', "%{$search}%");
+                ->orWhere('identificacion', 'like', "%{$search}%");
         });
     }
 
-    protected function applyFilters($query, array $filters): \Illuminate\Database\Eloquent\Builder
+    protected function applyFilters($query, array $filters): Builder
     {
         foreach ($filters as $field => $value) {
             if ($value === null || $value === '') {

@@ -2,13 +2,13 @@
 
 namespace App\Http\Controllers\API;
 
+use App\Application\UseCases\LugarEntidad\DestroyLugarEntidadUseCase;
 use App\Application\UseCases\LugarEntidad\IndexLugarEntidadUseCase;
 use App\Application\UseCases\LugarEntidad\ShowLugarEntidadUseCase;
 use App\Application\UseCases\LugarEntidad\StoreLugarEntidadUseCase;
 use App\Application\UseCases\LugarEntidad\UpdateLugarEntidadUseCase;
-use App\Application\UseCases\LugarEntidad\DestroyLugarEntidadUseCase;
-use App\Http\Controllers\Controller;
 use App\Http\Controllers\API\Concerns\ApiResponse;
+use App\Http\Controllers\Controller;
 use App\Http\Requests\LugarEntidadRequest;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -48,7 +48,7 @@ class LugarEntidadController extends Controller
     {
         $result = $this->showUseCase->execute($id);
 
-        if (!$result) {
+        if (! $result) {
             return $this->errorResponse('Lugar no encontrado.', 404);
         }
 
@@ -59,7 +59,7 @@ class LugarEntidadController extends Controller
     {
         $result = $this->updateUseCase->execute($id, $request->validated());
 
-        if (!$result) {
+        if (! $result) {
             return $this->errorResponse('Lugar no encontrado.', 404);
         }
 
@@ -70,7 +70,7 @@ class LugarEntidadController extends Controller
     {
         $result = $this->destroyUseCase->execute($id);
 
-        if (!$result) {
+        if (! $result) {
             return $this->errorResponse('Lugar no encontrado.', 404);
         }
 

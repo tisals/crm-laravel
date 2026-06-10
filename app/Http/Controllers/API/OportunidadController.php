@@ -2,21 +2,23 @@
 
 namespace App\Http\Controllers\API;
 
+use App\Application\UseCases\Oportunidad\ClonarOportunidadUseCase;
+use App\Application\UseCases\Oportunidad\CrearVersionOportunidadUseCase;
+use App\Application\UseCases\Oportunidad\DestroyOportunidadUseCase;
+use App\Application\UseCases\Oportunidad\GanarOportunidadUseCase;
 use App\Application\UseCases\Oportunidad\IndexOportunidadUseCase;
 use App\Application\UseCases\Oportunidad\ShowOportunidadUseCase;
 use App\Application\UseCases\Oportunidad\StoreOportunidadUseCase;
 use App\Application\UseCases\Oportunidad\UpdateOportunidadUseCase;
-use App\Application\UseCases\Oportunidad\DestroyOportunidadUseCase;
-use App\Application\UseCases\Oportunidad\GanarOportunidadUseCase;
-use App\Application\UseCases\Oportunidad\ClonarOportunidadUseCase;
-use App\Application\UseCases\Oportunidad\CrearVersionOportunidadUseCase;
-use App\Http\Controllers\Controller;
 use App\Http\Controllers\API\Concerns\ApiResponse;
+use App\Http\Controllers\Controller;
 use App\Http\Requests\OportunidadRequest;
 use App\Http\Resources\OportunidadResource;
+use App\Models\Oportunidad;
 use App\Traits\DispatchesWebhooks;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Modules\CRM\Models\PipelineEtapa;
 
 class OportunidadController extends Controller
 {
@@ -74,15 +76,16 @@ class OportunidadController extends Controller
             ]);
         }
 
-        $model = \App\Models\Oportunidad::with(['entidad', 'detalles'])->find($result->id);
+        $model = Oportunidad::with(['entidad', 'detalles'])->find($result->id);
+
         return $this->successResponse(new OportunidadResource($model), 201, 'Oportunidad creada exitosamente.');
     }
 
     public function show(int $id): JsonResponse
     {
-        $oportunidad = \App\Models\Oportunidad::with(['entidad', 'detalles'])->find($id);
+        $oportunidad = Oportunidad::with(['entidad', 'detalles'])->find($id);
 
-        if (!$oportunidad) {
+        if (! $oportunidad) {
             return $this->errorResponse('Oportunidad no encontrada.', 404);
         }
 
@@ -96,7 +99,7 @@ class OportunidadController extends Controller
 
         $result = $this->updateUseCase->execute($id, $request->validated());
 
-        if (!$result) {
+        if (! $result) {
             return $this->errorResponse('Oportunidad no encontrada.', 404);
         }
 
@@ -119,7 +122,8 @@ class OportunidadController extends Controller
             ]);
         }
 
-        $model = \App\Models\Oportunidad::with(['entidad', 'detalles'])->find($id);
+        $model = Oportunidad::with(['entidad', 'detalles'])->find($id);
+
         return $this->successResponse(new OportunidadResource($model), 200, 'Oportunidad actualizada exitosamente.');
     }
 
@@ -129,7 +133,7 @@ class OportunidadController extends Controller
 
         $result = $this->destroyUseCase->execute($id);
 
-        if (!$result) {
+        if (! $result) {
             return $this->errorResponse('Oportunidad no encontrada.', 404);
         }
 
@@ -150,20 +154,20 @@ class OportunidadController extends Controller
 
     public function ganar(int $id): JsonResponse
     {
-        $oportunidad = \App\Models\Oportunidad::find($id);
+        $oportunidad = Oportunidad::find($id);
 
-        if (!$oportunidad) {
+        if (! $oportunidad) {
             return $this->errorResponse('Oportunidad no encontrada.', 404);
         }
 
-        $etapaNombre = $oportunidad->pipelineEtapa?->nombre ?? \Modules\CRM\Models\PipelineEtapa::find($oportunidad->pipeline_etapa_id)?->nombre;
+        $etapaNombre = $oportunidad->pipelineEtapa?->nombre ?? PipelineEtapa::find($oportunidad->pipeline_etapa_id)?->nombre;
         if ($etapaNombre !== 'Aceptada') {
             return $this->errorResponse('Solo oportunidades aceptadas pueden marcarse como ganadas.', 422);
         }
 
         $result = $this->ganarUseCase->execute($id);
 
-        if (!$result) {
+        if (! $result) {
             return $this->errorResponse('Oportunidad no encontrada.', 404);
         }
 
@@ -174,7 +178,7 @@ class OportunidadController extends Controller
     {
         $result = $this->clonarUseCase->execute($id);
 
-        if (!$result) {
+        if (! $result) {
             return $this->errorResponse('Oportunidad no encontrada.', 404);
         }
 
@@ -185,7 +189,7 @@ class OportunidadController extends Controller
     {
         $result = $this->versionarUseCase->execute($id);
 
-        if (!$result) {
+        if (! $result) {
             return $this->errorResponse('Oportunidad no encontrada.', 404);
         }
 

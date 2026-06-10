@@ -40,8 +40,8 @@ class LugarEntidadControllerTest extends TestCase
         Ciudad::create(['cod_municipio' => '05001', 'nombre' => 'Medellín', 'departamento' => 'Antioquia']);
         $entidad = Entidad::factory()->create();
 
-        $response = $this->withHeader('Authorization', 'Bearer ' . $auth['token'])
-            ->getJson('/api/v1/entidad/' . $entidad->id . '/lugares');
+        $response = $this->withHeader('Authorization', 'Bearer '.$auth['token'])
+            ->getJson('/api/v1/entidad/'.$entidad->id.'/lugares');
 
         $response->assertStatus(200)
             ->assertJsonPath('success', true)
@@ -55,8 +55,8 @@ class LugarEntidadControllerTest extends TestCase
         Ciudad::create(['cod_municipio' => '05001', 'nombre' => 'Medellín', 'departamento' => 'Antioquia']);
         $entidad = Entidad::factory()->create();
 
-        $response = $this->withHeader('Authorization', 'Bearer ' . $auth['token'])
-            ->postJson('/api/v1/entidad/' . $entidad->id . '/lugares', [
+        $response = $this->withHeader('Authorization', 'Bearer '.$auth['token'])
+            ->postJson('/api/v1/entidad/'.$entidad->id.'/lugares', [
                 'area_oficina' => 'Sede Principal',
                 'direccion' => 'Av. Principal #123',
                 'ciudad_cod' => '05001',
@@ -75,8 +75,8 @@ class LugarEntidadControllerTest extends TestCase
         Ciudad::create(['cod_municipio' => '05001', 'nombre' => 'Medellín', 'departamento' => 'Antioquia']);
         $entidad = Entidad::factory()->create();
 
-        $createResponse = $this->withHeader('Authorization', 'Bearer ' . $auth['token'])
-            ->postJson('/api/v1/entidad/' . $entidad->id . '/lugares', [
+        $createResponse = $this->withHeader('Authorization', 'Bearer '.$auth['token'])
+            ->postJson('/api/v1/entidad/'.$entidad->id.'/lugares', [
                 'area_oficina' => 'Oficina Norte',
                 'direccion' => 'Calle Norte #456',
                 'ciudad_cod' => '05001',
@@ -84,8 +84,8 @@ class LugarEntidadControllerTest extends TestCase
 
         $lugarId = $createResponse->json('data.id');
 
-        $response = $this->withHeader('Authorization', 'Bearer ' . $auth['token'])
-            ->getJson('/api/v1/entidad/' . $entidad->id . '/lugares/' . $lugarId);
+        $response = $this->withHeader('Authorization', 'Bearer '.$auth['token'])
+            ->getJson('/api/v1/entidad/'.$entidad->id.'/lugares/'.$lugarId);
 
         $response->assertStatus(200)
             ->assertJsonPath('success', true)
@@ -99,8 +99,8 @@ class LugarEntidadControllerTest extends TestCase
         Ciudad::create(['cod_municipio' => '05001', 'nombre' => 'Medellín', 'departamento' => 'Antioquia']);
         $entidad = Entidad::factory()->create();
 
-        $createResponse = $this->withHeader('Authorization', 'Bearer ' . $auth['token'])
-            ->postJson('/api/v1/entidad/' . $entidad->id . '/lugares', [
+        $createResponse = $this->withHeader('Authorization', 'Bearer '.$auth['token'])
+            ->postJson('/api/v1/entidad/'.$entidad->id.'/lugares', [
                 'area_oficina' => 'Original',
                 'direccion' => 'Dir Original',
                 'ciudad_cod' => '05001',
@@ -108,8 +108,8 @@ class LugarEntidadControllerTest extends TestCase
 
         $lugarId = $createResponse->json('data.id');
 
-        $response = $this->withHeader('Authorization', 'Bearer ' . $auth['token'])
-            ->putJson('/api/v1/entidad/' . $entidad->id . '/lugares/' . $lugarId, [
+        $response = $this->withHeader('Authorization', 'Bearer '.$auth['token'])
+            ->putJson('/api/v1/entidad/'.$entidad->id.'/lugares/'.$lugarId, [
                 'area_oficina' => 'Updated Office',
             ]);
 
@@ -125,8 +125,8 @@ class LugarEntidadControllerTest extends TestCase
         Ciudad::create(['cod_municipio' => '05001', 'nombre' => 'Medellín', 'departamento' => 'Antioquia']);
         $entidad = Entidad::factory()->create();
 
-        $createResponse = $this->withHeader('Authorization', 'Bearer ' . $auth['token'])
-            ->postJson('/api/v1/entidad/' . $entidad->id . '/lugares', [
+        $createResponse = $this->withHeader('Authorization', 'Bearer '.$auth['token'])
+            ->postJson('/api/v1/entidad/'.$entidad->id.'/lugares', [
                 'area_oficina' => 'Temp Office',
                 'direccion' => 'Temp Dir',
                 'ciudad_cod' => '05001',
@@ -134,8 +134,8 @@ class LugarEntidadControllerTest extends TestCase
 
         $lugarId = $createResponse->json('data.id');
 
-        $response = $this->withHeader('Authorization', 'Bearer ' . $auth['token'])
-            ->deleteJson('/api/v1/entidad/' . $entidad->id . '/lugares/' . $lugarId);
+        $response = $this->withHeader('Authorization', 'Bearer '.$auth['token'])
+            ->deleteJson('/api/v1/entidad/'.$entidad->id.'/lugares/'.$lugarId);
 
         $response->assertStatus(200)
             ->assertJsonPath('success', true);
@@ -148,8 +148,8 @@ class LugarEntidadControllerTest extends TestCase
         Ciudad::create(['cod_municipio' => '05001', 'nombre' => 'Medellín', 'departamento' => 'Antioquia']);
         $entidad = Entidad::factory()->create();
 
-        $response = $this->withHeader('Authorization', 'Bearer ' . $auth['token'])
-            ->postJson('/api/v1/entidad/' . $entidad->id . '/lugares', []);
+        $response = $this->withHeader('Authorization', 'Bearer '.$auth['token'])
+            ->postJson('/api/v1/entidad/'.$entidad->id.'/lugares', []);
 
         $response->assertStatus(422);
     }

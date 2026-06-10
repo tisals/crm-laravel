@@ -3,6 +3,7 @@
 namespace Database\Factories;
 
 use App\Models\Cuenta;
+use App\Models\Proveedor;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
 class CuentaFactory extends Factory
@@ -12,7 +13,7 @@ class CuentaFactory extends Factory
     public function definition(): array
     {
         return [
-            'proveedor_id' => \App\Models\Proveedor::factory(),
+            'proveedor_id' => Proveedor::factory(),
             'banco' => fake()->randomElement(['Bancolombia', 'Davivienda', 'BBVA', 'Banco de Bogotá', 'Nequi']),
             'numero_cuenta' => fake()->bankAccountNumber(),
             'tipo' => fake()->randomElement(['Ahorros', 'Corriente']),

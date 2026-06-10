@@ -4,6 +4,11 @@ namespace Modules\CRM\Actions;
 
 use Illuminate\Pipeline\Pipeline;
 use Illuminate\Support\Facades\DB;
+use Modules\CRM\Pipelines\IngestLead\AssignLeadScore;
+use Modules\CRM\Pipelines\IngestLead\CreateOportunidad;
+use Modules\CRM\Pipelines\IngestLead\NormalizeLeadData;
+use Modules\CRM\Pipelines\IngestLead\ResolveOrCreateContacto;
+use Modules\CRM\Pipelines\IngestLead\ResolveOrCreateEntidad;
 
 class IngestLeadAction
 {
@@ -13,11 +18,11 @@ class IngestLeadAction
             return app(Pipeline::class)
                 ->send($data)
                 ->through([
-                    \Modules\CRM\Pipelines\IngestLead\NormalizeLeadData::class,
-                    \Modules\CRM\Pipelines\IngestLead\ResolveOrCreateEntidad::class,
-                    \Modules\CRM\Pipelines\IngestLead\ResolveOrCreateContacto::class,
-                    \Modules\CRM\Pipelines\IngestLead\AssignLeadScore::class,
-                    \Modules\CRM\Pipelines\IngestLead\CreateOportunidad::class,
+                    NormalizeLeadData::class,
+                    ResolveOrCreateEntidad::class,
+                    ResolveOrCreateContacto::class,
+                    AssignLeadScore::class,
+                    CreateOportunidad::class,
                 ])
                 ->then(function ($passable) {
                     return $passable;

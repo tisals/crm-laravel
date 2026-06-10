@@ -3,8 +3,9 @@
 namespace Tests\Feature\API;
 
 use App\Models\Ciudad;
-use Modules\CRM\Actions\IngestLeadAction;
+use Database\Seeders\PipelineSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Modules\CRM\Actions\IngestLeadAction;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
@@ -16,7 +17,7 @@ class IngestLeadActionTest extends TestCase
     {
         parent::setUp();
         Ciudad::create(['cod_municipio' => '05001', 'nombre' => 'Medellín', 'departamento' => 'Antioquia']);
-        $this->seed(\Database\Seeders\PipelineSeeder::class);
+        $this->seed(PipelineSeeder::class);
     }
 
     #[Test]
@@ -32,7 +33,7 @@ class IngestLeadActionTest extends TestCase
             'utm_medium' => 'PPC',
         ];
 
-        $action = new IngestLeadAction();
+        $action = new IngestLeadAction;
         $result = $action->execute($data);
 
         // Assert entity got created

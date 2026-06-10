@@ -14,7 +14,7 @@ class PermisoFactory extends Factory
     {
         return [
             'rol_id' => Rol::factory(),
-            'vista' => fake()->word() . '.' . fake()->randomElement(['index', 'store', 'show', 'update', 'destroy']),
+            'vista' => fake()->word().'.'.fake()->randomElement(['index', 'store', 'show', 'update', 'destroy']),
         ];
     }
 }

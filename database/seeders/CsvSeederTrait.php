@@ -15,8 +15,8 @@ trait CsvSeederTrait
     /**
      * Parse a semicolon-delimited CSV file row by row.
      *
-     * @param string $path Absolute path to the CSV file
-     * @param string $delimiter Column delimiter (default: semicolon)
+     * @param  string  $path  Absolute path to the CSV file
+     * @param  string  $delimiter  Column delimiter (default: semicolon)
      * @return \Generator Yields associative arrays [header => cleaned_value]
      */
     protected function parseCsv(string $path, string $delimiter = ';'): \Generator
@@ -62,6 +62,7 @@ trait CsvSeederTrait
             $h = str_replace([' ', '-'], '_', $h);
             // Remove any remaining non-alphanumeric chars except underscores
             $h = preg_replace('/[^a-z0-9_]/', '', $h);
+
             return $h;
         }, $headers);
     }
@@ -109,7 +110,7 @@ trait CsvSeederTrait
      */
     protected function parseExcelDate(?string $value): ?string
     {
-        if (!$value) {
+        if (! $value) {
             return null;
         }
 
@@ -118,6 +119,7 @@ trait CsvSeederTrait
             $d = str_pad($m[1], 2, '0', STR_PAD_LEFT);
             $mo = str_pad($m[2], 2, '0', STR_PAD_LEFT);
             $h = str_pad($m[4], 2, '0', STR_PAD_LEFT);
+
             return "{$m[3]}-{$mo}-{$d} {$h}:{$m[5]}:{$m[6]}";
         }
 
@@ -125,13 +127,15 @@ trait CsvSeederTrait
         if (preg_match('/^(\d{1,2})\/(\d{1,2})\/(\d{4})/', $value, $m)) {
             $d = str_pad($m[1], 2, '0', STR_PAD_LEFT);
             $mo = str_pad($m[2], 2, '0', STR_PAD_LEFT);
+
             return "{$m[3]}-{$mo}-{$d}";
         }
-        
+
         // YYYY-MM-DD
         if (preg_match('/^(\d{4})-(\d{1,2})-(\d{1,2})/', $value, $m)) {
             $mo = str_pad($m[2], 2, '0', STR_PAD_LEFT);
             $d = str_pad($m[3], 2, '0', STR_PAD_LEFT);
+
             return "{$m[1]}-{$mo}-{$d}";
         }
 
@@ -143,9 +147,10 @@ trait CsvSeederTrait
      */
     protected function parsePercentage(?string $value): float
     {
-        if (!$value) {
+        if (! $value) {
             return 0.0;
         }
+
         return (float) str_replace('%', '', trim($value));
     }
 

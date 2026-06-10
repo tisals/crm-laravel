@@ -39,7 +39,7 @@ class CiudadControllerTest extends TestCase
         Ciudad::create(['cod_municipio' => '05001', 'nombre' => 'Medellín', 'departamento' => 'Antioquia']);
         Ciudad::create(['cod_municipio' => '11001', 'nombre' => 'Bogotá', 'departamento' => 'Cundinamarca']);
 
-        $response = $this->withHeader('Authorization', 'Bearer ' . $auth['token'])
+        $response = $this->withHeader('Authorization', 'Bearer '.$auth['token'])
             ->getJson('/api/v1/ciudades');
 
         $response->assertStatus(200)
@@ -55,7 +55,7 @@ class CiudadControllerTest extends TestCase
         Ciudad::create(['cod_municipio' => '05360', 'nombre' => 'Itagüí', 'departamento' => 'Antioquia']);
         Ciudad::create(['cod_municipio' => '11001', 'nombre' => 'Bogotá', 'departamento' => 'Cundinamarca']);
 
-        $response = $this->withHeader('Authorization', 'Bearer ' . $auth['token'])
+        $response = $this->withHeader('Authorization', 'Bearer '.$auth['token'])
             ->getJson('/api/v1/ciudades?departamento=Antioquia');
 
         $response->assertStatus(200)
@@ -71,7 +71,7 @@ class CiudadControllerTest extends TestCase
         $auth = $this->authenticate();
         Ciudad::create(['cod_municipio' => '05001', 'nombre' => 'Medellín', 'departamento' => 'Antioquia']);
 
-        $response = $this->withHeader('Authorization', 'Bearer ' . $auth['token'])
+        $response = $this->withHeader('Authorization', 'Bearer '.$auth['token'])
             ->getJson('/api/v1/ciudades/05001');
 
         $response->assertStatus(200)
@@ -84,7 +84,7 @@ class CiudadControllerTest extends TestCase
     {
         $auth = $this->authenticate();
 
-        $response = $this->withHeader('Authorization', 'Bearer ' . $auth['token'])
+        $response = $this->withHeader('Authorization', 'Bearer '.$auth['token'])
             ->getJson('/api/v1/ciudades/99999');
 
         $response->assertStatus(404)

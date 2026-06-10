@@ -25,7 +25,7 @@ class EntidadRequest extends FormRequest
         return [
             'tipo_persona' => 'required|in:Natural,Juridica',
             'tipo_id' => 'nullable|string|max:20',
-            'identificacion' => 'nullable|string|max:50|unique:entidad,identificacion,' . $entidadId,
+            'identificacion' => 'nullable|string|max:50|unique:entidad,identificacion,'.$entidadId,
             'nombre' => 'required|string|max:255',
             'nombre_comercial' => 'nullable|string|max:255',
             'linea_negocio' => 'nullable|string|max:100',
@@ -34,6 +34,7 @@ class EntidadRequest extends FormRequest
             'dominio' => 'nullable|string|max:255',
             'email' => 'nullable|email|max:255',
             'telefono' => 'nullable|string|max:50',
+            'cantidad_empleados' => 'nullable|integer|min:0',
             'rut' => 'nullable|string|max:255',
             'logo' => 'nullable|string|max:255',
             'estado' => 'nullable|string|max:50',

@@ -22,8 +22,9 @@ class ProductoCsvSeeder extends Seeder
     {
         $csvFile = $this->csvPath('productos.csv');
 
-        if (!file_exists($csvFile)) {
+        if (! file_exists($csvFile)) {
             $this->command->error("CSV file not found: {$csvFile}");
+
             return;
         }
 
@@ -35,6 +36,7 @@ class ProductoCsvSeeder extends Seeder
 
             if (empty($nombre)) {
                 $skipped++;
+
                 continue;
             }
 
@@ -57,7 +59,8 @@ class ProductoCsvSeeder extends Seeder
         }
 
         if (empty($rows)) {
-            $this->command->warn("No valid rows found in CSV.");
+            $this->command->warn('No valid rows found in CSV.');
+
             return;
         }
 
@@ -71,6 +74,6 @@ class ProductoCsvSeeder extends Seeder
             }
         });
 
-        $this->command->info("Productos seeded: " . count($rows) . " rows ({$skipped} skipped).");
+        $this->command->info('Productos seeded: '.count($rows)." rows ({$skipped} skipped).");
     }
 }

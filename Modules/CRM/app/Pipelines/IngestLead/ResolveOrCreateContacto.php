@@ -2,8 +2,8 @@
 
 namespace Modules\CRM\Pipelines\IngestLead;
 
-use Modules\CRM\Models\Contacto;
 use Closure;
+use Modules\CRM\Models\Contacto;
 
 class ResolveOrCreateContacto
 {
@@ -14,14 +14,14 @@ class ResolveOrCreateContacto
         $entidadId = $data['entidad_id'];
 
         // 1. Find by email within organization
-        if (!empty($data['email_contacto'])) {
+        if (! empty($data['email_contacto'])) {
             $contacto = Contacto::where('entidad_id', $entidadId)
                 ->where('email_contacto', $data['email_contacto'])
                 ->first();
         }
 
         // 2. Find by names within organization
-        if (!$contacto) {
+        if (! $contacto) {
             $contacto = Contacto::where('entidad_id', $entidadId)
                 ->where('nombres', $data['nombres'])
                 ->where('apellidos', $data['apellidos'])
@@ -29,7 +29,7 @@ class ResolveOrCreateContacto
         }
 
         // 3. Create if not found
-        if (!$contacto) {
+        if (! $contacto) {
             $contacto = Contacto::create([
                 'entidad_id' => $entidadId,
                 'nombres' => $data['nombres'],
@@ -43,16 +43,21 @@ class ResolveOrCreateContacto
                 'etapa' => $data['etapa'] ?? 'Lead',
                 'estado' => 'Activo',
                 'fuente' => $data['fuente'],
+                'diagnostico_data' => $data['diagnostico_data'] ?? null,
             ]);
         } else {
-            // Update cargo or mobile if newly provided
+            // Update cargo, mobile, or diagnostico_data if newly provided
             $dirty = false;
-            if (!empty($data['cargo']) && empty($contacto->cargo)) {
+            if (! empty($data['cargo']) && empty($contacto->cargo)) {
                 $contacto->cargo = $data['cargo'];
                 $dirty = true;
             }
-            if (!empty($data['movil']) && empty($contacto->movil)) {
+            if (! empty($data['movil']) && empty($contacto->movil)) {
                 $contacto->movil = $data['movil'];
+                $dirty = true;
+            }
+            if (! empty($data['diagnostico_data']) && empty($contacto->diagnostico_data)) {
+                $contacto->diagnostico_data = $data['diagnostico_data'];
                 $dirty = true;
             }
             if ($dirty) {

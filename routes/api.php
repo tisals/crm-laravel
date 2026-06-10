@@ -1,36 +1,37 @@
 <?php
 
-use Illuminate\Support\Facades\Route;
 use App\Http\Controllers\API\AuthController;
-use App\Http\Controllers\API\RolController;
-use App\Http\Controllers\API\PermisoController;
-use App\Http\Controllers\API\UsuarioController;
+use App\Http\Controllers\API\BrandPermissionController;
 use App\Http\Controllers\API\CiudadController;
-use App\Http\Controllers\API\MaestroController;
-use App\Http\Controllers\API\ProductoController;
-use App\Http\Controllers\API\EtiquetaController;
-use App\Http\Controllers\API\EntidadController;
-use App\Http\Controllers\API\ContactoController;
-use App\Http\Controllers\API\LugarEntidadController;
 use App\Http\Controllers\API\ColaboradorController;
-use App\Http\Controllers\API\ProveedorController;
-use App\Http\Controllers\API\OportunidadController;
-use App\Http\Controllers\API\DetalleOportunidadController;
-use App\Http\Controllers\API\SeguimientoController;
-use App\Http\Controllers\API\ServicioController;
-use App\Http\Controllers\API\DetalleServicioController;
-use App\Http\Controllers\API\OrdenServicioController;
+use App\Http\Controllers\API\ContactoAccionController;
+use App\Http\Controllers\API\ContactoController;
+use App\Http\Controllers\API\CotizacionController;
 use App\Http\Controllers\API\CuentaController;
 use App\Http\Controllers\API\DashboardController;
+use App\Http\Controllers\API\DetalleOportunidadController;
+use App\Http\Controllers\API\DetalleServicioController;
+use App\Http\Controllers\API\EntidadController;
 use App\Http\Controllers\API\EntidadUsuarioController;
+use App\Http\Controllers\API\EtiquetaController;
+use App\Http\Controllers\API\LugarEntidadController;
+use App\Http\Controllers\API\MaestroController;
 use App\Http\Controllers\API\MovimientoController;
-use App\Http\Controllers\API\BrandPermissionController;
-use App\Http\Controllers\API\ContactoAccionController;
-use App\Http\Controllers\API\CotizacionController;
+use App\Http\Controllers\API\OportunidadController;
+use App\Http\Controllers\API\OrdenServicioController;
+use App\Http\Controllers\API\PermisoController;
 use App\Http\Controllers\API\PlanController;
+use App\Http\Controllers\API\ProductoController;
+use App\Http\Controllers\API\ProveedorController;
+use App\Http\Controllers\API\RolController;
 use App\Http\Controllers\API\SailusEntidadController;
 use App\Http\Controllers\API\SailusWebhookController;
+use App\Http\Controllers\API\SecurityDashboardController;
+use App\Http\Controllers\API\SeguimientoController;
+use App\Http\Controllers\API\ServicioController;
+use App\Http\Controllers\API\UsuarioController;
 use App\Infrastructure\Auth\ValidateApiKeyMiddleware;
+use Illuminate\Support\Facades\Route;
 
 Route::prefix('v1')->group(function () {
     // Public endpoints
@@ -115,7 +116,7 @@ Route::prefix('v1')->group(function () {
 
         // Seguridad Dashboard
         Route::middleware('rbac')->group(function () {
-            Route::get('/seguridad/dashboard', [\App\Http\Controllers\API\SecurityDashboardController::class, 'index'])
+            Route::get('/seguridad/dashboard', [SecurityDashboardController::class, 'index'])
                 ->name('seguridad.dashboard');
         });
 
@@ -211,7 +212,6 @@ Route::prefix('v1')->group(function () {
             Route::post('/oportunidades/{id}/ganar', [OportunidadController::class, 'ganar'])->name('oportunidades.ganar');
             Route::post('/oportunidades/{id}/clonar', [OportunidadController::class, 'clonar'])->name('oportunidades.clonar');
             Route::post('/oportunidades/{id}/version', [OportunidadController::class, 'versionar'])->name('oportunidades.version');
-            Route::get('/pipelines', [\App\Http\Controllers\API\PipelineController::class, 'index'])->name('pipelines.index');
         });
 
         // Detalle Oportunidad (nested under oportunidad + direct)

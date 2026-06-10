@@ -21,6 +21,7 @@ class EntidadResource extends JsonResource
             'dominio' => $this->dominio,
             'email' => $this->email,
             'telefono' => $this->telefono,
+            'cantidad_empleados' => $this->cantidad_empleados,
             'rut' => $this->rut,
             'logo' => $this->logo,
             'estado' => $this->estado,

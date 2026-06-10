@@ -2,6 +2,7 @@
 
 namespace Database\Factories;
 
+use App\Models\Colaborador;
 use App\Models\OrdenServicio;
 use Illuminate\Database\Eloquent\Factories\Factory;
 
@@ -13,7 +14,7 @@ class OrdenServicioFactory extends Factory
     {
         return [
             'detalle_srv_id' => null,
-            'colaborador_id' => \App\Models\Colaborador::factory(),
+            'colaborador_id' => Colaborador::factory(),
             'proveedor_id' => null,
             'contacto_id' => null,
             'descripcion' => fake()->optional(0.7)->sentence(),

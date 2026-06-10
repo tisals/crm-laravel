@@ -4,14 +4,16 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
+use Modules\CRM\Models\Oportunidad;
 
 class Entidad extends Model
 {
     use HasFactory, SoftDeletes;
 
     protected $table = 'entidad';
+
     protected $fillable = [
         'tipo_persona',
         'tipo_id',
@@ -24,6 +26,7 @@ class Entidad extends Model
         'dominio',
         'email',
         'telefono',
+        'cantidad_empleados',
         'rut',
         'logo',
         'estado',
@@ -49,7 +52,7 @@ class Entidad extends Model
         }
 
         $allowedDomains = array_map(
-            fn($d) => trim(strtolower($d)),
+            fn ($d) => trim(strtolower($d)),
             explode(',', $this->allowed_domains)
         );
 
@@ -61,7 +64,7 @@ class Entidad extends Model
                 return true;
             }
             // Permitir subdominios (ej: api.sailus.com matches sailus.com)
-            if (str_ends_with($domain, '.' . $allowed)) {
+            if (str_ends_with($domain, '.'.$allowed)) {
                 return true;
             }
         }
@@ -74,7 +77,7 @@ class Entidad extends Model
      */
     public function hasWebhooksEnabled(): bool
     {
-        return $this->webhook_enabled && !empty($this->webhook_url);
+        return $this->webhook_enabled && ! empty($this->webhook_url);
     }
 
     /**
@@ -82,7 +85,7 @@ class Entidad extends Model
      */
     public function getWebhookConfig(): ?array
     {
-        if (!$this->hasWebhooksEnabled()) {
+        if (! $this->hasWebhooksEnabled()) {
             return null;
         }
 
@@ -101,5 +104,15 @@ class Entidad extends Model
     public function contactos()
     {
         return $this->hasMany(Contacto::class, 'entidad_id');
+    }
+
+    public function oportunidades()
+    {
+        return $this->hasMany(Oportunidad::class, 'entidad_id');
+    }
+
+    public function ciudad()
+    {
+        return $this->belongsTo(Ciudad::class, 'ciudad_cod', 'cod_municipio');
     }
 }

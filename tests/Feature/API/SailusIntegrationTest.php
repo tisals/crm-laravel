@@ -4,8 +4,8 @@ namespace Tests\Feature\API;
 
 use App\Models\Entidad;
 use App\Models\Producto;
-use App\Models\Contacto;
 use App\Models\Usuario;
+use Database\Seeders\DatabaseSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
@@ -15,12 +15,13 @@ class SailusIntegrationTest extends TestCase
     use RefreshDatabase;
 
     private string $apiKey;
+
     private string $token;
 
     protected function setUp(): void
     {
         parent::setUp();
-        $this->seed(\Database\Seeders\DatabaseSeeder::class);
+        $this->seed(DatabaseSeeder::class);
 
         Entidad::create([
             'tipo_persona' => 'Juridica',
@@ -104,14 +105,14 @@ class SailusIntegrationTest extends TestCase
     {
         $response = $this->withToken($this->token)
             ->postJson('/api/v1/webhook/registration', [
-            'organization_name' => 'Test Org',
-            'contact_name' => 'Juan Pérez',
-            'contact_email' => 'juan@test.com',
-            'plan_type' => 'pro',
-            'service_name' => 'la-llave',
-            'source' => 'wordpress',
-            'diagnostico_data' => ['eje' => 'tecnologia'],
-        ]);
+                'organization_name' => 'Test Org',
+                'contact_name' => 'Juan Pérez',
+                'contact_email' => 'juan@test.com',
+                'plan_type' => 'pro',
+                'service_name' => 'la-llave',
+                'source' => 'wordpress',
+                'diagnostico_data' => ['eje' => 'tecnologia'],
+            ]);
 
         $response->assertStatus(201);
         $this->assertNotNull($response->json('org_id'));

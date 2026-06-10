@@ -3,7 +3,6 @@
 namespace Database\Seeders;
 
 use App\Application\UseCases\Oportunidad\OportunidadCsvImportUseCase;
-use App\Models\Contacto;
 use App\Models\Producto;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
@@ -18,9 +17,10 @@ class OportunidadCsvSeeder extends Seeder
     {
         $csvFile = $this->csvPath('oportunidades.csv');
 
-        if (!file_exists($csvFile)) {
+        if (! file_exists($csvFile)) {
             $this->command->error("CSV file not found: {$csvFile}");
             $this->command->info('Copy Docs/oportunidad.csv to database/csv/oportunidades.csv and retry.');
+
             return;
         }
 
@@ -46,6 +46,7 @@ class OportunidadCsvSeeder extends Seeder
 
         if ($totalRows === 0) {
             $this->command->warn('No rows found in CSV.');
+
             return;
         }
 
@@ -56,12 +57,12 @@ class OportunidadCsvSeeder extends Seeder
             ->where('campo', 'Estado oportunidad')
             ->pluck('nombre', 'id')
             ->toArray();
-        $this->command->info('  → ' . count($maestrosEstado) . ' estados loaded.');
+        $this->command->info('  → '.count($maestrosEstado).' estados loaded.');
 
         $jsonPath = database_path('csv/clientes_facturacion.json');
         $clientesFacturacion = file_exists($jsonPath) ? json_decode(file_get_contents($jsonPath), true) : ['nits' => [], 'names' => []];
 
-        $useCase = new OportunidadCsvImportUseCase();
+        $useCase = new OportunidadCsvImportUseCase;
         $useCase
             ->setEntityMap($entityMap['map'])
             ->setContactDedup($contactDedup)
@@ -79,7 +80,7 @@ class OportunidadCsvSeeder extends Seeder
         $chunks = array_chunk($allRows, self::CHUNK_SIZE);
         $chunkCount = count($chunks);
 
-        $this->command->info("Processing {$chunkCount} chunks of " . self::CHUNK_SIZE . " rows...");
+        $this->command->info("Processing {$chunkCount} chunks of ".self::CHUNK_SIZE.' rows...');
         $this->command->info('');
 
         $progressBar = $this->command->getOutput()->createProgressBar($chunkCount);
@@ -91,7 +92,7 @@ class OportunidadCsvSeeder extends Seeder
                 $totalCreated += $result['created'];
                 $totalSkipped += $result['skipped'];
                 $totalErrors += $result['errors'];
-                if (!empty($result['details'])) {
+                if (! empty($result['details'])) {
                     foreach ($result['details'] as $err) {
                         $allErrors[] = $err;
                     }
@@ -112,15 +113,15 @@ class OportunidadCsvSeeder extends Seeder
 
         // --- Report ---
         $this->command->info('');
-        $this->command->info("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
-        $this->command->info("📊 IMPORT RESULT");
-        $this->command->info("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+        $this->command->info('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+        $this->command->info('📊 IMPORT RESULT');
+        $this->command->info('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
         $this->command->info("  Total rows in CSV : {$totalRows}");
         $this->command->info("  Created/updated   : {$totalCreated}");
         $this->command->info("  Skipped           : {$totalSkipped}");
         $this->command->info("  Errors            : {$totalErrors}");
 
-        if (!empty($allErrors)) {
+        if (! empty($allErrors)) {
             $this->command->info('');
             $this->command->warn('Errors:');
             foreach (array_slice($allErrors, 0, 10) as $err) {
@@ -129,11 +130,11 @@ class OportunidadCsvSeeder extends Seeder
                 $this->command->warn("  - [{$cod}] {$msg}");
             }
             if (count($allErrors) > 10) {
-                $this->command->warn("  ... and " . (count($allErrors) - 10) . " more errors.");
+                $this->command->warn('  ... and '.(count($allErrors) - 10).' more errors.');
             }
         }
 
-        $this->command->info("━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━");
+        $this->command->info('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
     }
 
     /**
@@ -197,7 +198,7 @@ class OportunidadCsvSeeder extends Seeder
 
         $map = [];
         foreach ($contacts as $c) {
-            $key = $c->entidad_id . ':' . $c->email_contacto;
+            $key = $c->entidad_id.':'.$c->email_contacto;
             $map[$key] = true;
         }
 
@@ -243,7 +244,7 @@ class OportunidadCsvSeeder extends Seeder
             'sociedad', 'anonima', 'cooperativa', 'asociacion',
         ];
         $words = explode(' ', $name);
-        $words = array_filter($words, fn($w) => !in_array(trim($w), $removeWords));
+        $words = array_filter($words, fn ($w) => ! in_array(trim($w), $removeWords));
         $name = implode(' ', $words);
 
         $name = preg_replace('/[^\p{L}\p{N}\s]/u', ' ', $name);
@@ -251,7 +252,7 @@ class OportunidadCsvSeeder extends Seeder
 
         $stopWords = ['y', 'de', 'del', 'la', 'los', 'las', 'el', 'en', 'para', 'con', 'sin', 'por', 'e', 'o', 'a', 'su', 'un', 'una'];
         $words = explode(' ', trim($name));
-        $words = array_filter($words, fn($w) => !in_array(trim($w), $stopWords));
+        $words = array_filter($words, fn ($w) => ! in_array(trim($w), $stopWords));
         $name = implode(' ', $words);
 
         return trim(preg_replace('/\s+/', ' ', $name));

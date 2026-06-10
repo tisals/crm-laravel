@@ -2,13 +2,13 @@
 
 namespace App\Http\Controllers\API;
 
+use App\Application\UseCases\Colaborador\DestroyColaboradorUseCase;
 use App\Application\UseCases\Colaborador\IndexColaboradorUseCase;
 use App\Application\UseCases\Colaborador\ShowColaboradorUseCase;
 use App\Application\UseCases\Colaborador\StoreColaboradorUseCase;
 use App\Application\UseCases\Colaborador\UpdateColaboradorUseCase;
-use App\Application\UseCases\Colaborador\DestroyColaboradorUseCase;
-use App\Http\Controllers\Controller;
 use App\Http\Controllers\API\Concerns\ApiResponse;
+use App\Http\Controllers\Controller;
 use App\Http\Requests\ColaboradorRequest;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
@@ -47,7 +47,7 @@ class ColaboradorController extends Controller
     {
         $result = $this->showUseCase->execute($id);
 
-        if (!$result) {
+        if (! $result) {
             return $this->errorResponse('Colaborador no encontrado.', 404);
         }
 
@@ -58,7 +58,7 @@ class ColaboradorController extends Controller
     {
         $result = $this->updateUseCase->execute($id, $request->validated());
 
-        if (!$result) {
+        if (! $result) {
             return $this->errorResponse('Colaborador no encontrado.', 404);
         }
 
@@ -69,7 +69,7 @@ class ColaboradorController extends Controller
     {
         $result = $this->destroyUseCase->execute($id);
 
-        if (!$result) {
+        if (! $result) {
             return $this->errorResponse('Colaborador no encontrado.', 404);
         }
 

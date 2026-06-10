@@ -19,6 +19,7 @@ class LicenseActivated extends Mailable
     public function envelope(): Envelope
     {
         $planName = $this->data['plan_name'] ?? 'Plan';
+
         return new Envelope(
             subject: "Activa tu licencia SAIlus — {$planName}",
         );

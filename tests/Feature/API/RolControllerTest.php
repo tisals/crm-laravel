@@ -36,7 +36,7 @@ class RolControllerTest extends TestCase
         Rol::create(['nombre' => 'Ventas', 'estado' => 'Activo']);
         Rol::create(['nombre' => 'Finanzas', 'estado' => 'Activo']);
 
-        $response = $this->withHeader('Authorization', 'Bearer ' . $token)
+        $response = $this->withHeader('Authorization', 'Bearer '.$token)
             ->getJson('/api/v1/roles');
 
         $response->assertStatus(200)
@@ -49,7 +49,7 @@ class RolControllerTest extends TestCase
     {
         $token = $this->authenticate();
 
-        $response = $this->withHeader('Authorization', 'Bearer ' . $token)
+        $response = $this->withHeader('Authorization', 'Bearer '.$token)
             ->postJson('/api/v1/roles', [
                 'nombre' => 'Marketing',
                 'estado' => 'Activo',
@@ -66,8 +66,8 @@ class RolControllerTest extends TestCase
         $token = $this->authenticate();
         $rol = Rol::create(['nombre' => 'Operaciones', 'estado' => 'Activo']);
 
-        $response = $this->withHeader('Authorization', 'Bearer ' . $token)
-            ->getJson('/api/v1/roles/' . $rol->id);
+        $response = $this->withHeader('Authorization', 'Bearer '.$token)
+            ->getJson('/api/v1/roles/'.$rol->id);
 
         $response->assertStatus(200)
             ->assertJsonPath('success', true)
@@ -80,8 +80,8 @@ class RolControllerTest extends TestCase
         $token = $this->authenticate();
         $rol = Rol::create(['nombre' => 'Old Name', 'estado' => 'Activo']);
 
-        $response = $this->withHeader('Authorization', 'Bearer ' . $token)
-            ->putJson('/api/v1/roles/' . $rol->id, [
+        $response = $this->withHeader('Authorization', 'Bearer '.$token)
+            ->putJson('/api/v1/roles/'.$rol->id, [
                 'nombre' => 'New Name',
             ]);
 
@@ -96,8 +96,8 @@ class RolControllerTest extends TestCase
         $token = $this->authenticate();
         $rol = Rol::create(['nombre' => 'Temp', 'estado' => 'Activo']);
 
-        $response = $this->withHeader('Authorization', 'Bearer ' . $token)
-            ->deleteJson('/api/v1/roles/' . $rol->id);
+        $response = $this->withHeader('Authorization', 'Bearer '.$token)
+            ->deleteJson('/api/v1/roles/'.$rol->id);
 
         $response->assertStatus(200)
             ->assertJsonPath('success', true);
@@ -108,7 +108,7 @@ class RolControllerTest extends TestCase
     {
         $token = $this->authenticate();
 
-        $response = $this->withHeader('Authorization', 'Bearer ' . $token)
+        $response = $this->withHeader('Authorization', 'Bearer '.$token)
             ->getJson('/api/v1/roles/9999');
 
         $response->assertStatus(404)
@@ -120,7 +120,7 @@ class RolControllerTest extends TestCase
     {
         $token = $this->authenticate();
 
-        $response = $this->withHeader('Authorization', 'Bearer ' . $token)
+        $response = $this->withHeader('Authorization', 'Bearer '.$token)
             ->postJson('/api/v1/roles', []);
 
         $response->assertStatus(422);

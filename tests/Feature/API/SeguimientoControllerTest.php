@@ -54,7 +54,7 @@ class SeguimientoControllerTest extends TestCase
     {
         $token = $this->authenticate();
 
-        $response = $this->withHeader('Authorization', 'Bearer ' . $token)
+        $response = $this->withHeader('Authorization', 'Bearer '.$token)
             ->getJson('/api/v1/seguimientos');
 
         $response->assertStatus(200)
@@ -68,7 +68,7 @@ class SeguimientoControllerTest extends TestCase
         $token = $this->authenticate();
         $refs = $this->createReferences();
 
-        $response = $this->withHeader('Authorization', 'Bearer ' . $token)
+        $response = $this->withHeader('Authorization', 'Bearer '.$token)
             ->postJson('/api/v1/seguimientos', [
                 'oportunidad_id' => $refs['oportunidad']->id,
                 'contacto_id' => $refs['contacto']->id,
@@ -94,7 +94,7 @@ class SeguimientoControllerTest extends TestCase
         $token = $this->authenticate();
         $refs = $this->createReferences();
 
-        $createResponse = $this->withHeader('Authorization', 'Bearer ' . $token)
+        $createResponse = $this->withHeader('Authorization', 'Bearer '.$token)
             ->postJson('/api/v1/seguimientos', [
                 'oportunidad_id' => $refs['oportunidad']->id,
                 'tipo' => 'Correo',
@@ -104,8 +104,8 @@ class SeguimientoControllerTest extends TestCase
 
         $id = $createResponse->json('data.id');
 
-        $response = $this->withHeader('Authorization', 'Bearer ' . $token)
-            ->getJson('/api/v1/seguimientos/' . $id);
+        $response = $this->withHeader('Authorization', 'Bearer '.$token)
+            ->getJson('/api/v1/seguimientos/'.$id);
 
         $response->assertStatus(200)
             ->assertJsonPath('success', true)
@@ -118,7 +118,7 @@ class SeguimientoControllerTest extends TestCase
         $token = $this->authenticate();
         $refs = $this->createReferences();
 
-        $createResponse = $this->withHeader('Authorization', 'Bearer ' . $token)
+        $createResponse = $this->withHeader('Authorization', 'Bearer '.$token)
             ->postJson('/api/v1/seguimientos', [
                 'oportunidad_id' => $refs['oportunidad']->id,
                 'tipo' => 'Nota',
@@ -128,8 +128,8 @@ class SeguimientoControllerTest extends TestCase
 
         $id = $createResponse->json('data.id');
 
-        $response = $this->withHeader('Authorization', 'Bearer ' . $token)
-            ->putJson('/api/v1/seguimientos/' . $id, [
+        $response = $this->withHeader('Authorization', 'Bearer '.$token)
+            ->putJson('/api/v1/seguimientos/'.$id, [
                 'estado' => 'Completado',
                 'notas' => 'Completed follow-up',
             ]);
@@ -146,7 +146,7 @@ class SeguimientoControllerTest extends TestCase
         $token = $this->authenticate();
         $refs = $this->createReferences();
 
-        $createResponse = $this->withHeader('Authorization', 'Bearer ' . $token)
+        $createResponse = $this->withHeader('Authorization', 'Bearer '.$token)
             ->postJson('/api/v1/seguimientos', [
                 'oportunidad_id' => $refs['oportunidad']->id,
                 'tipo' => 'Otro',
@@ -156,8 +156,8 @@ class SeguimientoControllerTest extends TestCase
 
         $id = $createResponse->json('data.id');
 
-        $response = $this->withHeader('Authorization', 'Bearer ' . $token)
-            ->deleteJson('/api/v1/seguimientos/' . $id);
+        $response = $this->withHeader('Authorization', 'Bearer '.$token)
+            ->deleteJson('/api/v1/seguimientos/'.$id);
 
         $response->assertStatus(200)
             ->assertJsonPath('success', true);
@@ -168,7 +168,7 @@ class SeguimientoControllerTest extends TestCase
     {
         $token = $this->authenticate();
 
-        $response = $this->withHeader('Authorization', 'Bearer ' . $token)
+        $response = $this->withHeader('Authorization', 'Bearer '.$token)
             ->postJson('/api/v1/seguimientos', []);
 
         $response->assertStatus(422);
@@ -179,7 +179,7 @@ class SeguimientoControllerTest extends TestCase
     {
         $token = $this->authenticate();
 
-        $response = $this->withHeader('Authorization', 'Bearer ' . $token)
+        $response = $this->withHeader('Authorization', 'Bearer '.$token)
             ->getJson('/api/v1/seguimientos/9999');
 
         $response->assertStatus(404)
@@ -192,7 +192,7 @@ class SeguimientoControllerTest extends TestCase
         $token = $this->authenticate();
         $refs = $this->createReferences();
 
-        $this->withHeader('Authorization', 'Bearer ' . $token)
+        $this->withHeader('Authorization', 'Bearer '.$token)
             ->postJson('/api/v1/seguimientos', [
                 'oportunidad_id' => $refs['oportunidad']->id,
                 'tipo' => 'Reunion',
@@ -200,7 +200,7 @@ class SeguimientoControllerTest extends TestCase
                 'estado' => 'Completado',
             ]);
 
-        $response = $this->withHeader('Authorization', 'Bearer ' . $token)
+        $response = $this->withHeader('Authorization', 'Bearer '.$token)
             ->getJson("/api/v1/oportunidades/{$refs['oportunidad']->id}/seguimientos");
 
         $response->assertStatus(200)
@@ -216,7 +216,7 @@ class SeguimientoControllerTest extends TestCase
         $token = $this->authenticate();
         $refs = $this->createReferences();
 
-        $this->withHeader('Authorization', 'Bearer ' . $token)
+        $this->withHeader('Authorization', 'Bearer '.$token)
             ->postJson('/api/v1/seguimientos', [
                 'entidad_id' => $refs['entidad']->id,
                 'tipo' => 'Nota',
@@ -224,7 +224,7 @@ class SeguimientoControllerTest extends TestCase
                 'estado' => 'Pendiente',
             ]);
 
-        $response = $this->withHeader('Authorization', 'Bearer ' . $token)
+        $response = $this->withHeader('Authorization', 'Bearer '.$token)
             ->getJson("/api/v1/entidades/{$refs['entidad']->id}/seguimientos");
 
         $response->assertStatus(200)
@@ -240,7 +240,7 @@ class SeguimientoControllerTest extends TestCase
         $token = $this->authenticate();
         $refs = $this->createReferences();
 
-        $this->withHeader('Authorization', 'Bearer ' . $token)
+        $this->withHeader('Authorization', 'Bearer '.$token)
             ->postJson('/api/v1/seguimientos', [
                 'contacto_id' => $refs['contacto']->id,
                 'tipo' => 'Llamada',
@@ -248,7 +248,7 @@ class SeguimientoControllerTest extends TestCase
                 'estado' => 'Completado',
             ]);
 
-        $response = $this->withHeader('Authorization', 'Bearer ' . $token)
+        $response = $this->withHeader('Authorization', 'Bearer '.$token)
             ->getJson("/api/v1/contactos/{$refs['contacto']->id}/seguimientos");
 
         $response->assertStatus(200)
@@ -266,7 +266,7 @@ class SeguimientoControllerTest extends TestCase
         Ciudad::create(['cod_municipio' => '05001', 'nombre' => 'Medellín', 'departamento' => 'Antioquia']);
         $entidad = Entidad::factory()->create();
 
-        $response = $this->withHeader('Authorization', 'Bearer ' . $token)
+        $response = $this->withHeader('Authorization', 'Bearer '.$token)
             ->postJson('/api/v1/seguimientos', [
                 'entidad_id' => $entidad->id,
                 'tipo' => 'Nota',

@@ -6,7 +6,7 @@ class Servicio
 {
     public function __construct(
         public int $id,
-        public ?int $oportunidad_id = null,
+        public ?int $oportunidad_id,
         public int $entidad_id,
         public string $nombre,
         public float $vr_servicio = 0,

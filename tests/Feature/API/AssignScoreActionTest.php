@@ -2,10 +2,11 @@
 
 namespace Tests\Feature\API;
 
-use App\Models\Entidad;
+use App\Models\Ciudad;
 use App\Models\Contacto;
-use Modules\CRM\Actions\AssignScoreAction;
+use App\Models\Entidad;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Modules\CRM\Actions\AssignScoreAction;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
@@ -16,7 +17,7 @@ class AssignScoreActionTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        \App\Models\Ciudad::create(['cod_municipio' => '05001', 'nombre' => 'Medellín', 'departamento' => 'Antioquia']);
+        Ciudad::create(['cod_municipio' => '05001', 'nombre' => 'Medellín', 'departamento' => 'Antioquia']);
     }
 
     #[Test]
@@ -32,7 +33,7 @@ class AssignScoreActionTest extends TestCase
             'fuente' => 'Llamada fría',
         ]);
 
-        $action = new AssignScoreAction();
+        $action = new AssignScoreAction;
         $score = $action->execute($contacto);
 
         // Base 10 + 0 (not CEO) + 0 (not corporate email) + 0 (not high value source) = 10
@@ -53,7 +54,7 @@ class AssignScoreActionTest extends TestCase
             'fuente' => 'Web Form',
         ]);
 
-        $action = new AssignScoreAction();
+        $action = new AssignScoreAction;
         $score = $action->execute($contacto);
 
         // Base 10 + 30 (Gerente) + 20 (Web) + 20 (Corporate) = 80

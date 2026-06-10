@@ -2,12 +2,14 @@
 
 namespace Tests\Feature\API;
 
+use App\Models\Ciudad;
+use App\Models\Contacto;
 use App\Models\Entidad;
+use App\Models\Oportunidad;
 use App\Models\Permiso;
 use App\Models\Rol;
 use App\Models\Usuario;
-use App\Models\Contacto;
-use App\Models\Ciudad;
+use Database\Seeders\PipelineSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
@@ -19,7 +21,7 @@ class OportunidadControllerTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->seed(\Database\Seeders\PipelineSeeder::class);
+        $this->seed(PipelineSeeder::class);
     }
 
     private function authenticate(): string
@@ -52,7 +54,7 @@ class OportunidadControllerTest extends TestCase
     {
         $token = $this->authenticate();
 
-        $response = $this->withHeader('Authorization', 'Bearer ' . $token)
+        $response = $this->withHeader('Authorization', 'Bearer '.$token)
             ->getJson('/api/v1/oportunidades');
 
         $response->assertStatus(200)
@@ -66,7 +68,7 @@ class OportunidadControllerTest extends TestCase
         $token = $this->authenticate();
         $refs = $this->createReferences();
 
-        $response = $this->withHeader('Authorization', 'Bearer ' . $token)
+        $response = $this->withHeader('Authorization', 'Bearer '.$token)
             ->postJson('/api/v1/oportunidades', [
                 'entidad_id' => $refs['entidad']->id,
                 'contacto_id' => $refs['contacto']->id,
@@ -95,7 +97,7 @@ class OportunidadControllerTest extends TestCase
         $token = $this->authenticate();
         $refs = $this->createReferences();
 
-        $response = $this->withHeader('Authorization', 'Bearer ' . $token)
+        $response = $this->withHeader('Authorization', 'Bearer '.$token)
             ->postJson('/api/v1/oportunidades', [
                 'entidad_id' => $refs['entidad']->id,
                 'contacto_id' => $refs['contacto']->id,
@@ -105,8 +107,8 @@ class OportunidadControllerTest extends TestCase
 
         $id = $response->json('data.id');
 
-        $showResponse = $this->withHeader('Authorization', 'Bearer ' . $token)
-            ->getJson('/api/v1/oportunidades/' . $id);
+        $showResponse = $this->withHeader('Authorization', 'Bearer '.$token)
+            ->getJson('/api/v1/oportunidades/'.$id);
 
         $showResponse->assertStatus(200)
             ->assertJsonPath('success', true)
@@ -121,7 +123,7 @@ class OportunidadControllerTest extends TestCase
         $token = $this->authenticate();
         $refs = $this->createReferences();
 
-        $response = $this->withHeader('Authorization', 'Bearer ' . $token)
+        $response = $this->withHeader('Authorization', 'Bearer '.$token)
             ->postJson('/api/v1/oportunidades', [
                 'entidad_id' => $refs['entidad']->id,
                 'contacto_id' => $refs['contacto']->id,
@@ -131,8 +133,8 @@ class OportunidadControllerTest extends TestCase
 
         $id = $response->json('data.id');
 
-        $updateResponse = $this->withHeader('Authorization', 'Bearer ' . $token)
-            ->putJson('/api/v1/oportunidades/' . $id, [
+        $updateResponse = $this->withHeader('Authorization', 'Bearer '.$token)
+            ->putJson('/api/v1/oportunidades/'.$id, [
                 'estado' => 'Enviada',
                 'observaciones' => 'Updated observations',
             ]);
@@ -149,7 +151,7 @@ class OportunidadControllerTest extends TestCase
         $token = $this->authenticate();
         $refs = $this->createReferences();
 
-        $response = $this->withHeader('Authorization', 'Bearer ' . $token)
+        $response = $this->withHeader('Authorization', 'Bearer '.$token)
             ->postJson('/api/v1/oportunidades', [
                 'entidad_id' => $refs['entidad']->id,
                 'contacto_id' => $refs['contacto']->id,
@@ -159,8 +161,8 @@ class OportunidadControllerTest extends TestCase
 
         $id = $response->json('data.id');
 
-        $deleteResponse = $this->withHeader('Authorization', 'Bearer ' . $token)
-            ->deleteJson('/api/v1/oportunidades/' . $id);
+        $deleteResponse = $this->withHeader('Authorization', 'Bearer '.$token)
+            ->deleteJson('/api/v1/oportunidades/'.$id);
 
         $deleteResponse->assertStatus(200)
             ->assertJsonPath('success', true);
@@ -171,7 +173,7 @@ class OportunidadControllerTest extends TestCase
     {
         $token = $this->authenticate();
 
-        $response = $this->withHeader('Authorization', 'Bearer ' . $token)
+        $response = $this->withHeader('Authorization', 'Bearer '.$token)
             ->postJson('/api/v1/oportunidades', []);
 
         $response->assertStatus(422);
@@ -182,7 +184,7 @@ class OportunidadControllerTest extends TestCase
     {
         $token = $this->authenticate();
 
-        $response = $this->withHeader('Authorization', 'Bearer ' . $token)
+        $response = $this->withHeader('Authorization', 'Bearer '.$token)
             ->getJson('/api/v1/oportunidades/9999');
 
         $response->assertStatus(404)
@@ -202,10 +204,10 @@ class OportunidadControllerTest extends TestCase
             'estado' => 'Borrador',
         ];
 
-        $first = $this->withHeader('Authorization', 'Bearer ' . $token)
+        $first = $this->withHeader('Authorization', 'Bearer '.$token)
             ->postJson('/api/v1/oportunidades', $data);
 
-        $second = $this->withHeader('Authorization', 'Bearer ' . $token)
+        $second = $this->withHeader('Authorization', 'Bearer '.$token)
             ->postJson('/api/v1/oportunidades', $data);
 
         $firstCodigo = $first->json('data.codigo');
@@ -222,7 +224,7 @@ class OportunidadControllerTest extends TestCase
         $token = $this->authenticate();
         $refs = $this->createReferences();
 
-        $response = $this->withHeader('Authorization', 'Bearer ' . $token)
+        $response = $this->withHeader('Authorization', 'Bearer '.$token)
             ->postJson('/api/v1/oportunidades', [
                 'entidad_id' => $refs['entidad']->id,
                 'contacto_id' => $refs['contacto']->id,
@@ -232,8 +234,8 @@ class OportunidadControllerTest extends TestCase
 
         $id = $response->json('data.id');
 
-        $updateResponse = $this->withHeader('Authorization', 'Bearer ' . $token)
-            ->putJson('/api/v1/oportunidades/' . $id, [
+        $updateResponse = $this->withHeader('Authorization', 'Bearer '.$token)
+            ->putJson('/api/v1/oportunidades/'.$id, [
                 'estado' => 'Ganada',
             ]);
 
@@ -250,7 +252,7 @@ class OportunidadControllerTest extends TestCase
 
         // Create 3 oportunidades
         for ($i = 0; $i < 3; $i++) {
-            $this->withHeader('Authorization', 'Bearer ' . $token)
+            $this->withHeader('Authorization', 'Bearer '.$token)
                 ->postJson('/api/v1/oportunidades', [
                     'entidad_id' => $refs['entidad']->id,
                     'contacto_id' => $refs['contacto']->id,
@@ -259,7 +261,7 @@ class OportunidadControllerTest extends TestCase
                 ]);
         }
 
-        $response = $this->withHeader('Authorization', 'Bearer ' . $token)
+        $response = $this->withHeader('Authorization', 'Bearer '.$token)
             ->getJson('/api/v1/oportunidades?per_page=2');
 
         $response->assertStatus(200)
@@ -277,7 +279,7 @@ class OportunidadControllerTest extends TestCase
         $refs = $this->createReferences();
 
         // Create base opportunity
-        $response = $this->withHeader('Authorization', 'Bearer ' . $token)
+        $response = $this->withHeader('Authorization', 'Bearer '.$token)
             ->postJson('/api/v1/oportunidades', [
                 'entidad_id' => $refs['entidad']->id,
                 'contacto_id' => $refs['contacto']->id,
@@ -289,7 +291,7 @@ class OportunidadControllerTest extends TestCase
         $originalCodigo = $response->json('data.codigo');
 
         // Create version
-        $versionResponse = $this->withHeader('Authorization', 'Bearer ' . $token)
+        $versionResponse = $this->withHeader('Authorization', 'Bearer '.$token)
             ->postJson("/api/v1/oportunidades/{$id}/version");
 
         $versionResponse->assertStatus(201)
@@ -297,10 +299,10 @@ class OportunidadControllerTest extends TestCase
             ->assertJsonPath('data.version', 2)
             ->assertJsonPath('data.parent_id', $id)
             ->assertJsonPath('data.is_latest', true)
-            ->assertJsonPath('data.codigo', $originalCodigo . '-V2');
+            ->assertJsonPath('data.codigo', $originalCodigo.'-V2');
 
         // Verify the original opportunity is now marked is_latest=false and Inactiva
-        $original = \App\Models\Oportunidad::find($id);
+        $original = Oportunidad::find($id);
         $this->assertFalse($original->is_latest);
         $this->assertEquals('Inactiva', $original->estado);
     }

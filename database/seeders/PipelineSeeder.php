@@ -9,50 +9,78 @@ class PipelineSeeder extends Seeder
 {
     /**
      * Run the database seeds.
+     *
+     * Seeds 2 default pipelines idempotently:
+     * - Cotización (codigo: COTIZACION) with 5 etapas
+     * - Recuperación (codigo: RECUPERACION) with 5 etapas
      */
     public function run(): void
     {
-        // 1. Ingest pipelines
-        $llegadaId = DB::table('pipelines')->insertGetId([
-            'nombre' => 'Llegada',
-            'codigo' => 'llegada',
-            'habilitado' => true,
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]);
+        // 1. Cotización pipeline
+        DB::table('pipelines')->updateOrInsert(
+            ['codigo' => 'COTIZACION'],
+            ['nombre' => 'Cotización', 'habilitado' => true, 'updated_at' => now(), 'created_at' => now()]
+        );
+        $cotizacionId = DB::table('pipelines')->where('codigo', 'COTIZACION')->value('id');
 
-        $rescateId = DB::table('pipelines')->insertGetId([
-            'nombre' => 'Rescate',
-            'codigo' => 'rescate',
-            'habilitado' => true,
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]);
-
-        // 2. Ingest stages for Llegada
-        $llegadaStages = ['Borrador', 'Enviada', 'Aceptada', 'Rechazada', 'Ganada', 'Perdida'];
-        foreach ($llegadaStages as $index => $stage) {
-            DB::table('pipeline_etapas')->insert([
-                'pipeline_id' => $llegadaId,
-                'nombre' => $stage,
-                'orden' => $index,
-                'habilitado' => true,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]);
+        $cotizacionStages = [
+            'Borrador',
+            'Enviada',
+            'Aceptada',
+            'Rechazada',
+            'Ganada',
+            'Perdida',
+        ];
+        foreach ($cotizacionStages as $index => $stage) {
+            DB::table('pipeline_etapas')->updateOrInsert(
+                ['pipeline_id' => $cotizacionId, 'nombre' => $stage],
+                ['orden' => $index, 'habilitado' => true, 'updated_at' => now(), 'created_at' => now()]
+            );
         }
+        // Clean up obsolete stages not in the canonical list (only if no linked opportunities)
+        $this->cleanupObsoleteStages($cotizacionId, $cotizacionStages);
 
-        // 3. Ingest stages for Rescate
-        $rescateStages = ['Rescate_Inicial', 'Rescate_En_Progreso', 'Rescate_Exitoso', 'Rescate_Fallido'];
-        foreach ($rescateStages as $index => $stage) {
-            DB::table('pipeline_etapas')->insert([
-                'pipeline_id' => $rescateId,
-                'nombre' => $stage,
-                'orden' => $index,
-                'habilitado' => true,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ]);
+        // 2. Recuperación pipeline
+        DB::table('pipelines')->updateOrInsert(
+            ['codigo' => 'RECUPERACION'],
+            ['nombre' => 'Recuperación', 'habilitado' => true, 'updated_at' => now(), 'created_at' => now()]
+        );
+        $recuperacionId = DB::table('pipelines')->where('codigo', 'RECUPERACION')->value('id');
+
+        $recuperacionStages = [
+            'Inicio',
+            'Con Cita',
+            'En Negociación',
+            'Aprobado',
+            'Rechazado',
+        ];
+        foreach ($recuperacionStages as $index => $stage) {
+            DB::table('pipeline_etapas')->updateOrInsert(
+                ['pipeline_id' => $recuperacionId, 'nombre' => $stage],
+                ['orden' => $index, 'habilitado' => true, 'updated_at' => now(), 'created_at' => now()]
+            );
+        }
+        $this->cleanupObsoleteStages($recuperacionId, $recuperacionStages);
+    }
+
+    /**
+     * Delete stages for a pipeline that are NOT in the canonical list
+     * and have no linked opportunities.
+     */
+    private function cleanupObsoleteStages(int $pipelineId, array $canonicalNames): void
+    {
+        $obsolete = DB::table('pipeline_etapas')
+            ->where('pipeline_id', $pipelineId)
+            ->whereNotIn('nombre', $canonicalNames)
+            ->get();
+
+        foreach ($obsolete as $stage) {
+            $hasOpps = DB::table('oportunidad')
+                ->where('pipeline_etapa_id', $stage->id)
+                ->exists();
+            if (! $hasOpps) {
+                DB::table('pipeline_etapas')->where('id', $stage->id)->delete();
+            }
         }
     }
 }

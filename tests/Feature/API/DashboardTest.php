@@ -2,15 +2,16 @@
 
 namespace Tests\Feature\API;
 
+use App\Models\Ciudad;
+use App\Models\Contacto;
+use App\Models\DetalleOportunidad;
+use App\Models\Entidad;
+use App\Models\Oportunidad;
 use App\Models\Permiso;
+use App\Models\Producto;
 use App\Models\Rol;
 use App\Models\Usuario;
-use App\Models\Entidad;
-use App\Models\Contacto;
-use App\Models\Oportunidad;
-use App\Models\DetalleOportunidad;
-use App\Models\Producto;
-use App\Models\Ciudad;
+use Database\Seeders\PipelineSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
@@ -23,7 +24,7 @@ class DashboardTest extends TestCase
     {
         parent::setUp();
         Ciudad::create(['cod_municipio' => '05001', 'nombre' => 'Medellín', 'departamento' => 'Antioquia']);
-        $this->seed(\Database\Seeders\PipelineSeeder::class);
+        $this->seed(PipelineSeeder::class);
     }
 
     private function createAdminUser(): array
@@ -69,7 +70,7 @@ class DashboardTest extends TestCase
     {
         $auth = $this->createAdminUser();
 
-        $response = $this->withHeader('Authorization', 'Bearer ' . $auth['token'])
+        $response = $this->withHeader('Authorization', 'Bearer '.$auth['token'])
             ->getJson('/api/v1/dashboard');
 
         $response->assertStatus(200)
@@ -122,7 +123,7 @@ class DashboardTest extends TestCase
             ]);
         }
 
-        $response = $this->withHeader('Authorization', 'Bearer ' . $auth['token'])
+        $response = $this->withHeader('Authorization', 'Bearer '.$auth['token'])
             ->getJson('/api/v1/dashboard');
 
         // tasa = 2/10 = 20%
@@ -134,7 +135,7 @@ class DashboardTest extends TestCase
     {
         $auth = $this->createAdminUser();
 
-        $response = $this->withHeader('Authorization', 'Bearer ' . $auth['token'])
+        $response = $this->withHeader('Authorization', 'Bearer '.$auth['token'])
             ->getJson('/api/v1/dashboard');
 
         $response->assertJsonPath('data.prospectos.tasa_conversion', 0);
@@ -175,7 +176,7 @@ class DashboardTest extends TestCase
             'vr_total' => 500,
         ]);
 
-        $response = $this->withHeader('Authorization', 'Bearer ' . $auth['token'])
+        $response = $this->withHeader('Authorization', 'Bearer '.$auth['token'])
             ->getJson('/api/v1/dashboard');
 
         // ventas_mes = total anual / 12 = 1500 / 12 = 125
@@ -211,7 +212,7 @@ class DashboardTest extends TestCase
         ]);
         DetalleOportunidad::factory()->create(['oportunidad_id' => $opp3->id, 'producto_id' => $producto->id, 'vr_total' => 500]);
 
-        $response = $this->withHeader('Authorization', 'Bearer ' . $auth['token'])
+        $response = $this->withHeader('Authorization', 'Bearer '.$auth['token'])
             ->getJson('/api/v1/dashboard');
 
         // LTV = avg(1500, 500) = 1000
@@ -223,7 +224,7 @@ class DashboardTest extends TestCase
     {
         $auth = $this->createAdminUser();
 
-        $response = $this->withHeader('Authorization', 'Bearer ' . $auth['token'])
+        $response = $this->withHeader('Authorization', 'Bearer '.$auth['token'])
             ->getJson('/api/v1/dashboard');
 
         $chart = $response->json('data.chart');
@@ -255,7 +256,7 @@ class DashboardTest extends TestCase
         DetalleOportunidad::factory()->create(['oportunidad_id' => $oppB->id, 'producto_id' => $producto->id, 'vr_total' => 2000]);
 
         // Admin sees all (LTV = 3000/2 = 1500)
-        $adminResponse = $this->withHeader('Authorization', 'Bearer ' . $admin['token'])
+        $adminResponse = $this->withHeader('Authorization', 'Bearer '.$admin['token'])
             ->getJson('/api/v1/dashboard');
         $adminLtv = $adminResponse->json('data.ventas.ltv');
 
@@ -285,8 +286,8 @@ class DashboardTest extends TestCase
         DetalleOportunidad::factory()->create(['oportunidad_id' => $opp->id, 'producto_id' => $producto->id, 'vr_total' => 500]);
 
         // Admin filters by comercial
-        $response = $this->withHeader('Authorization', 'Bearer ' . $admin['token'])
-            ->getJson('/api/v1/dashboard?comercial_id=' . $ventas['usuario']->id);
+        $response = $this->withHeader('Authorization', 'Bearer '.$admin['token'])
+            ->getJson('/api/v1/dashboard?comercial_id='.$ventas['usuario']->id);
 
         $response->assertStatus(200);
         $this->assertEquals(500.0, $response->json('data.ventas.ltv'));
@@ -297,7 +298,7 @@ class DashboardTest extends TestCase
     {
         $auth = $this->createAdminUser();
 
-        $response = $this->withHeader('Authorization', 'Bearer ' . $auth['token'])
+        $response = $this->withHeader('Authorization', 'Bearer '.$auth['token'])
             ->getJson('/api/v1/dashboard?fecha_inicio=2026-01-01&fecha_fin=2026-06-01');
 
         $response->assertStatus(200);
@@ -322,7 +323,7 @@ class DashboardTest extends TestCase
             'vr_total' => 1500,
         ]);
 
-        $response = $this->withHeader('Authorization', 'Bearer ' . $auth['token'])
+        $response = $this->withHeader('Authorization', 'Bearer '.$auth['token'])
             ->getJson('/api/v1/dashboard');
 
         $funnel = $response->json('data.ventas.funnel');
@@ -343,7 +344,7 @@ class DashboardTest extends TestCase
         Oportunidad::factory()->create(['entidad_id' => $entidad->id, 'contacto_id' => $contacto->id, 'estado' => 'Borrador']);
         Oportunidad::factory()->count(2)->create(['entidad_id' => $entidad->id, 'contacto_id' => $contacto->id, 'estado' => 'Enviada']);
 
-        $response = $this->withHeader('Authorization', 'Bearer ' . $auth['token'])
+        $response = $this->withHeader('Authorization', 'Bearer '.$auth['token'])
             ->getJson('/api/v1/dashboard');
 
         $estados = $response->json('data.prospectos.oportunidades_por_estado');
@@ -362,7 +363,7 @@ class DashboardTest extends TestCase
         // Create contacts this month
         Contacto::factory()->count(3)->create();
 
-        $response = $this->withHeader('Authorization', 'Bearer ' . $auth['token'])
+        $response = $this->withHeader('Authorization', 'Bearer '.$auth['token'])
             ->getJson('/api/v1/dashboard');
 
         $this->assertEquals(3, $response->json('data.prospectos.nuevos_leads_mes'));

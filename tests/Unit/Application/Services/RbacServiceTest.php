@@ -3,31 +3,34 @@
 namespace Tests\Unit\Application\Services;
 
 use App\Application\Services\RbacService;
-use App\Models\Permiso;
-use App\Models\Rol;
-use Illuminate\Foundation\Testing\RefreshDatabase;
+use App\Domain\Repositories\PermisoRepositoryInterface;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
 class RbacServiceTest extends TestCase
 {
-    use RefreshDatabase;
-
     private RbacService $service;
+
+    private PermisoRepositoryInterface $repositoryMock;
 
     protected function setUp(): void
     {
         parent::setUp();
-        $this->service = new RbacService();
+
+        $this->repositoryMock = $this->createMock(PermisoRepositoryInterface::class);
+        $this->service = new RbacService($this->repositoryMock);
     }
 
     #[Test]
     public function it_returns_true_when_permission_exists(): void
     {
-        $rol = Rol::create(['nombre' => 'Admin', 'estado' => 'Activo']);
-        Permiso::create(['rol_id' => $rol->id, 'vista' => 'entidad.index']);
+        $this->repositoryMock
+            ->expects($this->once())
+            ->method('hasPermissionForRol')
+            ->with(1, 'entidad.index')
+            ->willReturn(true);
 
-        $result = $this->service->hasPermission($rol->id, 'entidad.index');
+        $result = $this->service->hasPermission(1, 'entidad.index');
 
         $this->assertTrue($result);
     }
@@ -35,9 +38,13 @@ class RbacServiceTest extends TestCase
     #[Test]
     public function it_returns_false_when_permission_missing(): void
     {
-        $rol = Rol::create(['nombre' => 'Ventas', 'estado' => 'Activo']);
+        $this->repositoryMock
+            ->expects($this->once())
+            ->method('hasPermissionForRol')
+            ->with(2, 'entidad.index')
+            ->willReturn(false);
 
-        $result = $this->service->hasPermission($rol->id, 'entidad.index');
+        $result = $this->service->hasPermission(2, 'entidad.index');
 
         $this->assertFalse($result);
     }
@@ -45,10 +52,13 @@ class RbacServiceTest extends TestCase
     #[Test]
     public function it_handles_wildcard_permission(): void
     {
-        $rol = Rol::create(['nombre' => 'Admin', 'estado' => 'Activo']);
-        Permiso::create(['rol_id' => $rol->id, 'vista' => '*']);
+        $this->repositoryMock
+            ->expects($this->once())
+            ->method('hasPermissionForRol')
+            ->with(1, 'entidad.index')
+            ->willReturn(true);
 
-        $result = $this->service->hasPermission($rol->id, 'entidad.index');
+        $result = $this->service->hasPermission(1, 'entidad.index');
 
         $this->assertTrue($result);
     }

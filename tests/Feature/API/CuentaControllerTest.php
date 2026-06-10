@@ -2,11 +2,11 @@
 
 namespace Tests\Feature\API;
 
+use App\Models\Ciudad;
 use App\Models\Permiso;
 use App\Models\Proveedor;
 use App\Models\Rol;
 use App\Models\Usuario;
-use App\Models\Ciudad;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
@@ -44,7 +44,7 @@ class CuentaControllerTest extends TestCase
     {
         $token = $this->authenticate();
 
-        $response = $this->withHeader('Authorization', 'Bearer ' . $token)
+        $response = $this->withHeader('Authorization', 'Bearer '.$token)
             ->getJson('/api/v1/cuentas');
 
         $response->assertStatus(200)
@@ -58,7 +58,7 @@ class CuentaControllerTest extends TestCase
         $token = $this->authenticate();
         $refs = $this->createReferences();
 
-        $response = $this->withHeader('Authorization', 'Bearer ' . $token)
+        $response = $this->withHeader('Authorization', 'Bearer '.$token)
             ->postJson('/api/v1/cuentas', [
                 'proveedor_id' => $refs['proveedor']->id,
                 'banco' => 'Bancolombia',
@@ -81,7 +81,7 @@ class CuentaControllerTest extends TestCase
         $token = $this->authenticate();
         $refs = $this->createReferences();
 
-        $createResponse = $this->withHeader('Authorization', 'Bearer ' . $token)
+        $createResponse = $this->withHeader('Authorization', 'Bearer '.$token)
             ->postJson('/api/v1/cuentas', [
                 'proveedor_id' => $refs['proveedor']->id,
                 'banco' => 'Davivienda',
@@ -91,8 +91,8 @@ class CuentaControllerTest extends TestCase
 
         $id = $createResponse->json('data.id');
 
-        $response = $this->withHeader('Authorization', 'Bearer ' . $token)
-            ->getJson('/api/v1/cuentas/' . $id);
+        $response = $this->withHeader('Authorization', 'Bearer '.$token)
+            ->getJson('/api/v1/cuentas/'.$id);
 
         $response->assertStatus(200)
             ->assertJsonPath('success', true)
@@ -106,7 +106,7 @@ class CuentaControllerTest extends TestCase
         $token = $this->authenticate();
         $refs = $this->createReferences();
 
-        $createResponse = $this->withHeader('Authorization', 'Bearer ' . $token)
+        $createResponse = $this->withHeader('Authorization', 'Bearer '.$token)
             ->postJson('/api/v1/cuentas', [
                 'proveedor_id' => $refs['proveedor']->id,
                 'banco' => 'BBVA',
@@ -116,8 +116,8 @@ class CuentaControllerTest extends TestCase
 
         $id = $createResponse->json('data.id');
 
-        $response = $this->withHeader('Authorization', 'Bearer ' . $token)
-            ->putJson('/api/v1/cuentas/' . $id, [
+        $response = $this->withHeader('Authorization', 'Bearer '.$token)
+            ->putJson('/api/v1/cuentas/'.$id, [
                 'banco' => 'Banco de Bogotá',
                 'estado' => 'Inactivo',
             ]);
@@ -134,7 +134,7 @@ class CuentaControllerTest extends TestCase
         $token = $this->authenticate();
         $refs = $this->createReferences();
 
-        $createResponse = $this->withHeader('Authorization', 'Bearer ' . $token)
+        $createResponse = $this->withHeader('Authorization', 'Bearer '.$token)
             ->postJson('/api/v1/cuentas', [
                 'proveedor_id' => $refs['proveedor']->id,
                 'banco' => 'Nequi',
@@ -144,8 +144,8 @@ class CuentaControllerTest extends TestCase
 
         $id = $createResponse->json('data.id');
 
-        $response = $this->withHeader('Authorization', 'Bearer ' . $token)
-            ->deleteJson('/api/v1/cuentas/' . $id);
+        $response = $this->withHeader('Authorization', 'Bearer '.$token)
+            ->deleteJson('/api/v1/cuentas/'.$id);
 
         $response->assertStatus(200)
             ->assertJsonPath('success', true);
@@ -158,7 +158,7 @@ class CuentaControllerTest extends TestCase
     {
         $token = $this->authenticate();
 
-        $response = $this->withHeader('Authorization', 'Bearer ' . $token)
+        $response = $this->withHeader('Authorization', 'Bearer '.$token)
             ->postJson('/api/v1/cuentas', []);
 
         $response->assertStatus(422);
@@ -169,7 +169,7 @@ class CuentaControllerTest extends TestCase
     {
         $token = $this->authenticate();
 
-        $response = $this->withHeader('Authorization', 'Bearer ' . $token)
+        $response = $this->withHeader('Authorization', 'Bearer '.$token)
             ->getJson('/api/v1/cuentas/9999');
 
         $response->assertStatus(404)
@@ -182,8 +182,8 @@ class CuentaControllerTest extends TestCase
         $token = $this->authenticate();
         $refs = $this->createReferences();
 
-        $response = $this->withHeader('Authorization', 'Bearer ' . $token)
-            ->getJson('/api/v1/proveedores/' . $refs['proveedor']->id . '/cuentas');
+        $response = $this->withHeader('Authorization', 'Bearer '.$token)
+            ->getJson('/api/v1/proveedores/'.$refs['proveedor']->id.'/cuentas');
 
         $response->assertStatus(200)
             ->assertJsonPath('success', true);

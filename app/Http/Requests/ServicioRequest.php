@@ -27,7 +27,7 @@ class ServicioRequest extends FormRequest
         ];
 
         if ($this->isMethod('PUT')) {
-            $rules['oportunidad_id'] = 'nullable|integer|exists:oportunidad,id|unique:servicios,oportunidad_id,' . $servicioId;
+            $rules['oportunidad_id'] = 'nullable|integer|exists:oportunidad,id|unique:servicios,oportunidad_id,'.$servicioId;
             $rules['entidad_id'] = 'nullable|integer|exists:entidad,id';
             $rules['nombre'] = 'nullable|string|max:255';
         }

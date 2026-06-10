@@ -7,8 +7,18 @@ use Illuminate\Pagination\LengthAwarePaginator;
 interface PermisoRepositoryInterface
 {
     public function paginate(int $perPage = 15, ?string $search = null, array $filters = []): LengthAwarePaginator;
+
     public function findById(int $id): mixed;
+
     public function create(array $data): mixed;
+
     public function update(int $id, array $data): mixed;
+
     public function delete(int $id): bool;
+
+    /**
+     * Check if a role has a specific permission (vista).
+     * Supports wildcard '*' permission.
+     */
+    public function hasPermissionForRol(int $rolId, string $vista): bool;
 }

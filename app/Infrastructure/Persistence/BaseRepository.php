@@ -19,7 +19,7 @@ abstract class BaseRepository
             $query = $this->applySearch($query, $search);
         }
 
-        if (!empty($filters)) {
+        if (! empty($filters)) {
             $query = $this->applyFilters($query, $filters);
         }
 
@@ -47,7 +47,7 @@ abstract class BaseRepository
     {
         $model = $this->newQuery()->find($id);
 
-        if (!$model) {
+        if (! $model) {
             return null;
         }
 
@@ -60,7 +60,7 @@ abstract class BaseRepository
     {
         $model = $this->newQuery()->find($id);
 
-        if (!$model) {
+        if (! $model) {
             return false;
         }
 

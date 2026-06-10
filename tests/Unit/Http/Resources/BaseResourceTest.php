@@ -2,6 +2,7 @@
 
 namespace Tests\Unit\Http\Resources;
 
+use App\Domain\Entities\Rol;
 use App\Http\Resources\BaseResource;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
@@ -11,7 +12,7 @@ class BaseResourceTest extends TestCase
     #[Test]
     public function it_wraps_entity_in_envelope_structure(): void
     {
-        $entity = \App\Domain\Entities\Rol::fromArray([
+        $entity = Rol::fromArray([
             'id' => 1,
             'nombre' => 'Admin',
             'estado' => 'Activo',
@@ -33,7 +34,7 @@ class BaseResourceTest extends TestCase
     public function it_returns_collection_structure(): void
     {
         $entities = collect([
-            \App\Domain\Entities\Rol::fromArray([
+            Rol::fromArray([
                 'id' => 1,
                 'nombre' => 'Admin',
                 'estado' => 'Activo',
@@ -44,7 +45,7 @@ class BaseResourceTest extends TestCase
             ]),
         ]);
 
-        $resource = \App\Http\Resources\BaseResource::collection($entities);
+        $resource = BaseResource::collection($entities);
         $response = $resource->toArray(request());
 
         $this->assertIsArray($response);

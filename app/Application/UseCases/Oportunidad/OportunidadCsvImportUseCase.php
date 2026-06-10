@@ -4,6 +4,7 @@ namespace App\Application\UseCases\Oportunidad;
 
 use App\Models\Contacto;
 use App\Models\Producto;
+use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -33,32 +34,35 @@ class OportunidadCsvImportUseCase
     private array $clientesFacturacion = ['nits' => [], 'names' => []];
 
     private ?Producto $fallbackProduct = null;
+
     private int $defaultUserId = 1;
 
     private const ESTADO_MAP = [
         // Texto directo del CSV
-        'generada'       => 'Enviada',
-        'aprobada'       => 'Aceptada',
-        'no aprobada'    => 'Rechazada',
-        'no aprobado'    => 'Rechazada',
+        'generada' => 'Enviada',
+        'aprobada' => 'Aceptada',
+        'no aprobada' => 'Rechazada',
+        'no aprobado' => 'Rechazada',
         // Nombres desde maestro (maestro.nombre → estado interno)
-        'borrador'       => 'Borrador',
-        'enviado'        => 'Enviada',
+        'borrador' => 'Borrador',
+        'enviado' => 'Enviada',
         'en negociación' => 'Aceptada',
-        'ganado'         => 'Ganada',
-        'perdido'        => 'Perdida',
+        'ganado' => 'Ganada',
+        'perdido' => 'Perdida',
     ];
     // --- Builder ---
 
     public function setEntityMap(array $map): static
     {
         $this->entityMap = $map;
+
         return $this;
     }
 
     public function setContactDedup(array $dedup): static
     {
         $this->contactDedup = $dedup;
+
         return $this;
     }
 
@@ -68,30 +72,35 @@ class OportunidadCsvImportUseCase
         foreach ($products as $product) {
             $this->productMap[strtolower(trim($product->nombre))] = $product;
         }
+
         return $this;
     }
 
     public function setFallbackProduct(?Producto $product): static
     {
         $this->fallbackProduct = $product;
+
         return $this;
     }
 
     public function setDefaultUserId(int $id): static
     {
         $this->defaultUserId = $id;
+
         return $this;
     }
 
     public function setEstadoMap(array $map): static
     {
         $this->estadoMap = $map;
+
         return $this;
     }
 
     public function setClientesFacturacion(array $list): static
     {
         $this->clientesFacturacion = $list;
+
         return $this;
     }
 
@@ -101,18 +110,18 @@ class OportunidadCsvImportUseCase
      * Import a chunk of CSV rows inside a single transaction.
      * Each row: resolve entity → resolve contact → upsert oportunidad → upsert detalle.
      *
-     * @param array<int, array<string, mixed>> $rows
+     * @param  array<int, array<string, mixed>>  $rows
      * @return array{created: int, skipped: int, errors: int, details: array}
      */
     public function import(array $rows): array
     {
         $counters = ['created' => 0, 'skipped' => 0, 'errors' => 0, 'details' => []];
 
-        $pipelineId = DB::table('pipelines')->where('codigo', 'llegada')->value('id');
-        if (!$pipelineId) {
+        $pipelineId = DB::table('pipelines')->where('codigo', 'COTIZACION')->value('id');
+        if (! $pipelineId) {
             $pipelineId = DB::table('pipelines')->insertGetId([
-                'nombre' => 'Llegada',
-                'codigo' => 'llegada',
+                'nombre' => 'Cotización',
+                'codigo' => 'COTIZACION',
                 'habilitado' => true,
                 'created_at' => now(),
                 'updated_at' => now(),
@@ -126,7 +135,7 @@ class OportunidadCsvImportUseCase
                 ->where('pipeline_id', $pipelineId)
                 ->where('nombre', $stageName)
                 ->value('id');
-            if (!$stageId) {
+            if (! $stageId) {
                 $stageId = DB::table('pipeline_etapas')->insertGetId([
                     'pipeline_id' => $pipelineId,
                     'nombre' => $stageName,
@@ -146,14 +155,15 @@ class OportunidadCsvImportUseCase
             foreach ($rows as $i => $row) {
                 try {
                     $codigo = $row['codigo'] ?? null;
-                    if (!$codigo) {
+                    if (! $codigo) {
                         $counters['skipped']++;
+
                         continue;
                     }
 
                     // Use CSV fecha for timestamps so Kanban and entities sort by real date
                     $fechaStr = $this->parseFecha($row['fecha'] ?? null);
-                    $timestamp = $fechaStr ? \Carbon\Carbon::parse($fechaStr) : $now;
+                    $timestamp = $fechaStr ? Carbon::parse($fechaStr) : $now;
 
                     // --- 1. Entity ---
                     $entidadId = $this->resolveEntityId($row, $timestamp);
@@ -163,7 +173,7 @@ class OportunidadCsvImportUseCase
 
                     // --- 3. Oportunidad (upsert by codigo) ---
                     $oppData = $this->buildOpportunityData($row, $entidadId, $contactId);
-                    
+
                     $resolvedStage = $oppData['estado'];
                     $oppData['pipeline_id'] = $pipelineId;
                     $oppData['pipeline_etapa_id'] = $stageMap[$resolvedStage] ?? $stageMap['Borrador'];
@@ -216,7 +226,7 @@ class OportunidadCsvImportUseCase
         $dominio = $this->cleanStr($row['dominio'] ?? '');
         $lineaNegocio = $this->cleanStr($row['linea_negocio'] ?? '');
 
-        if (!$empresa) {
+        if (! $empresa) {
             throw new \RuntimeException('CAMPO EMPRESA vacío');
         }
 
@@ -233,27 +243,27 @@ class OportunidadCsvImportUseCase
         }
 
         // Priority 2: NIT
-        if (!$id && $nit) {
+        if (! $id && $nit) {
             $cleanNit = preg_replace('/[\.\-\s]/', '', $nit);
             $id = $this->lookupEntityId($cleanNit) ?? $this->lookupEntityId($nit);
         }
 
         // Priority 3: Normalized name
-        if (!$id) {
+        if (! $id) {
             $normalized = $this->normalizeEntityName($empresaName);
             $id = $this->lookupEntityId($normalized);
         }
 
         // Priority 4: Raw lower name
-        if (!$id) {
+        if (! $id) {
             $nameLower = strtolower($empresaName);
             $id = $this->lookupEntityId($nameLower);
         }
 
         // Priority 5: Keyword fuzzy match (catches typos like "Activo" vs "Activos SAS")
-        if (!$id) {
+        if (! $id) {
             $csvWords = $this->extractKeyWords($empresaName);
-            if (!empty($csvWords)) {
+            if (! empty($csvWords)) {
                 $id = $this->lookupEntityIdByKeywords($csvWords);
             }
         }
@@ -266,14 +276,14 @@ class OportunidadCsvImportUseCase
                 $isClient = true;
             }
         }
-        if (!$isClient) {
+        if (! $isClient) {
             $normalizedName = $this->normalizeEntityName($empresaName);
             if (in_array($normalizedName, $this->clientesFacturacion['names'] ?? [])) {
                 $isClient = true;
             }
         }
 
-        $timestampStr = $now instanceof \Carbon\Carbon ? $now->format('Y-m-d H:i:s') : (string) $now;
+        $timestampStr = $now instanceof Carbon ? $now->format('Y-m-d H:i:s') : (string) $now;
 
         if ($id) {
             // Update existing entity's state and client_desde based on billing JSON crossing
@@ -295,11 +305,11 @@ class OportunidadCsvImportUseCase
                 ->where('id', $id)
                 ->where(function ($q) use ($timestampStr) {
                     $q->whereNull('created_at')
-                      ->orWhere('created_at', '>', $timestampStr);
+                        ->orWhere('created_at', '>', $timestampStr);
                 })
                 ->update([
                     'created_at' => $timestampStr,
-                    'updated_at' => $timestampStr
+                    'updated_at' => $timestampStr,
                 ]);
 
             return $id;
@@ -307,24 +317,24 @@ class OportunidadCsvImportUseCase
 
         // Not found → CREATE
         $newId = DB::table('entidad')->insertGetId([
-            'nombre'          => mb_substr($empresaName, 0, 255),
-            'nombre_comercial'=> mb_substr($empresaName, 0, 255),
-            'linea_negocio'   => $lineaNegocio ?: null,
-            'tipo_persona'    => 'Juridica',
-            'tipo_id'         => 'NIT',
-            'identificacion'  => $nit ? preg_replace('/[\.\-\s]/', '', $nit) : null,
-            'dominio'         => $dominio ?: null,
-            'estado'          => $isClient ? 'Cliente' : 'Prospecto',
-            'cliente_desde'   => $isClient ? $now : null,
-            'created_at'      => $now,
-            'updated_at'      => $now,
+            'nombre' => mb_substr($empresaName, 0, 255),
+            'nombre_comercial' => mb_substr($empresaName, 0, 255),
+            'linea_negocio' => $lineaNegocio ?: null,
+            'tipo_persona' => 'Juridica',
+            'tipo_id' => 'NIT',
+            'identificacion' => $nit ? preg_replace('/[\.\-\s]/', '', $nit) : null,
+            'dominio' => $dominio ?: null,
+            'estado' => $isClient ? 'Cliente' : 'Prospecto',
+            'cliente_desde' => $isClient ? $now : null,
+            'created_at' => $now,
+            'updated_at' => $now,
         ]);
 
         // Index for dedup within same chunk
         $normalized = $this->normalizeEntityName($empresaName);
-        $nameLower  = strtolower($empresaName);
+        $nameLower = strtolower($empresaName);
         $this->newEntityMap[$normalized] = $newId;
-        $this->newEntityMap[$nameLower]  = $newId;
+        $this->newEntityMap[$nameLower] = $newId;
 
         return $newId;
     }
@@ -386,10 +396,11 @@ class OportunidadCsvImportUseCase
         $words = [];
         foreach ($parts as $part) {
             $part = trim($part);
-            if (strlen($part) >= 3 && !in_array($part, $stopWords)) {
+            if (strlen($part) >= 3 && ! in_array($part, $stopWords)) {
                 $words[$part] = $part;
             }
         }
+
         return array_values($words);
     }
 
@@ -398,7 +409,7 @@ class OportunidadCsvImportUseCase
     private function resolveContactId(array $row, int $entidadId, $now): ?int
     {
         $email = $this->cleanStr($row['email_contacto'] ?? '');
-        if (!$email) {
+        if (! $email) {
             return null;
         }
         // Some rows have multiple emails separated by \n — take only the first
@@ -408,7 +419,7 @@ class OportunidadCsvImportUseCase
             return null;
         }
 
-        $dedupKey = $entidadId . ':' . $email;
+        $dedupKey = $entidadId.':'.$email;
 
         // Already handled in this chunk or previous chunk?
         if (isset($this->contactDedup[$dedupKey])) {
@@ -422,6 +433,7 @@ class OportunidadCsvImportUseCase
 
         if ($existing) {
             $this->contactDedup[$dedupKey] = true;
+
             return $existing->id;
         }
 
@@ -430,19 +442,20 @@ class OportunidadCsvImportUseCase
         $nombre = $contactoRaw ? trim(explode("\n", $contactoRaw)[0]) : '';
 
         $newId = DB::table('contacto')->insertGetId([
-            'entidad_id'    => $entidadId,
+            'entidad_id' => $entidadId,
             'email_contacto' => $email,
-            'nombres'       => mb_substr($nombre, 0, 255) ?: 'Sin nombre',
-            'apellidos'     => ' ',    // MariaDB: NOT NULL, no default
-            'cargo'         => $this->cleanStr($row['cargo'] ?? null),
-            'tel_contacto'  => $this->cleanStr($row['tel_contacto'] ?? null),
-            'movil'         => $this->cleanStr($row['movil'] ?? null),
-            'estado'        => 'Activo',
-            'created_at'    => $now,
-            'updated_at'    => $now,
+            'nombres' => mb_substr($nombre, 0, 255) ?: 'Sin nombre',
+            'apellidos' => ' ',    // MariaDB: NOT NULL, no default
+            'cargo' => $this->cleanStr($row['cargo'] ?? null),
+            'tel_contacto' => $this->cleanStr($row['tel_contacto'] ?? null),
+            'movil' => $this->cleanStr($row['movil'] ?? null),
+            'estado' => 'Activo',
+            'created_at' => $now,
+            'updated_at' => $now,
         ]);
 
         $this->contactDedup[$dedupKey] = true;
+
         return $newId;
     }
 
@@ -454,7 +467,7 @@ class OportunidadCsvImportUseCase
      */
     private function resolveEstado(?string $raw): string
     {
-        if (!$raw) {
+        if (! $raw) {
             return 'Borrador';
         }
 
@@ -480,27 +493,27 @@ class OportunidadCsvImportUseCase
         $estado = $this->resolveEstado($estadoRaw);
 
         return [
-            'codigo'         => $row['codigo'],
-            'entidad_id'     => $entidadId,
-            'contacto_id'    => $contactId,
-            'fecha'          => $this->parseFecha($row['fecha'] ?? null) ?? date('Y-m-d'),
-            'fuente_canal'   => $this->cleanStr($row['fuente_canal'] ?? $row['fuentecanal'] ?? null),
-            'estado'         => $estado,
-            'observaciones'  => $this->cleanStr($row['observaciones'] ?? null),
-            'aclaraciones'   => $this->cleanStr($row['aclaraciones'] ?? null),
+            'codigo' => $row['codigo'],
+            'entidad_id' => $entidadId,
+            'contacto_id' => $contactId,
+            'fecha' => $this->parseFecha($row['fecha'] ?? null) ?? date('Y-m-d'),
+            'fuente_canal' => $this->cleanStr($row['fuente_canal'] ?? $row['fuentecanal'] ?? null),
+            'estado' => $estado,
+            'observaciones' => $this->cleanStr($row['observaciones'] ?? null),
+            'aclaraciones' => $this->cleanStr($row['aclaraciones'] ?? null),
             'validez_oferta' => $this->parseValidezOferta($row['validez_oferta'] ?? null),
             'tiempo_entrega' => $this->cleanStr($row['tiempo_de_entrega'] ?? null),
-            'forma_pago'     => $this->cleanStr($row['forma_de_pago'] ?? null),
-            'garantia'       => $row['garantia'] ?? $row['garanta'] ?? null,
-            'linea_negocio'  => $this->cleanStr($row['linea_negocio'] ?? null),
-            'created_by'     => $this->defaultUserId,
+            'forma_pago' => $this->cleanStr($row['forma_de_pago'] ?? null),
+            'garantia' => $row['garantia'] ?? $row['garanta'] ?? null,
+            'linea_negocio' => $this->cleanStr($row['linea_negocio'] ?? null),
+            'created_by' => $this->defaultUserId,
         ];
     }
 
     private function buildDetalleData(array $row): ?array
     {
         $valorStr = $this->cleanStr($row['valor_sin_iva'] ?? '');
-        if (!$valorStr) {
+        if (! $valorStr) {
             return null;
         }
 
@@ -518,15 +531,15 @@ class OportunidadCsvImportUseCase
         $cantidadStr = $this->cleanStr($row['cantidad'] ?? '');
 
         return [
-            'producto_id'  => $productoId,
-            'concepto'     => $producto?->nombre ?? $tipoServicio ?? 'Servicio',
-            'descripcion'  => $producto?->descripcion ?? $tipoServicio ?? '',
-            'medida'       => $producto?->medida ?? 'Und',
-            'cantidad'     => $cantidadStr ? max(1, (int) $cantidadStr) : 1,
-            'vr_unitario'  => $vrUnitario,
-            'iva'          => $ivaAmount,
-            'vr_total'     => $vrUnitario + $ivaAmount,
-            'created_by'   => $this->defaultUserId,
+            'producto_id' => $productoId,
+            'concepto' => $producto?->nombre ?? $tipoServicio ?? 'Servicio',
+            'descripcion' => $producto?->descripcion ?? $tipoServicio ?? '',
+            'medida' => $producto?->medida ?? 'Und',
+            'cantidad' => $cantidadStr ? max(1, (int) $cantidadStr) : 1,
+            'vr_unitario' => $vrUnitario,
+            'iva' => $ivaAmount,
+            'vr_total' => $vrUnitario + $ivaAmount,
+            'created_by' => $this->defaultUserId,
         ];
     }
 
@@ -535,7 +548,7 @@ class OportunidadCsvImportUseCase
     private function matchProduct(array $row): ?Producto
     {
         $tipoServicio = $this->cleanStr($row['tipo_de_servicio'] ?? '');
-        if (!$tipoServicio) {
+        if (! $tipoServicio) {
             return $this->fallbackProduct;
         }
 
@@ -560,7 +573,7 @@ class OportunidadCsvImportUseCase
 
     private function parseMonetaryValue(?string $value): float
     {
-        if (!$value) {
+        if (! $value) {
             return 0.0;
         }
         $value = trim($value);
@@ -578,11 +591,11 @@ class OportunidadCsvImportUseCase
 
     private function parseValidezOferta(?string $value): ?int
     {
-        if (!$value) {
+        if (! $value) {
             return null;
         }
         preg_match('/\d+/', $value, $m);
-        if (!$m) {
+        if (! $m) {
             return null;
         }
         $num = (int) $m[0];
@@ -594,35 +607,41 @@ class OportunidadCsvImportUseCase
         if (str_contains($lower, 'mes')) {
             return $num * 30;
         }
+
         return $num;
     }
 
     private function parseFecha(?string $value): ?string
     {
-        if (!$value) {
+        if (! $value) {
             return null;
         }
         if (is_numeric($value)) {
             // Excel serial date (Windows 1900 format)
             $unixDate = ($value - 25569) * 86400;
-            return gmdate("Y-m-d", (int) $unixDate);
+
+            return gmdate('Y-m-d', (int) $unixDate);
         }
         if (preg_match('/(\d{1,2})\/(\d{1,2})\/(\d{4})\s+(\d{1,2}):(\d{2}):(\d{2})/', $value, $m)) {
             $d = str_pad($m[1], 2, '0', STR_PAD_LEFT);
             $mo = str_pad($m[2], 2, '0', STR_PAD_LEFT);
             $h = str_pad($m[4], 2, '0', STR_PAD_LEFT);
+
             return "{$m[3]}-{$mo}-{$d} {$h}:{$m[5]}:{$m[6]}";
         }
         if (preg_match('/(\d{1,2})\/(\d{1,2})\/(\d{4})/', $value, $m)) {
             $d = str_pad($m[1], 2, '0', STR_PAD_LEFT);
             $mo = str_pad($m[2], 2, '0', STR_PAD_LEFT);
+
             return "{$m[3]}-{$mo}-{$d}";
         }
         if (preg_match('/^(\d{4})-(\d{1,2})-(\d{1,2})/', $value, $m)) {
             $mo = str_pad($m[2], 2, '0', STR_PAD_LEFT);
             $d = str_pad($m[3], 2, '0', STR_PAD_LEFT);
+
             return "{$m[1]}-{$mo}-{$d}";
         }
+
         return null;
     }
 
@@ -682,7 +701,7 @@ class OportunidadCsvImportUseCase
             'sociedad', 'anonima', 'cooperativa', 'asociacion',
         ];
         $words = explode(' ', $name);
-        $words = array_filter($words, fn($w) => !in_array(trim($w), $removeWords));
+        $words = array_filter($words, fn ($w) => ! in_array(trim($w), $removeWords));
         $name = implode(' ', $words);
 
         // Remove special chars and collapse spaces
@@ -692,7 +711,7 @@ class OportunidadCsvImportUseCase
         // Remove Spanish stop words
         $stopWords = ['y', 'de', 'del', 'la', 'los', 'las', 'el', 'en', 'para', 'con', 'sin', 'por', 'e', 'o', 'a', 'su', 'un', 'una'];
         $words = explode(' ', trim($name));
-        $words = array_filter($words, fn($w) => !in_array(trim($w), $stopWords));
+        $words = array_filter($words, fn ($w) => ! in_array(trim($w), $stopWords));
         $name = implode(' ', $words);
 
         return trim(preg_replace('/\s+/', ' ', $name));
@@ -704,6 +723,7 @@ class OportunidadCsvImportUseCase
             return null;
         }
         $trimmed = trim($value);
+
         return $trimmed === '' ? null : $trimmed;
     }
 }

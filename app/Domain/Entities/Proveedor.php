@@ -6,7 +6,7 @@ class Proveedor
 {
     public function __construct(
         public int $id,
-        public ?string $tipo_id = null,
+        public ?string $tipo_id,
         public string $identificacion,
         public ?string $nombres = null,
         public ?string $apellidos = null,

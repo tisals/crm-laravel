@@ -2,8 +2,10 @@
 
 namespace Tests\Unit\API;
 
-use App\Models\Usuario;
 use App\Models\Entidad;
+use App\Models\Rol;
+use App\Models\Usuario;
+use Database\Seeders\DatabaseSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
@@ -15,13 +17,13 @@ class BrandPermissionsTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->seed(\Database\Seeders\DatabaseSeeder::class);
+        $this->seed(DatabaseSeeder::class);
     }
 
     #[Test]
     public function it_returns_brand_permissions_for_admin_user()
     {
-        $superAdmin = \App\Models\Rol::where('nombre', 'SuperAdmin')->first() ?? \App\Models\Rol::create(['nombre' => 'SuperAdmin', 'estado' => 'Activo']);
+        $superAdmin = Rol::where('nombre', 'SuperAdmin')->first() ?? Rol::create(['nombre' => 'SuperAdmin', 'estado' => 'Activo']);
         $user = Usuario::firstOrCreate(
             ['email' => 'admin@tecnoinnsoft.dev'],
             [
@@ -59,7 +61,7 @@ class BrandPermissionsTest extends TestCase
         $token = $user->createToken('test-token')->plainTextToken;
 
         $response = $this->withToken($token)
-            ->getJson('/api/v1/users/' . $user->id . '/brands');
+            ->getJson('/api/v1/users/'.$user->id.'/brands');
 
         $response->assertStatus(200)
             ->assertJson([
@@ -74,7 +76,7 @@ class BrandPermissionsTest extends TestCase
     #[Test]
     public function it_returns_404_for_non_existent_user()
     {
-        $superAdmin = \App\Models\Rol::where('nombre', 'SuperAdmin')->first() ?? \App\Models\Rol::create(['nombre' => 'SuperAdmin', 'estado' => 'Activo']);
+        $superAdmin = Rol::where('nombre', 'SuperAdmin')->first() ?? Rol::create(['nombre' => 'SuperAdmin', 'estado' => 'Activo']);
         $user = Usuario::firstOrCreate(
             ['email' => 'temp_brands_test@test.com'],
             [

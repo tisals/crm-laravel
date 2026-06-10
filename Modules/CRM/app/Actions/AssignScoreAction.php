@@ -9,7 +9,6 @@ class AssignScoreAction
     /**
      * Calculate and assign score to a Contacto.
      *
-     * @param Contacto $contacto
      * @return int The calculated score
      */
     public function execute(Contacto $contacto): int
@@ -46,7 +45,7 @@ class AssignScoreAction
             if (count($emailParts) === 2) {
                 $domain = mb_strtolower($emailParts[1]);
                 $freeEmailProviders = ['gmail.com', 'yahoo.com', 'hotmail.com', 'outlook.com', 'live.com', 'icloud.com', 'aol.com'];
-                if (!in_array($domain, $freeEmailProviders)) {
+                if (! in_array($domain, $freeEmailProviders)) {
                     $score += 20;
                 }
             }

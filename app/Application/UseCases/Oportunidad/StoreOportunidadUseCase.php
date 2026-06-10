@@ -3,6 +3,7 @@
 namespace App\Application\UseCases\Oportunidad;
 
 use App\Domain\Repositories\OportunidadRepositoryInterface;
+use App\Models\Entidad;
 
 class StoreOportunidadUseCase
 {
@@ -19,7 +20,7 @@ class StoreOportunidadUseCase
 
         // If created directly as Ganada, set cliente_desde
         if (isset($data['estado']) && $data['estado'] === 'Ganada') {
-            \App\Models\Entidad::where('id', $oportunidad->entidad_id)
+            Entidad::where('id', $oportunidad->entidad_id)
                 ->whereNull('cliente_desde')
                 ->update(['cliente_desde' => now()]);
         }

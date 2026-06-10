@@ -5,9 +5,11 @@ namespace App\Providers;
 use App\Events\ContactUpdated;
 use App\Events\OrganizationCreated;
 use App\Events\PaymentCompleted;
+use App\Events\PipelineEtapaChanged;
 use App\Infrastructure\Webhook\Listeners\ContactUpdatedListener;
 use App\Infrastructure\Webhook\Listeners\OrganizationCreatedListener;
 use App\Infrastructure\Webhook\Listeners\PaymentCompletedListener;
+use App\Listeners\SendPipelineChangeToN8n;
 use Illuminate\Foundation\Support\Providers\EventServiceProvider as ServiceProvider;
 
 class EventServiceProvider extends ServiceProvider
@@ -26,6 +28,9 @@ class EventServiceProvider extends ServiceProvider
         ],
         PaymentCompleted::class => [
             PaymentCompletedListener::class,
+        ],
+        PipelineEtapaChanged::class => [
+            SendPipelineChangeToN8n::class,
         ],
     ];
 }

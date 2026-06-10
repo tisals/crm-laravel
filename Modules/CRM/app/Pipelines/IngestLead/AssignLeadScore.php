@@ -2,8 +2,8 @@
 
 namespace Modules\CRM\Pipelines\IngestLead;
 
-use Modules\CRM\Actions\AssignScoreAction;
 use Closure;
+use Modules\CRM\Actions\AssignScoreAction;
 
 class AssignLeadScore
 {
@@ -11,7 +11,7 @@ class AssignLeadScore
     {
         $data = $passable;
 
-        $action = new AssignScoreAction();
+        $action = new AssignScoreAction;
         $action->execute($data['contacto']);
 
         return $next($data);

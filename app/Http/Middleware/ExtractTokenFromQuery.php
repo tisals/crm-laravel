@@ -13,8 +13,8 @@ class ExtractTokenFromQuery
 {
     public function handle(Request $request, Closure $next)
     {
-        if ($request->has('token') && !$request->bearerToken()) {
-            $request->headers->set('Authorization', 'Bearer ' . $request->input('token'));
+        if ($request->has('token') && ! $request->bearerToken()) {
+            $request->headers->set('Authorization', 'Bearer '.$request->input('token'));
         }
 
         return $next($request);

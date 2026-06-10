@@ -8,16 +8,9 @@ return new class extends Migration
     /**
      * Add FK for created_by/updated_by on entidad and contacto,
      * skipping if the constraint already exists (idempotent).
-     *
-     * NOTE: SQLite does not support ALTER TABLE ADD/DROP CONSTRAINT.
-     * These FK constraints are only applied on MySQL (production/staging).
      */
     public function up(): void
     {
-        if ($this->isSqlite()) {
-            return;
-        }
-
         $this->ensureForeignKey('entidad', 'created_by', 'usuarios');
         $this->ensureForeignKey('entidad', 'updated_by', 'usuarios');
         $this->ensureForeignKey('contacto', 'created_by', 'usuarios');
@@ -26,19 +19,10 @@ return new class extends Migration
 
     public function down(): void
     {
-        if ($this->isSqlite()) {
-            return;
-        }
-
         $this->dropForeignKeyIfExists('entidad', 'created_by');
         $this->dropForeignKeyIfExists('entidad', 'updated_by');
         $this->dropForeignKeyIfExists('contacto', 'created_by');
         $this->dropForeignKeyIfExists('contacto', 'updated_by');
-    }
-
-    private function isSqlite(): bool
-    {
-        return DB::connection()->getDriverName() === 'sqlite';
     }
 
     private function ensureForeignKey(string $table, string $column, string $references): void
@@ -59,7 +43,7 @@ return new class extends Migration
     {
         $fkName = "{$table}_{$column}_foreign";
 
-        if (!$this->fkExists($table, $fkName)) {
+        if (! $this->fkExists($table, $fkName)) {
             return;
         }
 
@@ -68,7 +52,7 @@ return new class extends Migration
 
     private function fkExists(string $table, string $constraintName): bool
     {
-        return !empty(DB::select(
+        return ! empty(DB::select(
             'SELECT 1 FROM information_schema.KEY_COLUMN_USAGE
              WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ? AND CONSTRAINT_NAME = ?',
             [$table, $constraintName]

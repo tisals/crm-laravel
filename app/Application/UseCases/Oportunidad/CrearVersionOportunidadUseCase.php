@@ -4,6 +4,7 @@ namespace App\Application\UseCases\Oportunidad;
 
 use App\Domain\Repositories\DetalleOportunidadRepositoryInterface;
 use App\Domain\Repositories\OportunidadRepositoryInterface;
+use App\Models\Oportunidad;
 use Illuminate\Support\Facades\DB;
 
 class CrearVersionOportunidadUseCase
@@ -17,23 +18,23 @@ class CrearVersionOportunidadUseCase
     {
         return DB::transaction(function () use ($id) {
             // 1. Find source model (with details)
-            $sourceModel = \App\Models\Oportunidad::with('detalles')->find($id);
-            if (!$sourceModel) {
+            $sourceModel = Oportunidad::with('detalles')->find($id);
+            if (! $sourceModel) {
                 return null;
             }
 
             // 2. Mark previous latest version as not latest and inactive
-            \App\Models\Oportunidad::where('codigo', $sourceModel->codigo)
+            Oportunidad::where('codigo', $sourceModel->codigo)
                 ->orWhere('parent_id', $sourceModel->parent_id ?? $sourceModel->id)
                 ->update(['is_latest' => false, 'estado' => 'Inactiva']);
 
             // 3. Resolve base code and new code
             $baseCodigo = preg_replace('/-V\d+$/i', '', $sourceModel->codigo);
             $newVersionNumber = $sourceModel->version + 1;
-            $newCodigo = $baseCodigo . "-V" . $newVersionNumber;
+            $newCodigo = $baseCodigo.'-V'.$newVersionNumber;
 
             // 4. Create new opportunity version
-            $newOportunidad = \App\Models\Oportunidad::create([
+            $newOportunidad = Oportunidad::create([
                 'codigo' => $newCodigo,
                 'entidad_id' => $sourceModel->entidad_id,
                 'contacto_id' => $sourceModel->contacto_id,
