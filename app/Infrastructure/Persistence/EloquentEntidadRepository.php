@@ -7,6 +7,7 @@ use App\Domain\Repositories\EntidadRepositoryInterface;
 use App\Models\Entidad as EloquentEntidad;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\DB;
 
 class EloquentEntidadRepository extends BaseRepository implements EntidadRepositoryInterface
@@ -44,6 +45,16 @@ class EloquentEntidadRepository extends BaseRepository implements EntidadReposit
 
     protected function applyFilters($query, array $filters): Builder
     {
+        // Auto-filter by entidad_usuario for Comercial role
+        $user = Auth::user();
+        if ($user && $user->rol?->nombre === 'Comercial') {
+            $query->whereIn('id', function ($q) use ($user) {
+                $q->select('entidad_id')
+                    ->from('entidad_usuario')
+                    ->where('usuario_id', $user->id);
+            });
+        }
+
         foreach ($filters as $field => $value) {
             if ($value === null || $value === '') {
                 continue;

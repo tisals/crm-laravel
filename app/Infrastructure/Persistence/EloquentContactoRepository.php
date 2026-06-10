@@ -5,8 +5,10 @@ namespace App\Infrastructure\Persistence;
 use App\Domain\Entities\Contacto as ContactoEntity;
 use App\Domain\Repositories\ContactoRepositoryInterface;
 use App\Models\Contacto as EloquentContacto;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Pagination\LengthAwarePaginator;
+use Illuminate\Support\Facades\Auth;
 
 class EloquentContactoRepository extends BaseRepository implements ContactoRepositoryInterface
 {
@@ -55,6 +57,21 @@ class EloquentContactoRepository extends BaseRepository implements ContactoRepos
         $sortOrder = in_array($sortOrder, ['asc', 'desc']) ? $sortOrder : 'desc';
 
         return $query->orderBy($sortBy, $sortOrder)->paginate($perPage);
+    }
+
+    protected function applyFilters($query, array $filters): Builder
+    {
+        // Auto-filter by entidad_usuario for Comercial role
+        $user = Auth::user();
+        if ($user && $user->rol?->nombre === 'Comercial') {
+            $query->whereIn('contacto.entidad_id', function ($q) use ($user) {
+                $q->select('entidad_id')
+                    ->from('entidad_usuario')
+                    ->where('usuario_id', $user->id);
+            });
+        }
+
+        return parent::applyFilters($query, $filters);
     }
 
     public function findById(int $id): mixed
