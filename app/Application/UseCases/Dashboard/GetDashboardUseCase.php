@@ -39,7 +39,7 @@ class GetDashboardUseCase
             'ventas' => $this->getVentasData($effectiveComercialId, $fechaInicio, $fechaFin),
             'chart' => $this->getChartData($effectiveComercialId, $fechaInicio, $fechaFin),
             'comerciales_ventas' => $this->getComercialesVentas($effectiveComercialId, $fechaInicio, $fechaFin),
-            'actividades_recientes' => $this->getActividadesRecientes(),
+            'actividades_recientes' => $this->getActividadesRecientes($effectiveComercialId),
         ];
     }
 
@@ -55,7 +55,7 @@ class GetDashboardUseCase
      */
     private function resolveComercialId(?int $comercialId, ?Usuario $authUser): ?int
     {
-        if ($authUser && $authUser->rol?->nombre === 'Ventas') {
+        if ($authUser && $authUser->rol?->nombre === 'Comercial') {
             return $authUser->id;
         }
 
@@ -347,10 +347,19 @@ class GetDashboardUseCase
     //  Section: actividades recientes
     // -----------------------------------------------------------------------
 
-    private function getActividadesRecientes(): array
+    private function getActividadesRecientes(?int $comercialId = null): array
     {
-        return Seguimiento::with(['oportunidad', 'autor'])
-            ->orderBy('created_at', 'desc')
+        $query = Seguimiento::with(['oportunidad', 'autor']);
+
+        if ($comercialId) {
+            $query->whereIn('entidad_id', function ($q) use ($comercialId) {
+                $q->select('entidad_id')
+                    ->from('entidad_usuario')
+                    ->where('usuario_id', $comercialId);
+            });
+        }
+
+        return $query->orderBy('created_at', 'desc')
             ->limit(10)
             ->get()
             ->map(function (Seguimiento $s) {

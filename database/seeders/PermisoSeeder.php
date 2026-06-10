@@ -38,7 +38,7 @@ class PermisoSeeder extends Seeder
             'movimientos' => ['index', 'store', 'show', 'update', 'destroy'],
             'entidad-usuario' => ['index', 'store', 'destroy'],
             'pipelines' => ['index', 'store', 'show', 'update', 'destroy'],
-            'pipeline-etapas' => ['index', 'store', 'show', 'update', 'destroy'],
+            'pipelines.etapas' => ['index', 'store', 'show', 'update', 'destroy'],
         ];
 
         $roles = Rol::whereNotIn('nombre', ['SuperAdmin', 'Admin'])->get();

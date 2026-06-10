@@ -32,9 +32,16 @@ class SeguimientoController extends Controller
     {
         $perPage = min($request->input('per_page', 15), 100);
         $filters = $request->only([
-            'oportunidad_id', 'contacto_id', 'entidad_id',
-            'tipo', 'estado', 'fecha_desde', 'fecha_hasta',
+            'contacto_id', 'entidad_id',
+            'tipo', 'estado',
         ]);
+
+        // Read route parameters for nested resource routes
+        // e.g. /api/v1/oportunidades/{oportunidadId}/seguimientos
+        $oportunidadId = $request->route('oportunidadId');
+        if ($oportunidadId) {
+            $filters['oportunidad_id'] = $oportunidadId;
+        }
 
         $result = $this->indexUseCase->execute($perPage, null, $filters);
 
