@@ -263,35 +263,14 @@ class EntidadCsvSeeder extends Seeder
                 ->delete();
 
             // Skip CSV rows that would conflict with existing Propia entities (by NIT)
-            // and remap explicit IDs that collide with Propia entity IDs
             $propiaNits = DB::table('entidad')
                 ->where('estado', 'Propia')
                 ->pluck('identificacion')
                 ->all();
 
-            $propiaIds = DB::table('entidad')
-                ->where('estado', 'Propia')
-                ->pluck('id')
-                ->all();
-
-            // Find max ID to generate new IDs for conflicting rows
-            $maxId = DB::table('entidad')->max('id') ?? 0;
-            $nextId = $maxId + 1;
-
-            $rows = array_map(function ($r) use ($propiaNits, $propiaIds, &$nextId) {
-                // Skip if no id or if NIT matches an existing Propia entity
-                if (empty($r['id']) || in_array($r['identificacion'], $propiaNits)) {
-                    return null;
-                }
-                // If id conflicts with Propia entity, assign a new auto-increment ID
-                if (in_array($r['id'], $propiaIds)) {
-                    $r['id'] = $nextId++;
-                }
-                return $r;
-            }, $rows);
-
-            // Remove nulls (skipped Propia entities)
-            $rows = array_values(array_filter($rows, fn ($r) => $r !== null));
+            $rows = array_values(array_filter($rows, fn ($r) =>
+                ! in_array($r['identificacion'], $propiaNits)
+            ));
 
             DB::table('entidad')->insert($rows);
         });
