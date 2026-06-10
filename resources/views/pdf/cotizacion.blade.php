@@ -97,12 +97,9 @@
                         <tr>
                             <td>
                                 <h2 style="margin-bottom: 4px;">Responsable Comercial:</h2>
-                                <p style="font-size: 8pt; color: #6b7280;">Nombre usuario:</p>
                                 <p style="font-size: 11pt; font-weight: bold; color: #333333;">{{ $contact['user']['name'] }}</p>
-                                <p style="font-size: 8pt; color: #6b7280; margin-top: 4px;">Tel:</p>
-                                <p style="font-size: 9pt; color: #333333;">{{ $contact['user']['telefono'] ?? '—' }}</p>
-                                <p style="font-size: 8pt; color: #6b7280; margin-top: 4px;">Email:</p>
-                                <p style="font-size: 9pt; color: #333333;">{{ $contact['user']['email'] }}</p>
+                                <p style="font-size: 8pt; color: #6b7280; margin-top: 4px;">Tel:<span style="font-size: 9pt; color: #333333;">{{ $contact['user']['telefono'] ?? '—' }}</span></p>
+                                <p style="font-size: 8pt; color: #6b7280; margin-top: 4px;">Email:<span style="font-size: 9pt; color: #333333;">{{ $contact['user']['email'] }}</span></p>
                             </td>
                         </tr>
                     </table>
@@ -178,11 +175,11 @@
         </table>
 
         <!-- ====== NOTAS ACLARATORIAS (full width) ====== -->
-        <table width="100%" cellpadding="10" cellspacing="0" style="margin-bottom: 14px;">
+        <table width="100%" cellpadding="10" cellspacing="0" style="margin-bottom: 10px;">
             <tr>
                 <td style="border-top: 1px solid #9ca3af; padding-top: 10px;">
                     <p class="teal" style="font-size: 8pt; font-weight: bold; margin-bottom: 3px;">Notas Aclaratorias</p>
-                    <p style="font-size: 8pt; font-style: italic; color: #4b5563;">{!! nl2br(e(preg_replace('/\. /', ".\n", $opportunity['aclarations']))) !!}</p>
+                    <p style="font-size: 7pt; font-style: italic; color: #4b5563;">{!! nl2br(e(preg_replace('/\. /', ".\n", $opportunity['aclarations']))) !!}</p>
                 </td>
             </tr>
         </table>
@@ -200,10 +197,13 @@
                 <table width="100%" cellpadding="5" cellspacing="0">
                     <tr>
                         <td width="50%" align="center" valign="top">
-                            <p style="font-size: 7pt; font-weight: bold; color: #6b7280; margin-bottom: 2px;">Garantia</p>
-                            <p style="font-size: 7pt; color: #9ca3af;">{!! nl2br(e($opportunity['guarantees'])) !!}</p>
+                            <img src="https://deseguridad.net/wp-content/uploads/2022/03/Compra-lo-nuestro.jpg"
+                         alt="Logo"
+                         style="height: 48px; width: auto;" />
                         </td>
                         <td width="50%" align="center" valign="top" style="border-left: 1px solid #e5e7eb;">
+                            <p style="font-size: 7pt; font-weight: bold; color: #6b7280; margin-bottom: 2px;">Garantia</p>
+                            <p style="font-size: 7pt; color: #9ca3af; border-bottom: 1px solid #e5e7eb;">{!! nl2br(e($opportunity['guarantees'])) !!}</p>
                             <p style="font-size: 7pt; font-weight: bold; color: #6b7280; margin-bottom: 2px;">Tiempo de entrega</p>
                             <p style="font-size: 7pt; color: #9ca3af;">{{ $opportunity['delivery_time'] }} dias</p>
                         </td>
