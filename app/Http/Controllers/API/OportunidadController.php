@@ -39,7 +39,7 @@ class OportunidadController extends Controller
     {
         $perPage = min((int) $request->input('per_page', 50), 100);
         $search = $request->input('search');
-        $filters = $request->only(['estado', 'entidad_id', 'producto_id', 'fecha_desde', 'fecha_hasta', 'codigo']);
+        $filters = $request->only(['pipeline_id', 'estado', 'entidad_id', 'producto_id', 'fecha_desde', 'fecha_hasta', 'codigo']);
         $sortBy = $request->input('sort_by', 'created_at');
         $sortOrder = $request->input('sort_order', 'desc');
 

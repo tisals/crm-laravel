@@ -52,6 +52,7 @@ Route::prefix('v1')->group(function () {
             Route::get('/contacto/{id}', [ContactoController::class, 'show'])->name('contacto.show');
             Route::put('/contacto/{id}', [ContactoController::class, 'update'])->name('contacto.update');
             Route::delete('/contacto/{id}', [ContactoController::class, 'destroy'])->name('contacto.destroy');
+            Route::post('/contacto/{id}/reasignar', [ContactoController::class, 'reasignar'])->name('contacto.reasignar');
             Route::post('/contacto/{contactoId}/acciones', [ContactoAccionController::class, 'acciones'])->name('contacto.acciones');
         });
     });

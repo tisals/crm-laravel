@@ -4,6 +4,7 @@ namespace Modules\CRM\Http\Controllers;
 
 use App\Application\UseCases\Contacto\DestroyContactoUseCase;
 use App\Application\UseCases\Contacto\IndexContactoUseCase;
+use App\Application\UseCases\Contacto\ReasignarContactoUseCase;
 use App\Application\UseCases\Contacto\ShowContactoUseCase;
 use App\Application\UseCases\Contacto\StoreContactoUseCase;
 use App\Application\UseCases\Contacto\UpdateContactoUseCase;
@@ -74,5 +75,36 @@ class ContactoController extends Controller
         }
 
         return $this->successResponse(null, 200, 'Contacto eliminado exitosamente.');
+    }
+
+    /**
+     * POST /api/v1/contacto/{id}/reasignar
+     * Reasigna un contacto a otra entidad. Si hay conflicto de email,
+     * retorna 409 con info del contacto existente. Si merge=true, fusiona.
+     */
+    public function reasignar(Request $request, int $id): JsonResponse
+    {
+        $validated = $request->validate([
+            'entidad_id' => 'required|integer|exists:entidad,id',
+            'merge' => 'sometimes|boolean',
+        ]);
+
+        $useCase = new ReasignarContactoUseCase();
+        $result = $useCase->execute($id, $validated['entidad_id'], $validated['merge'] ?? false);
+
+        if (! $result['success'] && isset($result['conflict'])) {
+            return response()->json([
+                'success' => false,
+                'error' => 'conflict',
+                'conflicting_contacto' => $result['conflict'],
+                'message' => $result['message'],
+            ], 409);
+        }
+
+        if (! $result['success']) {
+            return $this->errorResponse($result['message'], 404);
+        }
+
+        return $this->successResponse($result['data'], 200, $result['message']);
     }
 }
