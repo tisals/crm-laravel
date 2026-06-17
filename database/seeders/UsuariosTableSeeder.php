@@ -59,27 +59,57 @@ class UsuariosTableSeeder extends Seeder
             $userIds[] = $user->id;
         }
 
-        // Asignar equitativamente a cada usuario las entidades (excluyendo marcas propias)
+        // Asignar por rango de año de oportunidad (basado en la fecha más reciente):
+        // - Lorena Bernal (índice 1): 2026
+        // - Alejandro, Jaime, Patricia (índices 0,2,3): 2021-2025
         $propiaIds = Entidad::where('estado', 'Propia')->pluck('id')->toArray();
-        $entidades = Entidad::where('estado', '!=', 'Propia')->pluck('id')->toArray();
 
-        // Limpiar asignaciones previas de estos usuarios, preservando marcas propias
+        // Entidades con opp más reciente en 2026 → Lorena
+        // Entidades con opp más reciente en 2021-2025 → los otros 3 (round-robin)
+        $entidadUserMap = DB::table('oportunidad')
+            ->selectRaw('MIN(oportunidad.entidad_id) as entidad_id, MAX(oportunidad.fecha) as max_fecha')
+            ->groupBy('entidad_id')
+            ->get()
+            ->map(function ($row) {
+                $year = substr($row->max_fecha, 0, 4);
+                return [
+                    'entidad_id' => (int) $row->entidad_id,
+                    'year' => (int) $year,
+                ];
+            });
+
+        $lorenaId = $userIds[1]; // Lorena Bernal
+        $otherUserIds = [$userIds[0], $userIds[2], $userIds[3]]; // Alejandro, Jaime, Patricia
+
+        // Limpiar asignaciones previas de estos usuarios
         DB::table('entidad_usuario')
             ->whereIn('usuario_id', $userIds)
             ->whereNotIn('entidad_id', $propiaIds)
             ->delete();
 
         $insertData = [];
-        foreach ($entidades as $index => $entidadId) {
-            $assignedUserId = $userIds[$index % count($userIds)];
-            $insertData[] = [
-                'entidad_id' => $entidadId,
-                'usuario_id' => $assignedUserId,
-                'created_at' => now(),
-                'updated_at' => now(),
-            ];
+        $otherIndex = 0;
+        foreach ($entidadUserMap as $item) {
+            if (in_array($item['entidad_id'], $propiaIds)) {
+                continue;
+            }
+            if ($item['year'] >= 2026) {
+                $insertData[] = [
+                    'entidad_id' => $item['entidad_id'],
+                    'usuario_id' => $lorenaId,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ];
+            } else {
+                $insertData[] = [
+                    'entidad_id' => $item['entidad_id'],
+                    'usuario_id' => $otherUserIds[$otherIndex % count($otherUserIds)],
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ];
+                $otherIndex++;
+            }
 
-            // Batch insert to avoid memory issues
             if (count($insertData) >= 500) {
                 DB::table('entidad_usuario')->insert($insertData);
                 $insertData = [];

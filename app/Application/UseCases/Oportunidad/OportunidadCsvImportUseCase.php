@@ -545,28 +545,60 @@ class OportunidadCsvImportUseCase
 
     // --- Product matching ---
 
+    /**
+     * Match product using the `productos` column (full description) from CSV,
+     * with accent-insensitive comparison and bidirectional substring matching.
+     */
     private function matchProduct(array $row): ?Producto
     {
-        $tipoServicio = $this->cleanStr($row['tipo_de_servicio'] ?? '');
-        if (! $tipoServicio) {
+        // Use 'productos' column (index 3, full product description) not 'tipo_de_servicio'
+        $productosCol = $this->cleanStr($row['productos'] ?? $row['tipo_de_servicio'] ?? '');
+        if (! $productosCol) {
             return $this->fallbackProduct;
         }
 
-        $lower = strtolower($tipoServicio);
+        $normSearch = $this->normalizeForMatch($productosCol);
 
-        // Exact
-        if (isset($this->productMap[$lower])) {
-            return $this->productMap[$lower];
+        // Exact match on normalized key
+        if (isset($this->productMap[$normSearch])) {
+            return $this->productMap[$normSearch];
         }
 
-        // Fuzzy: substring match
+        // Bidirectional substring match with accent normalization
         foreach ($this->productMap as $name => $product) {
-            if (str_contains($name, $lower) || str_contains($lower, $name)) {
+            $normName = $this->normalizeForMatch($name);
+            if (str_contains($normName, $normSearch) || str_contains($normSearch, $normName)) {
                 return $product;
             }
         }
 
         return $this->fallbackProduct;
+    }
+
+    /**
+     * Normalize string for product matching:
+     * - strip accents (á → a, ó → o, etc.)
+     * - lowercase
+     * - collapse whitespace
+     * - remove punctuation
+     */
+    private function normalizeForMatch(string $value): string
+    {
+        $v = strtolower(trim($value));
+        // Remove accents using a character map
+        $accents = [
+            'á' => 'a', 'é' => 'e', 'í' => 'i', 'ó' => 'o', 'ú' => 'u', 'ü' => 'u', 'ñ' => 'n',
+            'à' => 'a', 'è' => 'e', 'ì' => 'i', 'ò' => 'o', 'ù' => 'u',
+            'â' => 'a', 'ê' => 'e', 'î' => 'i', 'ô' => 'o', 'û' => 'u',
+            'ã' => 'a', 'õ' => 'o', 'ñ' => 'n',
+            'Á' => 'a', 'É' => 'e', 'Í' => 'i', 'Ó' => 'o', 'Ú' => 'u', 'Ü' => 'u', 'Ñ' => 'n',
+        ];
+        $v = strtr($v, $accents);
+        // Collapse spaces / remove punctuation
+        $v = preg_replace('/[^\p{L}\p{N}\s]/u', ' ', $v);
+        $v = preg_replace('/\s+/', ' ', $v);
+
+        return trim($v);
     }
 
     // --- Parsing helpers ---

@@ -18,7 +18,7 @@ class ContactoRequest extends FormRequest
         return [
             'entidad_id' => 'nullable|integer|exists:entidad,id',
             'nombres' => 'required|string|max:150',
-            'apellidos' => 'required|string|max:150',
+            'apellidos' => 'nullable|string|max:150',
             'area' => 'nullable|string|max:100',
             'cargo' => 'nullable|string|max:100',
             'tel_contacto' => 'nullable|string|max:50',
@@ -35,7 +35,7 @@ class ContactoRequest extends FormRequest
     {
         return [
             'nombres.required' => 'Los nombres son obligatorios.',
-            'apellidos.required' => 'Los apellidos son obligatorios.',
+            'apellidos.required' => 'Los apellidos son obligatorios.', // aún usado en update
             'email_contacto.email' => 'El correo electrónico no es válido.',
             'email_secundario.email' => 'El correo secundario no es válido.',
         ];
