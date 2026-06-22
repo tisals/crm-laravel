@@ -11,13 +11,15 @@ class BrandPermissionsSeeder extends Seeder
 {
     public function run(): void
     {
-        // 1. Crear entidades marca primero
+        // 1. Crear/actualizar entidades marca por NIT (clave de negocio única).
+        // Usamos 'identificacion' en lugar de 'id' para que el seeder sea idempotente
+        // y no choque con el UNIQUE de identificacion cuando el RealDataSeeder
+        // ya pobló la entidad con otro id desde el CSV.
         $tecnoinnsoft = Entidad::updateOrCreate(
-            ['id' => 1],
+            ['identificacion' => '900935453'],
             [
                 'tipo_persona' => 'Juridica',
                 'tipo_id' => 'NIT',
-                'identificacion' => '900935453',
                 'nombre' => 'Tecnoinnsoft SAS BIC',
                 'nombre_comercial' => 'Tecnoinnsoft',
                 'dominio' => 'tecnoinnsoft.com',
@@ -26,14 +28,13 @@ class BrandPermissionsSeeder extends Seeder
         );
 
         $deseguridad = Entidad::updateOrCreate(
-            ['id' => 2],
+            ['identificacion' => '900935453-0'],
             [
                 'tipo_persona' => 'Juridica',
                 'tipo_id' => 'NIT',
-                'identificacion' => '900935453-0',
                 'nombre' => 'Deseguridad.net',
                 'nombre_comercial' => 'Deseguridad.net',
-                'dominio' => 'https://deseguridad.net',
+                'dominio' => 'deseguridad.net',
                 'estado' => 'Propia',
             ]
         );
