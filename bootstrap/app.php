@@ -37,8 +37,11 @@ return Application::configure(basePath: dirname(__DIR__))
             'throttle-mutations' => ThrottleMutations::class,
         ]);
 
-        // Agregar logger como middleware global para todas las rutas API
+        // Agregar logger como middleware global para todas las rutas API.
+        // HandleCors va primero (prepend) para que los preflight requests
+        // se respondan antes de pasar por el resto del stack.
         $middleware->api(prepend: [
+            \Illuminate\Http\Middleware\HandleCors::class,
             ApiAccessLogger::class,
         ]);
     })
