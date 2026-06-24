@@ -135,6 +135,60 @@ class OportunidadCsvSeeder extends Seeder
         }
 
         $this->command->info('━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━');
+
+        // NOTE: DOD cap is NOT applied here because DetalleOportunidadCsvSeeder
+        // runs after this seeder and needs all opportunities to exist for FK
+        // inserts. The cap is applied by DodCapSeeder, which runs LAST in
+        // DatabaseSeeder.
+    }
+
+    /**
+     * Apply the DOD cap on the `oportunidad` table: no entity may have more
+     * than $maxOps opportunities. The oldest rows (by fecha ASC) are deleted,
+     * preserving the most recent work.
+     *
+     * Returns ['oportunidades_eliminadas' => int].
+     *
+     * Works on MySQL 8+ / MariaDB 10.2+ / SQLite 3.25+ (window functions).
+     */
+    public function applyDodCap(int $maxOps = 10, int $maxContactos = 10): array
+    {
+        $stats = ['oportunidades_eliminadas' => 0, 'contactos_eliminados' => 0];
+
+        if ($maxOps > 0) {
+            $rowsToDelete = $this->countOportunidadesOverCap($maxOps);
+
+            DB::statement('
+                DELETE FROM oportunidad
+                WHERE id IN (
+                    SELECT id FROM (
+                        SELECT id,
+                               ROW_NUMBER() OVER (PARTITION BY entidad_id ORDER BY fecha DESC) AS rn
+                        FROM oportunidad
+                        WHERE entidad_id IS NOT NULL
+                    ) t
+                    WHERE rn > ?
+                )
+            ', [$maxOps]);
+
+            $stats['oportunidades_eliminadas'] = $rowsToDelete;
+        }
+
+        // contactos cap is applied by ContactoCsvSeeder, not here.
+        return $stats;
+    }
+
+    private function countOportunidadesOverCap(int $cap): int
+    {
+        $rows = DB::select('
+            SELECT entidad_id, COUNT(*) AS total
+            FROM oportunidad
+            WHERE entidad_id IS NOT NULL
+            GROUP BY entidad_id
+            HAVING total > ?
+        ', [$cap]);
+
+        return array_sum(array_map(fn ($r) => (int) $r->total - $cap, $rows));
     }
 
     /**

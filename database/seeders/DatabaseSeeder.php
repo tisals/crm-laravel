@@ -15,6 +15,7 @@ class DatabaseSeeder extends Seeder
             RealDataSeeder::class,         // Datos CSV primero (crea entidades id=1,2 como Prospecto/Cliente)
             BrandPermissionsSeeder::class, // DESPUÉS: sobreescribe id=1 y id=2 como Propia (marca propia)
             PipelineSeeder::class,         // Pipelines y etapas predefinidas
+            DodCapSeeder::class,           // ÚLTIMO: trunca a máx 10 ops y 10 contactos por entidad
         ]);
     }
 }

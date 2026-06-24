@@ -297,5 +297,55 @@ class ContactoCsvSeeder extends Seeder
         });
 
         $this->command->info('Contactos seeded: '.count($rows)." rows ({$skippedNoEmail} no email, {$skippedNoEntidad} unmatched ref, {$skippedDuplicate} duplicates, {$withNullEntidad} without entidad).");
+
+        // NOTE: DOD cap is NOT applied here because the cap is enforced by
+        // DodCapSeeder, which runs LAST in DatabaseSeeder. This avoids any
+        // ordering issues with downstream seeders that depend on contacts
+        // (e.g., OportunidadCsvSeeder resolves contacto_id by email).
+    }
+
+    /**
+     * Apply the DOD cap on the `contacto` table. See OportunidadCsvSeeder::applyDodCap
+     * for the same logic on opportunities.
+     *
+     * Returns ['contactos_eliminados' => int].
+     */
+    public function applyDodCap(int $maxOps = 10, int $maxContactos = 10): array
+    {
+        $stats = ['oportunidades_eliminadas' => 0, 'contactos_eliminados' => 0];
+
+        if ($maxContactos > 0) {
+            $rowsToDelete = $this->countContactosOverCap($maxContactos);
+
+            DB::statement('
+                DELETE FROM contacto
+                WHERE id IN (
+                    SELECT id FROM (
+                        SELECT id,
+                               ROW_NUMBER() OVER (PARTITION BY entidad_id ORDER BY created_at DESC) AS rn
+                        FROM contacto
+                        WHERE entidad_id IS NOT NULL
+                    ) t
+                    WHERE rn > ?
+                )
+            ', [$maxContactos]);
+
+            $stats['contactos_eliminados'] = $rowsToDelete;
+        }
+
+        return $stats;
+    }
+
+    private function countContactosOverCap(int $cap): int
+    {
+        $rows = DB::select('
+            SELECT entidad_id, COUNT(*) AS total
+            FROM contacto
+            WHERE entidad_id IS NOT NULL
+            GROUP BY entidad_id
+            HAVING total > ?
+        ', [$cap]);
+
+        return array_sum(array_map(fn ($r) => (int) $r->total - $cap, $rows));
     }
 }
