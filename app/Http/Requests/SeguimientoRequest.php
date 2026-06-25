@@ -20,7 +20,8 @@ class SeguimientoRequest extends FormRequest
             'tipo' => 'required|in:Llamada,Correo,Reunion,Nota,Otro',
             'fecha' => 'required|date',
             'hora' => ['nullable', 'regex:/^([01]\d|2[0-3]):[0-5]\d(:[0-5]\d)?$/'],
-            'fecha_fin' => 'nullable|date',
+            // fecha_fin must be on or after fecha when both are provided.
+            'fecha_fin' => 'nullable|date|after_or_equal:fecha',
             'notas' => 'nullable|string',
             'estado' => 'nullable|in:Pendiente,Completado,Cancelado',
         ];
@@ -39,6 +40,7 @@ class SeguimientoRequest extends FormRequest
             'tipo.required' => 'El tipo de seguimiento es obligatorio.',
             'tipo.in' => 'El tipo debe ser Llamada, Correo, Reunion, Nota u Otro.',
             'fecha.required' => 'La fecha es obligatoria.',
+            'fecha_fin.after_or_equal' => 'La fecha de fin debe ser igual o posterior a la fecha de inicio.',
             'oportunidad_id.exists' => 'La oportunidad seleccionada no existe.',
             'contacto_id.exists' => 'El contacto seleccionado no existe.',
             'entidad_id.exists' => 'La entidad seleccionada no existe.',
