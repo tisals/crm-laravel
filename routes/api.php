@@ -237,11 +237,17 @@ Route::prefix('v1')->group(function () {
 
         // Seguimiento CRUD
         Route::middleware('rbac')->group(function () {
+            // Specific routes BEFORE {id} routes to avoid 'mios' matching {id}.
+            Route::get('/seguimientos/mios', [SeguimientoController::class, 'misSeguimientos'])->name('seguimientos.mios');
             Route::get('/seguimientos', [SeguimientoController::class, 'index'])->name('seguimientos.index');
             Route::post('/seguimientos', [SeguimientoController::class, 'store'])->name('seguimientos.store');
             Route::get('/seguimientos/{id}', [SeguimientoController::class, 'show'])->name('seguimientos.show');
             Route::put('/seguimientos/{id}', [SeguimientoController::class, 'update'])->name('seguimientos.update');
             Route::delete('/seguimientos/{id}', [SeguimientoController::class, 'destroy'])->name('seguimientos.destroy');
+
+            // Calendar view per user (self or admin).
+            Route::get('/usuarios/{usuarioId}/calendario', [SeguimientoController::class, 'calendarioUsuario'])
+                ->name('usuarios.calendario');
         });
 
         // Seguimiento filters by related entity

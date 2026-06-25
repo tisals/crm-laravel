@@ -83,7 +83,7 @@ class SeguimientoControllerTest extends TestCase
         $response->assertStatus(201)
             ->assertJsonPath('success', true)
             ->assertJsonPath('data.tipo', 'Llamada')
-            ->assertJsonPath('data.fecha', '2026-05-10')
+            ->assertJsonPath('data.fecha', '2026-05-10T00:00:00.000000Z')
             ->assertJsonPath('data.estado', 'Pendiente')
             ->assertJsonPath('data.notas', 'Test seguimiento');
     }

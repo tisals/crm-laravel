@@ -28,7 +28,8 @@ class EloquentSeguimientoRepository extends BaseRepository implements Seguimient
 
     protected function applyFilters($query, array $filters): Builder
     {
-        // Auto-filter by entidad_usuario for Comercial role
+        // Auto-filter by entidad_usuario for Comercial role (HTTP context).
+        // Note: programmatic callers (findForUser) use scopeByUser() instead.
         $user = Auth::user();
         if ($user && $user->rol?->nombre === 'Comercial') {
             $query->whereIn('entidad_id', function ($q) use ($user) {
@@ -38,7 +39,23 @@ class EloquentSeguimientoRepository extends BaseRepository implements Seguimient
             });
         }
 
-        return parent::applyFilters($query, $filters);
+        foreach ($filters as $field => $value) {
+            if ($value === null || $value === '') {
+                continue;
+            }
+            match ($field) {
+                'fecha_desde' => $query->whereDate('fecha', '>=', $value),
+                'fecha_hasta' => $query->whereDate('fecha', '<=', $value),
+                'oportunidad_id' => $query->where('oportunidad_id', $value),
+                'contacto_id' => $query->where('contacto_id', $value),
+                'entidad_id' => $query->where('entidad_id', $value),
+                'tipo' => $query->where('tipo', $value),
+                'estado' => $query->where('estado', $value),
+                default => null,  // ignore unknown filter keys
+            };
+        }
+
+        return $query;
     }
 
     public function findForUser(int $userId, int $perPage = 15, ?string $search = null, array $filters = []): LengthAwarePaginator

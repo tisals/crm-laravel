@@ -4,6 +4,8 @@ namespace App\Http\Controllers\API;
 
 use App\Application\UseCases\Seguimiento\DestroySeguimientoUseCase;
 use App\Application\UseCases\Seguimiento\IndexSeguimientoUseCase;
+use App\Application\UseCases\Seguimiento\ListarMisSeguimientosUseCase;
+use App\Application\UseCases\Seguimiento\ObtenerCalendarioUsuarioUseCase;
 use App\Application\UseCases\Seguimiento\ShowSeguimientoUseCase;
 use App\Application\UseCases\Seguimiento\StoreSeguimientoUseCase;
 use App\Application\UseCases\Seguimiento\UpdateSeguimientoUseCase;
@@ -14,6 +16,7 @@ use App\Models\Seguimiento;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Response;
 
 class SeguimientoController extends Controller
@@ -26,6 +29,8 @@ class SeguimientoController extends Controller
         private StoreSeguimientoUseCase $storeUseCase,
         private UpdateSeguimientoUseCase $updateUseCase,
         private DestroySeguimientoUseCase $destroyUseCase,
+        private ListarMisSeguimientosUseCase $listarMisSeguimientosUseCase,
+        private ObtenerCalendarioUsuarioUseCase $obtenerCalendarioUsuarioUseCase,
     ) {}
 
     public function index(Request $request): JsonResponse
@@ -46,6 +51,78 @@ class SeguimientoController extends Controller
         $result = $this->indexUseCase->execute($perPage, null, $filters);
 
         return $this->successResponse($result);
+    }
+
+    /**
+     * GET /api/v1/seguimientos/mios
+     *
+     * Shortcut for the current user's seguimientos. Scoped by role:
+     * - Comercial → only entities mapped via entidad_usuario
+     * - Admin/SuperAdmin → all
+     */
+    public function misSeguimientos(Request $request): JsonResponse
+    {
+        $userId = Auth::id();
+        if (! $userId) {
+            return $this->errorResponse('No autenticado.', 401);
+        }
+
+        $perPage = min((int) $request->input('per_page', 50), 100);
+        $search = $request->input('search');
+        $filters = $request->only(['estado', 'fecha_desde', 'fecha_hasta', 'tipo']);
+
+        $result = $this->listarMisSeguimientosUseCase->execute($userId, $perPage, $search, $filters);
+
+        return $this->successResponse($result);
+    }
+
+    /**
+     * GET /api/v1/usuarios/{usuarioId}/calendario?mes=YYYY-MM
+     *
+     * Returns seguimientos in the given month for the given user, grouped by day.
+     * Authorization: self or Admin/SuperAdmin.
+     */
+    public function calendarioUsuario(Request $request, int $usuarioId): JsonResponse
+    {
+        $authUser = Auth::user();
+        if (! $authUser) {
+            return $this->errorResponse('No autenticado.', 401);
+        }
+
+        $authUserRolNombre = $authUser->rol?->nombre;
+        $isSelf = $authUser->id === $usuarioId;
+        $isAdmin = in_array($authUserRolNombre, ['Admin', 'SuperAdmin'], true);
+
+        if (! $isSelf && ! $isAdmin) {
+            return $this->errorResponse('No autorizado a ver el calendario de otro usuario.', 403);
+        }
+
+        $mes = $request->input('mes', now()->format('Y-m'));
+        if (! preg_match('/^\d{4}-\d{2}$/', $mes)) {
+            return $this->errorResponse('El parámetro mes debe tener formato YYYY-MM.', 422);
+        }
+
+        [$year, $month] = explode('-', $mes);
+        $startOfMonth = Carbon::createFromDate((int) $year, (int) $month, 1)->startOfMonth();
+        $endOfMonth = $startOfMonth->copy()->endOfMonth()->endOfDay();
+
+        $seguimientos = $this->obtenerCalendarioUsuarioUseCase->execute(
+            $usuarioId,
+            $startOfMonth->toDateString(),
+            $endOfMonth->toDateString(),
+        );
+
+        // Group by day: { "2026-06-01": [...], ... }
+        $grouped = $seguimientos->groupBy(function ($s) {
+            return $s->fecha instanceof Carbon
+                ? $s->fecha->format('Y-m-d')
+                : (string) $s->fecha;
+        });
+
+        return $this->successResponse([
+            'mes' => $mes,
+            'dias' => $grouped,
+        ]);
     }
 
     public function store(SeguimientoRequest $request): JsonResponse
