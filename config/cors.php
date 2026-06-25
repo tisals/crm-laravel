@@ -14,7 +14,9 @@
 
 $originsEnv = env(
     'CORS_ALLOWED_ORIGINS',
-    'https://crm.tecnoinnsoft.com,https://prod-dashboard-crm.jsvdny.easypanel.host'
+    // Default includes the two prod frontends + local dev (Vite on 5174, backend on 8001).
+    // For prod-only deployments, override the env var in the container .env to remove localhost.
+    'https://crm.tecnoinnsoft.com,https://prod-dashboard-crm.jsvdny.easypanel.host,http://localhost:5174,http://localhost:5173,http://localhost:8001'
 );
 
 return [

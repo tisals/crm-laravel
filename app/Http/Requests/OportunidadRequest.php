@@ -47,7 +47,6 @@ class OportunidadRequest extends FormRequest
             'entidad_id.exists' => 'La entidad seleccionada no existe.',
             'contacto_id.exists' => 'El contacto seleccionado no existe.',
             'fecha.required' => 'La fecha es obligatoria.',
-            'estado.in' => 'El estado debe ser Borrador, Enviada, Negociada, Rechazada o Ganada.',
         ];
     }
 }

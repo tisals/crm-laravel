@@ -26,8 +26,12 @@ class EloquentOportunidadRepository extends BaseRepository implements Oportunida
     {
         $query = $this->newQuery();
 
-        // Default to latest active versions
-        $query->where('is_latest', true)->where('estado', 'Activa');
+        // Default: filter to latest active versions.
+        // If the caller passes is_latest=false, return ALL versions (for history views).
+        $onlyLatest = ! array_key_exists('is_latest', $filters) || $filters['is_latest'] !== false;
+        if ($onlyLatest) {
+            $query->where('is_latest', true)->where('estado', 'Activa');
+        }
 
         if ($search) {
             $query = $this->applySearch($query, $search);

@@ -40,6 +40,13 @@ class OportunidadController extends Controller
         $perPage = min((int) $request->input('per_page', 50), 100);
         $search = $request->input('search');
         $filters = $request->only(['pipeline_id', 'estado', 'entidad_id', 'producto_id', 'fecha_desde', 'fecha_hasta', 'codigo']);
+
+        // is_latest is special: it's a boolean, not a string. Default true.
+        // ?is_latest=false returns ALL versions (for history views in detail panel).
+        $filters['is_latest'] = $request->has('is_latest')
+            ? filter_var($request->input('is_latest'), FILTER_VALIDATE_BOOLEAN)
+            : true;
+
         $sortBy = $request->input('sort_by', 'created_at');
         $sortOrder = $request->input('sort_order', 'desc');
 
