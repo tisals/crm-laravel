@@ -2,17 +2,19 @@
 
 namespace App\Http\Controllers\API;
 
+use App\Application\Seguimiento\Services\NotificacionRecipientsResolver;
 use App\Application\UseCases\Seguimiento\StoreSeguimientoUseCase;
 use App\Http\Controllers\API\Concerns\ApiResponse;
 use App\Http\Controllers\Controller;
 use App\Models\Seguimiento;
-use App\Models\Usuario;
 use App\Notifications\FollowUpNotification;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Notification;
+use Modules\CRM\Models\Seguimiento as CanonicalSeguimiento;
 
 class ContactoAccionController extends Controller
 {
@@ -20,6 +22,7 @@ class ContactoAccionController extends Controller
 
     public function __construct(
         private StoreSeguimientoUseCase $storeSeguimientoUseCase,
+        private NotificacionRecipientsResolver $recipientsResolver,
     ) {}
 
     /**
@@ -27,16 +30,6 @@ class ContactoAccionController extends Controller
      *
      * Registra una acción de seguimiento (llamada, correo, reunión, nota)
      * y opcionalmente programa un próximo seguimiento con fecha/hora.
-     *
-     * Body:
-     *   tipo           string  (Llamada|Correo|Reunion|Otro) — requerida
-     *   notas          string  — requerida
-     *   oportunidad_id int     — opcional
-     *   entidad_id     int     — opcional
-     *   fecha          date    — opcional (para crear próximo seguimiento)
-     *   hora           time    — opcional
-     *   estado         string  — opcional (default: Completado para acción actual,
-     *                              Pendiente para próximo seguimiento)
      */
     public function acciones(int $contactoId, Request $request): JsonResponse
     {
@@ -58,14 +51,9 @@ class ContactoAccionController extends Controller
         $notas = $request->input('notas');
         $oportunidadId = $request->input('oportunidad_id');
         $entidadId = $request->input('entidad_id');
-        $fechaProximo = $request->input('fecha');       // puede ser null
-        $horaProximo = $request->input('hora');         // puede ser null
+        $fechaProximo = $request->input('fecha');
+        $horaProximo = $request->input('hora');
         $ahora = now()->toDateString();
-
-        // Si hay fecha_proximo → crear dos seguimientos:
-        //   1. El actual (completado)
-        //   2. El próximo (pendiente, con fecha/hora)
-        // Si no hay fecha → crear solo el actual
 
         return DB::transaction(function () use (
             $contactoId, $tipo, $notas, $oportunidadId, $entidadId,
@@ -73,7 +61,6 @@ class ContactoAccionController extends Controller
         ) {
             $creados = [];
 
-            // ── Seguimiento actual (siempre se crea) ────────────────────
             $actual = $this->storeSeguimientoUseCase->execute([
                 'contacto_id' => $contactoId,
                 'oportunidad_id' => $oportunidadId,
@@ -87,13 +74,12 @@ class ContactoAccionController extends Controller
 
             $creados[] = $actual;
 
-            // ── Próximo seguimiento (si se proporcionó fecha) ───────────
             if ($fechaProximo) {
                 $proximo = $this->storeSeguimientoUseCase->execute([
                     'contacto_id' => $contactoId,
                     'oportunidad_id' => $oportunidadId,
                     'entidad_id' => $entidadId,
-                    'tipo' => $tipo, // lleva el mismo tipo como recordatorio
+                    'tipo' => $tipo,
                     'notas' => $notas,
                     'fecha' => $fechaProximo,
                     'hora' => $horaProximo,
@@ -102,7 +88,6 @@ class ContactoAccionController extends Controller
 
                 $creados[] = $proximo;
 
-                // Programar notificación para la fecha/hora del próximo seguimiento
                 $proximoModel = Seguimiento::findOrFail($proximo->id);
                 $this->scheduleFollowUpNotification($proximoModel);
             }
@@ -121,37 +106,18 @@ class ContactoAccionController extends Controller
 
     /**
      * Programa la notificación para un seguimiento pendiente futuro.
-     * Si fechahora es en el futuro → ScheduleNotification ( Laravel Queue )
-     * Si ya pasó → se envía inmediatamente (para entornos sin queue worker)
+     * Si fechahora es en el futuro → ScheduleNotification (Laravel Queue).
+     * Si ya pasó → se envía inmediatamente (para entornos sin queue worker).
      */
     private function scheduleFollowUpNotification(Seguimiento $seguimiento): void
     {
-        $fecha = $seguimiento->fecha;
-        $hora = $seguimiento->hora ?? '09:00';
-        $scheduledAt = Carbon::parse("{$fecha} {$hora}");
+        $recipients = $this->recipientsResolver->resolve($seguimiento);
 
-        if ($scheduledAt->isPast()) {
-            // Ya venció → notificar de inmediato
-            $this->sendToUser($seguimiento);
-
+        if ($recipients->isEmpty()) {
+            Log::warning("FollowUpNotification for seguimiento {$seguimiento->id}: no recipients found (no comercial mapped, no admins)");
             return;
         }
 
-        // Programar notificación para el momento exacto
-        Notification::send(
-            Usuario::admins()->get(),
-            new FollowUpNotification($seguimiento),
-        );
-    }
-
-    /**
-     * Envía notificación a todos los admins (puede ajustarse al autor o entidad)
-     */
-    private function sendToUser(Seguimiento $seguimiento): void
-    {
-        Notification::send(
-            Usuario::admins()->get(),
-            new FollowUpNotification($seguimiento),
-        );
+        Notification::send($recipients, new FollowUpNotification($seguimiento));
     }
 }
