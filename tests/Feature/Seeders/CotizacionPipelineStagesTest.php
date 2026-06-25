@@ -10,17 +10,18 @@ use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
 /**
- * End-to-end test: when the CSV has estado=22 (Ganado), the resulting
- * oportunidad.pipeline_etapa_id must point to the ACEPTADA stage.
+ * Pipeline Cotización now has 5 canonical stages identified by STABLE codigos:
+ *   BORRADOR, ENVIADA, EN_NEGOCIACION, ACEPTADA, RECHAZADA
  *
- * After the pipeline refactor (5 canonical stages with stable codigos):
- *   - estado 20 (Enviado)    → ENVIADA
- *   - estado 21 (En negociación) → EN_NEGOCIACION
- *   - estado 22 (Ganado)     → ACEPTADA   (last positive stage, equivalent of legacy "Ganada")
- *   - estado 23 (Perdido)    → RECHAZADA  (last negative stage, equivalent of legacy "Perdida")
- *   - texto "Generada"       → ENVIADA
+ * The `nombre` column is the human-readable label (parametrizable in the future).
+ *
+ * Legacy stages ('Ganada', 'Perdida', 'Aprobado', 'Enviado', 'En Negociación',
+ * 'Rechazado') are removed in the migration. The seeder:
+ *   - Maps estado=22 (Ganado) → ACEPTADA (last positive stage)
+ *   - Maps estado=23 (Perdido) → RECHAZADA (last negative stage)
+ *   - Maps estado=21 (En negociacion) → EN_NEGOCIACION
  */
-class OportunidadEstadoMappingIntegrationTest extends TestCase
+class CotizacionPipelineStagesTest extends TestCase
 {
     use RefreshDatabase;
 
@@ -64,82 +65,83 @@ class OportunidadEstadoMappingIntegrationTest extends TestCase
     }
 
     #[Test]
-    public function it_maps_estado_22_ganado_to_aceptada_stage(): void
+    public function pipeline_crea_solo_las_5_etapas_canonicas_con_codigo(): void
     {
-        $result = $this->importRow([
+        $this->importRow([
             'codigo' => 'TEST-001',
             'fecha' => '15/06/2026',
-            'estado' => '22',
+            'estado' => '20',
             'empresa' => 'Test Corp',
             'valor_sin_iva' => '1000000',
             'email_contacto' => 'test@example.com',
             'contacto' => 'Test User',
         ]);
 
-        $this->assertSame(1, $result['created']);
-        $this->assertSame(0, $result['errors']);
+        $pipelineId = DB::table('pipelines')->where('codigo', 'COTIZACION')->value('id');
+        $etapas = DB::table('pipeline_etapas')
+            ->where('pipeline_id', $pipelineId)
+            ->orderBy('orden')
+            ->pluck('codigo')
+            ->toArray();
 
-        $opp = DB::table('oportunidad')->where('codigo', 'TEST-001')->first();
-        $this->assertNotNull($opp);
-
-        $stageCodigo = DB::table('pipeline_etapas')->where('id', $opp->pipeline_etapa_id)->value('codigo');
-        $this->assertSame('ACEPTADA', $stageCodigo, "Expected stage 'ACEPTADA' but got '{$stageCodigo}'");
+        $this->assertSame(
+            ['BORRADOR', 'ENVIADA', 'EN_NEGOCIACION', 'ACEPTADA', 'RECHAZADA'],
+            $etapas,
+            'Pipeline Cotización debe tener exactamente 5 etapas con códigos estables en el orden correcto'
+        );
     }
 
     #[Test]
-    public function it_maps_estado_23_perdido_to_rechazada_stage(): void
+    public function estado_22_ganado_cae_en_codigo_aceptada(): void
     {
         $this->importRow([
-            'codigo' => 'TEST-002',
+            'codigo' => 'TEST-GAN-001',
             'fecha' => '15/06/2026',
-            'estado' => '23',
-            'empresa' => 'Test Corp 2',
+            'estado' => '22', // Ganado en maestro
+            'empresa' => 'Test Corp Ganado',
             'valor_sin_iva' => '1000000',
-            'email_contacto' => 'test2@example.com',
-            'contacto' => 'Test User 2',
+            'email_contacto' => 'test-ganado@example.com',
+            'contacto' => 'Test User Ganado',
         ]);
 
-        $opp = DB::table('oportunidad')->where('codigo', 'TEST-002')->first();
+        $opp = DB::table('oportunidad')->where('codigo', 'TEST-GAN-001')->first();
         $stageCodigo = DB::table('pipeline_etapas')->where('id', $opp->pipeline_etapa_id)->value('codigo');
-
-        $this->assertSame('RECHAZADA', $stageCodigo);
+        $this->assertSame('ACEPTADA', $stageCodigo, 'Estado Ganado debe mapear a código ACEPTADA');
     }
 
     #[Test]
-    public function it_maps_text_Generada_to_enviada_stage(): void
+    public function estado_23_perdido_cae_en_codigo_rechazada(): void
     {
         $this->importRow([
-            'codigo' => 'TEST-003',
+            'codigo' => 'TEST-PER-001',
             'fecha' => '15/06/2026',
-            'estado' => 'Generada',
-            'empresa' => 'Test Corp 3',
+            'estado' => '23', // Perdido en maestro
+            'empresa' => 'Test Corp Perdido',
             'valor_sin_iva' => '1000000',
-            'email_contacto' => 'test3@example.com',
-            'contacto' => 'Test User 3',
+            'email_contacto' => 'test-perdido@example.com',
+            'contacto' => 'Test User Perdido',
         ]);
 
-        $opp = DB::table('oportunidad')->where('codigo', 'TEST-003')->first();
+        $opp = DB::table('oportunidad')->where('codigo', 'TEST-PER-001')->first();
         $stageCodigo = DB::table('pipeline_etapas')->where('id', $opp->pipeline_etapa_id)->value('codigo');
-
-        $this->assertSame('ENVIADA', $stageCodigo);
+        $this->assertSame('RECHAZADA', $stageCodigo, 'Estado Perdido debe mapear a código RECHAZADA');
     }
 
     #[Test]
-    public function it_maps_estado_20_enviado_to_enviada_stage(): void
+    public function estado_21_en_negociacion_cae_en_codigo_correspondiente(): void
     {
         $this->importRow([
-            'codigo' => 'TEST-004',
+            'codigo' => 'TEST-NEG-001',
             'fecha' => '15/06/2026',
-            'estado' => '20',
-            'empresa' => 'Test Corp 4',
+            'estado' => '21', // En negociación
+            'empresa' => 'Test Corp Neg',
             'valor_sin_iva' => '1000000',
-            'email_contacto' => 'test4@example.com',
-            'contacto' => 'Test User 4',
+            'email_contacto' => 'test-neg@example.com',
+            'contacto' => 'Test User Neg',
         ]);
 
-        $opp = DB::table('oportunidad')->where('codigo', 'TEST-004')->first();
+        $opp = DB::table('oportunidad')->where('codigo', 'TEST-NEG-001')->first();
         $stageCodigo = DB::table('pipeline_etapas')->where('id', $opp->pipeline_etapa_id)->value('codigo');
-
-        $this->assertSame('ENVIADA', $stageCodigo);
+        $this->assertSame('EN_NEGOCIACION', $stageCodigo, 'Estado 21 debe mapear a código EN_NEGOCIACION');
     }
 }

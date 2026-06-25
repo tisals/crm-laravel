@@ -38,17 +38,21 @@ class OportunidadCsvImportUseCase
     private int $defaultUserId = 1;
 
     private const ESTADO_MAP = [
-        // Texto directo del CSV
-        'generada' => 'Enviada',
-        'aprobada' => 'Aceptada',
-        'no aprobada' => 'Rechazada',
-        'no aprobado' => 'Rechazada',
-        // Nombres desde maestro (maestro.nombre → estado interno)
-        'borrador' => 'Borrador',
-        'enviado' => 'Enviada',
-        'en negociación' => 'Aceptada',
-        'ganado' => 'Ganada',
-        'perdido' => 'Perdida',
+        // Texto directo del CSV (legacy)
+        'generada' => 'ENVIADA',
+        'aprobada' => 'ACEPTADA',
+        'no aprobada' => 'RECHAZADA',
+        'no aprobado' => 'RECHAZADA',
+        // Nombres desde maestro (lower-case) → codigo estable del stage del pipeline Cotización.
+        // Keys are LOWER-CASE maestro names. Values are STABLE codigos (the application
+        // code references these by codigo, never by label).
+        'borrador' => 'BORRADOR',
+        'enviado' => 'ENVIADA',
+        'en negociación' => 'EN_NEGOCIACION',
+        // Ganado/Perdido del maestro se colapsan a los stages terminales del pipeline:
+        // ganada (negocio cerrado) → Aceptada, perdida (rechazada) → Rechazada
+        'ganado' => 'ACEPTADA',
+        'perdido' => 'RECHAZADA',
     ];
     // --- Builder ---
 
@@ -128,24 +132,33 @@ class OportunidadCsvImportUseCase
             ]);
         }
 
-        $stages = ['Borrador', 'Enviada', 'Aceptada', 'Rechazada', 'Ganada', 'Perdida'];
+        // The 5 canonical stages of the Cotización pipeline, identified by STABLE codigo.
+        // The label (`nombre`) is parametrizable and may differ across deployments.
+        $stages = [
+            'BORRADOR' => 0,
+            'ENVIADA' => 1,
+            'EN_NEGOCIACION' => 2,
+            'ACEPTADA' => 3,
+            'RECHAZADA' => 4,
+        ];
         $stageMap = [];
-        foreach ($stages as $index => $stageName) {
+        foreach ($stages as $codigo => $orden) {
             $stageId = DB::table('pipeline_etapas')
                 ->where('pipeline_id', $pipelineId)
-                ->where('nombre', $stageName)
+                ->where('codigo', $codigo)
                 ->value('id');
             if (! $stageId) {
                 $stageId = DB::table('pipeline_etapas')->insertGetId([
                     'pipeline_id' => $pipelineId,
-                    'nombre' => $stageName,
-                    'orden' => $index,
+                    'codigo' => $codigo,
+                    'nombre' => $this->defaultNombreForCodigo($codigo),
+                    'orden' => $orden,
                     'habilitado' => true,
                     'created_at' => now(),
                     'updated_at' => now(),
                 ]);
             }
-            $stageMap[$stageName] = $stageId;
+            $stageMap[$codigo] = $stageId;
         }
 
         DB::transaction(function () use ($rows, &$counters, $pipelineId, $stageMap) {
@@ -176,7 +189,7 @@ class OportunidadCsvImportUseCase
 
                     $resolvedStage = $oppData['estado'];
                     $oppData['pipeline_id'] = $pipelineId;
-                    $oppData['pipeline_etapa_id'] = $stageMap[$resolvedStage] ?? $stageMap['Borrador'];
+                    $oppData['pipeline_etapa_id'] = $stageMap[$resolvedStage] ?? $stageMap['BORRADOR'];
                     $oppData['estado'] = 'Activa';
                     $oppData['is_latest'] = true;
 
@@ -460,29 +473,29 @@ class OportunidadCsvImportUseCase
     }
 
     /**
-     * Resolve estado from raw CSV value:
-     * 1. Numeric → lookup maestro nombre by ID → map to internal
-     * 2. Text   → lookup in hardcoded ESTADO_MAP
-     * 3. Fallback → Borrador
+     * Resolve estado from raw CSV value to a STABLE stage codigo:
+     * 1. Numeric → lookup maestro nombre by ID → map to internal codigo
+     * 2. Text   → lookup in hardcoded ESTADO_MAP (lower-case maestro name → codigo)
+     * 3. Fallback → BORRADOR
      */
     private function resolveEstado(?string $raw): string
     {
         if (! $raw) {
-            return 'Borrador';
+            return 'BORRADOR';
         }
 
         $trimmed = trim($raw);
 
-        // Numeric: maestro ID → nombre → internal
+        // Numeric: maestro ID → nombre → codigo
         if (is_numeric($trimmed)) {
             $maestroNombre = $this->estadoMap[(int) $trimmed] ?? null;
             if ($maestroNombre) {
-                return self::ESTADO_MAP[strtolower($maestroNombre)] ?? 'Borrador';
+                return self::ESTADO_MAP[strtolower($maestroNombre)] ?? 'BORRADOR';
             }
         }
 
         // Text: direct lookup
-        return self::ESTADO_MAP[strtolower($trimmed)] ?? 'Borrador';
+        return self::ESTADO_MAP[strtolower($trimmed)] ?? 'BORRADOR';
     }
 
     // --- Builders ---
@@ -641,6 +654,22 @@ class OportunidadCsvImportUseCase
         }
 
         return $num;
+    }
+
+    /**
+     * Default human-readable label for a stage codigo. Used when the seeder
+     * needs to create a stage that doesn't exist yet.
+     */
+    private function defaultNombreForCodigo(string $codigo): string
+    {
+        return match ($codigo) {
+            'BORRADOR' => 'Borrador',
+            'ENVIADA' => 'Enviada',
+            'EN_NEGOCIACION' => 'En negociación',
+            'ACEPTADA' => 'Aceptada',
+            'RECHAZADA' => 'Rechazada',
+            default => ucfirst(strtolower($codigo)),
+        };
     }
 
     private function parseFecha(?string $value): ?string

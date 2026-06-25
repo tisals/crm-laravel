@@ -11,13 +11,15 @@ class OportunidadObserver
 {
     /**
      * Handle Oportunidad created event.
-     * If created directly as 'Ganada', set cliente_desde.
+     * If created directly on the 'ACEPTADA' stage (the canonical equivalent of
+     * the legacy 'Ganada' state), set cliente_desde on the related entity.
      */
     public function created(Oportunidad $oportunidad): void
     {
-        $etapaNombre = $oportunidad->pipelineEtapa?->nombre ?? (PipelineEtapa::find($oportunidad->pipeline_etapa_id)?->nombre);
+        $etapaCodigo = $oportunidad->pipelineEtapa?->codigo
+            ?? PipelineEtapa::find($oportunidad->pipeline_etapa_id)?->codigo;
 
-        if ($etapaNombre === 'Ganada') {
+        if ($etapaCodigo === 'ACEPTADA') {
             Entidad::where('id', $oportunidad->entidad_id)
                 ->whereNull('cliente_desde')
                 ->update(['cliente_desde' => now()]);
@@ -37,16 +39,16 @@ class OportunidadObserver
             return;
         }
 
-        $oldEtapaNombre = PipelineEtapa::find($oldEtapaId)?->nombre;
-        $newEtapaNombre = PipelineEtapa::find($newEtapaId)?->nombre;
+        $oldEtapaCodigo = PipelineEtapa::find($oldEtapaId)?->codigo;
+        $newEtapaCodigo = PipelineEtapa::find($newEtapaId)?->codigo;
 
-        if ($newEtapaNombre === 'Ganada' && $oldEtapaNombre !== 'Ganada') {
+        if ($newEtapaCodigo === 'ACEPTADA' && $oldEtapaCodigo !== 'ACEPTADA') {
             Entidad::where('id', $oportunidad->entidad_id)
                 ->whereNull('cliente_desde')
                 ->update(['cliente_desde' => now()]);
-        } elseif ($oldEtapaNombre === 'Ganada' && $newEtapaNombre !== 'Ganada') {
+        } elseif ($oldEtapaCodigo === 'ACEPTADA' && $newEtapaCodigo !== 'ACEPTADA') {
             $hasOtherWon = Oportunidad::where('entidad_id', $oportunidad->entidad_id)
-                ->whereHas('pipelineEtapa', fn ($q) => $q->where('nombre', 'Ganada'))
+                ->whereHas('pipelineEtapa', fn ($q) => $q->where('codigo', 'ACEPTADA'))
                 ->where('id', '!=', $oportunidad->id)
                 ->exists();
 

@@ -99,7 +99,7 @@ class GetDashboardUseCase
         $this->applyDateFilter($oppQuery, $fechaInicio, $fechaFin, 'oportunidad.fecha');
         $this->applyCommercialFilter($oppQuery, $comercialId);
         $totalOpp = (int) (clone $oppQuery)->count();
-        $ganadas = (int) (clone $oppQuery)->whereHas('pipelineEtapa', fn ($q) => $q->where('nombre', 'Ganada'))->count();
+        $ganadas = (int) (clone $oppQuery)->whereHas('pipelineEtapa', fn ($q) => $q->where('codigo', 'ACEPTADA'))->count();
         $tasaConversion = $totalOpp > 0 ? round(($ganadas / $totalOpp) * 100, 1) : 0.0;
 
         // --- Oportunidades creadas por mes (cantidad) ---
@@ -146,7 +146,7 @@ class GetDashboardUseCase
         $entidadesConvertidasMes = [];
         for ($m = 1; $m <= 12; $m++) {
             $q = Oportunidad::query()
-                ->whereHas('pipelineEtapa', fn ($q) => $q->where('nombre', 'Ganada'))
+                ->whereHas('pipelineEtapa', fn ($q) => $q->where('codigo', 'ACEPTADA'))
                 ->whereMonth('fecha', $m)
                 ->whereYear('fecha', $year);
             $this->applyDateFilter($q, $fechaInicio, $fechaFin, 'oportunidad.fecha');
@@ -261,7 +261,7 @@ class GetDashboardUseCase
         $query = DetalleOportunidad::query()
             ->join('oportunidad', 'detalle_oportunidad.oportunidad_id', '=', 'oportunidad.id')
             ->join('pipeline_etapas', 'oportunidad.pipeline_etapa_id', '=', 'pipeline_etapas.id')
-            ->where('pipeline_etapas.nombre', 'Ganada');
+            ->where('pipeline_etapas.codigo', 'ACEPTADA');
 
         $this->applyCommercialFilter($query, $comercialId);
         $this->applyDateFilter($query, $fechaInicio, $fechaFin, 'oportunidad.fecha');
@@ -283,7 +283,7 @@ class GetDashboardUseCase
             ->join('oportunidad', 'oportunidad.entidad_id', '=', 'entidad.id')
             ->join('pipeline_etapas', 'oportunidad.pipeline_etapa_id', '=', 'pipeline_etapas.id')
             ->join('detalle_oportunidad', 'detalle_oportunidad.oportunidad_id', '=', 'oportunidad.id')
-            ->where('pipeline_etapas.nombre', 'Ganada')
+            ->where('pipeline_etapas.codigo', 'ACEPTADA')
             ->whereBetween('oportunidad.fecha', [$fechaInicio, $fechaFin]);
 
         if ($comercialId) {
@@ -322,7 +322,7 @@ class GetDashboardUseCase
         for ($m = 1; $m <= 12; $m++) {
             // Bars: distinct entities with won opportunities this month
             $eq = Oportunidad::query()
-                ->whereHas('pipelineEtapa', fn ($q) => $q->where('nombre', 'Ganada'))
+                ->whereHas('pipelineEtapa', fn ($q) => $q->where('codigo', 'ACEPTADA'))
                 ->whereMonth('fecha', $m)
                 ->whereYear('fecha', $year);
             $this->applyDateFilter($eq, $fechaInicio, $fechaFin, 'oportunidad.fecha');
