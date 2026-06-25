@@ -4,6 +4,7 @@ namespace Tests\Feature\API;
 
 use App\Models\Entidad;
 use App\Models\Oportunidad;
+use App\Models\Permiso;
 use App\Models\Rol;
 use App\Models\Usuario;
 use Illuminate\Foundation\Testing\RefreshDatabase;
@@ -28,9 +29,18 @@ class OportunidadIsLatestFilterTest extends TestCase
         parent::setUp();
 
         $rol = Rol::create(['nombre' => 'Admin', 'estado' => 'Activo']);
+
+        // Grant wildcard permission so the RBAC middleware lets the request through.
+        // Without this the request is short-circuited by RbacMiddleware before
+        // reaching the IndexOportunidadUseCase.
+        Permiso::create([
+            'rol_id' => $rol->id,
+            'vista' => '*',
+        ]);
+
         $user = Usuario::create([
             'nombre' => 'Test',
-            'email' => 'test@example.com',
+            'email' => 'is_latest_test@example.com',
             'password_hash' => bcrypt('password'),
             'rol_id' => $rol->id,
             'estado' => 'Activo',
@@ -54,7 +64,7 @@ class OportunidadIsLatestFilterTest extends TestCase
             'version' => 1,
             'is_latest' => false,
         ]);
-        $latest = Oportunidad::create([
+        Oportunidad::create([
             'codigo' => 'TEST-001-V2',
             'entidad_id' => $entidad->id,
             'fecha' => '2025-06-15',

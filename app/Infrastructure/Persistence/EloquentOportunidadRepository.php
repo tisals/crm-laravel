@@ -103,6 +103,13 @@ class EloquentOportunidadRepository extends BaseRepository implements Oportunida
                 continue;
             }
 
+            // is_latest is handled separately at the top of paginate() via the
+            // $onlyLatest flag. Skip it here so the default case doesn't add
+            // a contradictory WHERE is_latest = false when the caller wants all versions.
+            if ($field === 'is_latest') {
+                continue;
+            }
+
             match ($field) {
                 'fecha_desde' => $query->whereDate('fecha', '>=', $value),
                 'fecha_hasta' => $query->whereDate('fecha', '<=', $value),
