@@ -13,7 +13,12 @@ class StoreSeguimientoUseCase
 
     public function execute(array $data): mixed
     {
-        $data['autor_id'] = Auth::id();
+        // Always override caller-provided values with the authenticated user.
+        // This guarantees that autor_id and created_by always reflect who
+        // actually created the seguimiento, never a forged client value.
+        $userId = Auth::id();
+        $data['autor_id']   = $userId;
+        $data['created_by'] = $userId;
 
         return $this->repository->create($data);
     }
