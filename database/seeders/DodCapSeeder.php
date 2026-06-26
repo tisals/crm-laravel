@@ -24,9 +24,13 @@ use Illuminate\Database\Seeder;
  */
 class DodCapSeeder extends Seeder
 {
+    /** Max oportunidades por entidad. Las ops se pueden repetir naturalmente
+     *  (mismo cliente puede tener varias cotizaciones activas), así que 10 es OK. */
     public const MAX_OPS_POR_ENTIDAD = 10;
 
-    public const MAX_CONTACTOS_POR_ENTIDAD = 10;
+    /** Max contactos por entidad. Los contactos son personas reales (relaciones
+     *  a mantener), así que el cap es más permisivo que el de ops. */
+    public const MAX_CONTACTOS_POR_ENTIDAD = 25;
 
     public function run(): void
     {

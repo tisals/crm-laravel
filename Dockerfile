@@ -41,6 +41,11 @@ RUN echo "pm.max_children = 50" >> /usr/local/etc/php-fpm.d/www.conf \
     && echo "pm.min_spare_servers = 5" >> /usr/local/etc/php-fpm.d/www.conf \
     && echo "pm.max_spare_servers = 20" >> /usr/local/etc/php-fpm.d/www.conf
 
+# OPcache tuning: bind-mount en Docker sobre Windows es lento para stat() de
+# ~7.375 archivos vendor. Deshabilitar validación de timestamps evita pagar ese
+# costo en cada request. Es seguro en dev (los archivos no cambian entre reqs).
+COPY docker/opcache-tune.ini /usr/local/etc/php/conf.d/zz-opcache-tune.ini
+
 # Copiar vendor + código
 COPY --from=vendor /app/vendor /var/www/html/vendor
 COPY . /var/www/html
