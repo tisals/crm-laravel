@@ -4,6 +4,7 @@ namespace App\Application\UseCases\Oportunidad;
 
 use App\Models\Contacto;
 use App\Models\Producto;
+use App\Traits\UrlCategorizer;
 use Carbon\Carbon;
 use Illuminate\Support\Facades\DB;
 
@@ -15,6 +16,8 @@ use Illuminate\Support\Facades\DB;
  */
 class OportunidadCsvImportUseCase
 {
+    use UrlCategorizer;
+
     /** @var array<string, int> Pre-built entity lookup: [key => entidad_id] */
     private array $entityMap = [];
 
@@ -236,8 +239,21 @@ class OportunidadCsvImportUseCase
     private function resolveEntityId(array $row, $now): int
     {
         $empresa = $this->cleanStr($row['empresa'] ?? '');
-        $dominio = $this->cleanStr($row['dominio'] ?? '');
         $lineaNegocio = $this->cleanStr($row['linea_negocio'] ?? '');
+
+        // Separar el valor del CSV entre dominio real y red social.
+        // Ej: "facebook.com/humplast" → red_social_url, dominio queda null
+        //     "polinter.com.co"       → dominio, red_social_url queda null
+        $dominioRaw = $this->cleanStr($row['dominio'] ?? '');
+        $dominio = null;
+        $redSocialUrl = null;
+        if ($dominioRaw) {
+            if ($this->isSocialNetworkUrl($dominioRaw)) {
+                $redSocialUrl = $dominioRaw;
+            } else {
+                $dominio = $dominioRaw;
+            }
+        }
 
         if (! $empresa) {
             throw new \RuntimeException('CAMPO EMPRESA vacío');
@@ -309,6 +325,17 @@ class OportunidadCsvImportUseCase
                 $updateData['cliente_desde'] = null;
             }
 
+            // Si el CSV trae dominio/red_social y la entidad los tiene NULL,
+            // los llenamos para no perder datos del CSV en futuras corridas
+            // idempotentes (no sobrescribimos si ya hay un valor).
+            $current = DB::table('entidad')->where('id', $id)->first(['dominio', 'red_social_url']);
+            if ($dominio && empty($current->dominio)) {
+                $updateData['dominio'] = $dominio;
+            }
+            if ($redSocialUrl && empty($current->red_social_url)) {
+                $updateData['red_social_url'] = $redSocialUrl;
+            }
+
             DB::table('entidad')
                 ->where('id', $id)
                 ->update($updateData);
@@ -337,6 +364,7 @@ class OportunidadCsvImportUseCase
             'tipo_id' => 'NIT',
             'identificacion' => $nit ? preg_replace('/[\.\-\s]/', '', $nit) : null,
             'dominio' => $dominio ?: null,
+            'red_social_url' => $redSocialUrl ?: null,
             'estado' => $isClient ? 'Cliente' : 'Prospecto',
             'cliente_desde' => $isClient ? $now : null,
             'created_at' => $now,
