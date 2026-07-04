@@ -185,11 +185,40 @@ docker exec crm-laravel-dev php artisan tinker   # shell interactivo
 
 **Entrypoint:** key:generate → migrate --seed → PHP-FPM → Nginx foreground
 
-**Reset DB:**
+**Reset DB (recomendado):**
+```bash
+docker exec crm-laravel-dev php artisan crm:reset --force
+# Wrapper sobre `migrate:fresh --seed`. Borra TODO y regenera desde CSV.
+# Tiempo: ~30s. Validación post-seed incluida.
+```
+
+**Reset DB (legacy):**
 ```bash
 docker exec crm-laravel-dev rm storage/framework/.migrated
 docker restart crm-laravel-dev
 ```
+
+**⚠️ IMPORTANTE: `.env` debe tener `DB_DATABASE=tecnoinnsoft_crm` DESCOMENTADO.** El bug común es tener `# DB_DATABASE=tecnoinnsoft_crm` (comentado), que hace que Laravel use el default del config y rompa cosas.
+
+## Regeneración 100% reproducible
+
+`crm:reset` valida este contrato:
+
+```bash
+docker exec crm-laravel-dev php artisan crm:reset --force
+```
+
+Salida esperada:
+- 1439 entidades (después del seed)
+- 2336 contactos
+- 2113 oportunidades
+- 2758 detalles
+- 5 usuarios
+- 58 seguimientos
+- ~13 entidades con `red_social_url` (FB/IG/LI de oportunidades.csv)
+- ~1036 entidades con dominio real
+
+Si los numbers cambian luego de modificar CSVs en `database/csv/`, es esperado. Si el seed peta, NO commitear — revisar primero.
 
 ## Brand Permissions (SAIlus)
 
