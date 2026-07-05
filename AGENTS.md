@@ -220,6 +220,31 @@ Salida esperada:
 
 Si los numbers cambian luego de modificar CSVs en `database/csv/`, es esperado. Si el seed peta, NO commitear — revisar primero.
 
+## Backfill de dominios con DuckDuckGo
+
+`crm:backfill-domain` busca dominios faltantes para entidades que no tienen ni `dominio` ni `red_social_url` en la BD.
+
+```bash
+# Instalación dentro del container (una vez)
+docker exec crm-laravel-dev apk add --no-cache python3 py3-pip
+docker exec crm-laravel-dev pip install --break-system-packages ddgs
+
+# Dry-run con verbose
+docker exec crm-laravel-dev php artisan crm:backfill-domain --limit=20 --show
+```
+
+**Limitaciones** (descubiertas en testing real):
+- Tasa de falsos positivos ~67%: DDG matchea directorios tipo `empresas.portafolio.co`, `infopiniones.com`, `findglocal.com` con score 1.0
+- La heurística distingue solo por el **host** (debe contener una palabra del nombre)
+- **NO recomendado para ejecutar en bulk** sin revisión manual
+
+**Modo correcto de uso**:
+- Dry-run primero: ver qué propone
+- Una a la vez: `--entity=123` para validar la calidad del match
+- Solo aplicar match a entidades de **alta confianza** (host con palabra del nombre Y no en blacklist de directorios)
+
+Alternativa manual: el equipo continúa actualizando manualmente los dominios como hasta ahora, complementando con este comando solo para descubrir candidatos.
+
 ## Brand Permissions (SAIlus)
 
 **Endpoint:** `GET /api/v1/users/{id}/brands` — marca `Propia` como entidad interna.
