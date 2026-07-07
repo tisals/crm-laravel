@@ -5,6 +5,8 @@
 .env.production
 .phpactor.json
 .phpunit.result.cache
+*.sqlite
+/tecnoinnsoft_crm
 /.fleet
 /.idea
 /.nova
