@@ -2,7 +2,6 @@
 
 namespace Database\Seeders;
 
-use App\Models\Producto;
 use Illuminate\Database\Seeder;
 use Illuminate\Support\Facades\DB;
 
@@ -36,16 +35,6 @@ class DetalleOportunidadCsvSeeder extends Seeder
             ->mapWithKeys(fn ($id, $cod) => [trim($cod) => $id])
             ->toArray();
         $this->command->info('  → '.count($oppsByCodigo).' oportunidades loaded.');
-
-        // Load product map for matching producto names
-        $this->command->info('Loading products...');
-        $allProducts = Producto::all();
-        $productMap = [];
-        foreach ($allProducts as $p) {
-            $key = strtolower(trim($p->nombre));
-            $productMap[$key] = $p;
-        }
-        $this->command->info('  → '.count($productMap).' products loaded.');
 
         // Parse CSV and collect rows grouped by codigo
         $this->command->info('Parsing detalle CSV...');
@@ -104,7 +93,7 @@ class DetalleOportunidadCsvSeeder extends Seeder
         $existingCount = DB::table('detalle_oportunidad')->count();
         $this->command->info("  → {$existingCount} existing detalles to replace.");
 
-        DB::transaction(function () use ($detalleGroups, $productMap) {
+        DB::transaction(function () use ($detalleGroups) {
             // Gather all oportunidad_ids that will receive new detalles
             $oppIds = array_unique(
                 array_merge(...array_map(fn ($g) => array_column($g, 'oportunidad_id'), array_values($detalleGroups)))
@@ -126,7 +115,7 @@ class DetalleOportunidadCsvSeeder extends Seeder
                 foreach ($rows as $r) {
                     $insertBatch[] = [
                         'oportunidad_id' => $r['oportunidad_id'],
-                        'producto_id' => $this->matchProductId($r['producto'], $productMap),
+                        'producto_id' => max(1, (int) $r['cod']),
                         'concepto' => $r['concepto'],
                         'descripcion' => $r['producto'] ?? $r['concepto'] ?? '',
                         'medida' => $r['medida'],
@@ -219,51 +208,6 @@ class DetalleOportunidadCsvSeeder extends Seeder
         }
 
         return (float) $value;
-    }
-
-    /**
-     * Match a product name from CSV against the product table.
-     * Uses exact match first, then bidirectional substring match for variations.
-     * Falls back to producto_id=1 when nothing matches (legacy BRP).
-     */
-    private function matchProductId(?string $productoName, array $productMap): int
-    {
-        if (! $productoName) return 1;
-
-        $normalized = $this->normalizeForMatch($productoName);
-
-        // Exact match
-        if (isset($productMap[$normalized])) {
-            return $productMap[$normalized]->id;
-        }
-
-        // Bidirectional substring match
-        foreach ($productMap as $key => $product) {
-            if (str_contains($normalized, $key) || str_contains($key, $normalized)) {
-                return $product->id;
-            }
-        }
-
-        return 1; // fallback BRP
-    }
-
-    /**
-     * Normalize a string for product matching: lowercase, strip accents, collapse spaces.
-     */
-    private function normalizeForMatch(string $value): string
-    {
-        $v = strtolower(trim($value));
-        $accents = [
-            'á' => 'a', 'é' => 'e', 'í' => 'i', 'ó' => 'o', 'ú' => 'u', 'ü' => 'u', 'ñ' => 'n',
-            'à' => 'a', 'è' => 'e', 'ì' => 'i', 'ò' => 'o', 'ù' => 'u',
-            'â' => 'a', 'ê' => 'e', 'î' => 'i', 'ô' => 'o', 'û' => 'u',
-            'ã' => 'a', 'õ' => 'o',
-            'Á' => 'a', 'É' => 'e', 'Í' => 'i', 'Ó' => 'o', 'Ú' => 'u', 'Ü' => 'u', 'Ñ' => 'n',
-        ];
-        $v = strtr($v, $accents);
-        $v = preg_replace('/[^\p{L}\p{N}\s]/u', ' ', $v);
-        $v = preg_replace('/\s+/', ' ', $v);
-        return trim($v);
     }
 
     private function cleanStr(?string $value, bool $truncateLong = true): ?string

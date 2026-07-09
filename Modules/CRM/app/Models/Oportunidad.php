@@ -34,6 +34,8 @@ class Oportunidad extends Model
         'forma_pago',
         'garantia',
         'linea_negocio',
+        'frecuencia',
+        'duracion_meses',
         'created_by',
         'updated_by',
     ];

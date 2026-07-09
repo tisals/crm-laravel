@@ -208,20 +208,55 @@ class GetDashboardUseCase
             $ventasPorMes[$this->mesNombre($m)] = (float) ($q->sum('detalle_oportunidad.vr_total') ?: 0);
         }
 
-        // --- LTV: facturación mensual promedio por cliente ---
-        // Por cada cliente: total ingresos / meses con ventas → promedio entre clientes
+        // --- LTV: valor estimado por cliente ---
+        // Si la oportunidad tiene frecuencia + duracion_meses:
+        //   valor_mensual = vr_total / divisor_frecuencia
+        //   ltv_cliente = valor_mensual * duracion_meses
+        // Sino (legacy): total ingresos / meses con ventas
         $clientesLtv = (clone $ventasQuery)
-            ->select('oportunidad.entidad_id', 'detalle_oportunidad.vr_total', 'oportunidad.fecha')
+            ->select(
+                'oportunidad.entidad_id',
+                'detalle_oportunidad.vr_total',
+                'oportunidad.fecha',
+                'oportunidad.frecuencia',
+                'oportunidad.duracion_meses'
+            )
             ->get()
             ->groupBy('entidad_id')
             ->map(function ($items) {
-                $total = (float) $items->sum('vr_total');
-                $months = $items->pluck('fecha')
+                $totalLtv = 0.0;
+                $count = 0;
+
+                foreach ($items as $item) {
+                    $vr = (float) $item->vr_total;
+                    if ($item->frecuencia && $item->duracion_meses) {
+                        // Tiene frecuencia + duración → calcular LTV estimado
+                        $divisor = match ($item->frecuencia) {
+                            'mensual' => 1,
+                            'trimestral' => 3,
+                            'semestral' => 6,
+                            'anual' => 12,
+                            default => 1,
+                        };
+                        $valorMensual = $vr / $divisor;
+                        $totalLtv += $valorMensual * (int) $item->duracion_meses;
+                        $count++;
+                    } else {
+                        // Legacy: sumar vr_total y al final dividir por meses
+                        $totalLtv += $vr;
+                        $count++;
+                    }
+                }
+
+                if ($count === 0) return 0;
+
+                // Si alguna fila usó legacy, dividimos por meses únicos
+                $legacyMonths = $items->pluck('fecha')
                     ->map(fn ($d) => date('Y-m', strtotime((string) $d)))
                     ->unique()
                     ->count();
 
-                return $months > 0 ? $total / $months : 0;
+                return $legacyMonths > 0 ? $totalLtv / $legacyMonths : $totalLtv;
             });
         $ltv = $clientesLtv->count() > 0
             ? round($clientesLtv->avg(), 2)
@@ -245,7 +280,7 @@ class GetDashboardUseCase
             ->toArray();
 
         return [
-            'ventas_mes' => $ventasMes,
+            'ventas_nuevas_mes' => $ventasMes,
             'ventas_por_mes' => $ventasPorMes,
             'ltv' => $ltv,
             'funnel' => $funnel,
@@ -316,30 +351,32 @@ class GetDashboardUseCase
         $year = $this->resolveYear($fechaInicio);
         $meses = $this->getMonthLabels();
 
-        $entidadesConvertidas = [];
-        $ventas = [];
+        $total = [];   // oportunidades creadas en el mes (cantidad)
+        $monto = [];   // suma vr_total de oportunidades creadas en el mes
 
         for ($m = 1; $m <= 12; $m++) {
-            // Bars: distinct entities with won opportunities this month
-            $eq = Oportunidad::query()
-                ->whereHas('pipelineEtapa', fn ($q) => $q->where('codigo', 'ACEPTADA'))
+            // Bars: oportunidades creadas en el mes (todas, no solo ganadas)
+            $oq = Oportunidad::query()
                 ->whereMonth('fecha', $m)
                 ->whereYear('fecha', $year);
-            $this->applyDateFilter($eq, $fechaInicio, $fechaFin, 'oportunidad.fecha');
-            $this->applyCommercialFilter($eq, $comercialId);
-            $entidadesConvertidas[] = (int) (clone $eq)->distinct()->count('entidad_id');
+            $this->applyDateFilter($oq, $fechaInicio, $fechaFin, 'oportunidad.fecha');
+            $this->applyCommercialFilter($oq, $comercialId);
+            $total[] = (int) (clone $oq)->count();
 
-            // Line: sales this month
-            $vq = $this->baseVentasQuery($comercialId, $fechaInicio, $fechaFin)
+            // Line: monto total de detalle de esas oportunidades
+            $dq = DetalleOportunidad::query()
+                ->join('oportunidad', 'detalle_oportunidad.oportunidad_id', '=', 'oportunidad.id')
                 ->whereMonth('oportunidad.fecha', $m)
                 ->whereYear('oportunidad.fecha', $year);
-            $ventas[] = (float) ($vq->sum('detalle_oportunidad.vr_total') ?: 0);
+            $this->applyDateFilter($dq, $fechaInicio, $fechaFin, 'oportunidad.fecha');
+            $this->applyCommercialFilter($dq, $comercialId);
+            $monto[] = (float) ($dq->sum('detalle_oportunidad.vr_total') ?: 0);
         }
 
         return [
             'meses' => $meses,
-            'entidades_convertidas' => $entidadesConvertidas,
-            'ventas' => $ventas,
+            'oportunidades_por_mes' => $total,
+            'montos_por_mes' => $monto,
         ];
     }
 
