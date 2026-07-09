@@ -125,6 +125,19 @@ class GetDashboardUseCase
             $oportunidadesMontoPorMes[$this->mesNombre($m)] = (float) ($q->sum('detalle_oportunidad.vr_total') ?: 0);
         }
 
+        // --- Ventas monto por mes (suma vr_total SOLO de oportunidades ACEPTADAS/GANADAS) ---
+        $ventasMontoPorMes = [];
+        for ($m = 1; $m <= 12; $m++) {
+            $q = DetalleOportunidad::query()
+                ->join('oportunidad', 'detalle_oportunidad.oportunidad_id', '=', 'oportunidad.id')
+                ->whereHas('oportunidad.pipelineEtapa', fn ($qq) => $qq->where('codigo', 'ACEPTADA'))
+                ->whereMonth('oportunidad.fecha', $m)
+                ->whereYear('oportunidad.fecha', $year);
+            $this->applyDateFilter($q, $fechaInicio, $fechaFin, 'oportunidad.fecha');
+            $this->applyCommercialFilter($q, $comercialId);
+            $ventasMontoPorMes[$this->mesNombre($m)] = (float) ($q->sum('detalle_oportunidad.vr_total') ?: 0);
+        }
+
         // --- Entidades por mes (creadas en el mes) ---
         $entidadesPorMes = [];
         for ($m = 1; $m <= 12; $m++) {
@@ -175,6 +188,7 @@ class GetDashboardUseCase
             'entidades_convertidas_mes' => $entidadesConvertidasMes,
             'oportunidades_por_mes' => $oportunidadesPorMes,
             'oportunidades_monto_por_mes' => $oportunidadesMontoPorMes,
+            'ventas_monto_por_mes' => $ventasMontoPorMes,
             'oportunidades_por_estado' => $oportunidadesPorEstado,
         ];
     }
