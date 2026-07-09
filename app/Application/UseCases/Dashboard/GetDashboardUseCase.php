@@ -96,6 +96,7 @@ class GetDashboardUseCase
 
         // --- Tasa de conversión ---
         $oppQuery = Oportunidad::query();
+        $this->applyActiveVersionFilter($oppQuery);
         $this->applyDateFilter($oppQuery, $fechaInicio, $fechaFin, 'oportunidad.fecha');
         $this->applyCommercialFilter($oppQuery, $comercialId);
         $totalOpp = (int) (clone $oppQuery)->count();
@@ -108,6 +109,7 @@ class GetDashboardUseCase
             $q = Oportunidad::query()
                 ->whereMonth('fecha', $m)
                 ->whereYear('fecha', $year);
+            $this->applyActiveVersionFilter($q);
             $this->applyDateFilter($q, $fechaInicio, $fechaFin, 'oportunidad.fecha');
             $this->applyCommercialFilter($q, $comercialId);
             $oportunidadesPorMes[$this->mesNombre($m)] = (int) $q->count();
@@ -120,6 +122,7 @@ class GetDashboardUseCase
                 ->join('oportunidad', 'detalle_oportunidad.oportunidad_id', '=', 'oportunidad.id')
                 ->whereMonth('oportunidad.fecha', $m)
                 ->whereYear('oportunidad.fecha', $year);
+            $this->applyActiveVersionFilter($q);
             $this->applyDateFilter($q, $fechaInicio, $fechaFin, 'oportunidad.fecha');
             $this->applyCommercialFilter($q, $comercialId);
             $oportunidadesMontoPorMes[$this->mesNombre($m)] = (float) ($q->sum('detalle_oportunidad.vr_total') ?: 0);
@@ -133,6 +136,7 @@ class GetDashboardUseCase
                 ->whereHas('oportunidad.pipelineEtapa', fn ($qq) => $qq->where('codigo', 'ACEPTADA'))
                 ->whereMonth('oportunidad.fecha', $m)
                 ->whereYear('oportunidad.fecha', $year);
+            $this->applyActiveVersionFilter($q);
             $this->applyDateFilter($q, $fechaInicio, $fechaFin, 'oportunidad.fecha');
             $this->applyCommercialFilter($q, $comercialId);
             $ventasMontoPorMes[$this->mesNombre($m)] = (float) ($q->sum('detalle_oportunidad.vr_total') ?: 0);
@@ -162,6 +166,7 @@ class GetDashboardUseCase
                 ->whereHas('pipelineEtapa', fn ($q) => $q->where('codigo', 'ACEPTADA'))
                 ->whereMonth('fecha', $m)
                 ->whereYear('fecha', $year);
+            $this->applyActiveVersionFilter($q);
             $this->applyDateFilter($q, $fechaInicio, $fechaFin, 'oportunidad.fecha');
             $this->applyCommercialFilter($q, $comercialId);
             $entidadesConvertidasMes[$this->mesNombre($m)] = (int) (clone $q)
@@ -171,6 +176,7 @@ class GetDashboardUseCase
 
         // --- Oportunidades por estado ---
         $oppEstadoQuery = Oportunidad::query();
+        $this->applyActiveVersionFilter($oppEstadoQuery);
         $this->applyDateFilter($oppEstadoQuery, $fechaInicio, $fechaFin, 'oportunidad.fecha');
         $this->applyCommercialFilter($oppEstadoQuery, $comercialId);
         $oportunidadesPorEstado = (clone $oppEstadoQuery)
@@ -240,6 +246,7 @@ class GetDashboardUseCase
         $funnelQuery = Oportunidad::query()
             ->join('pipeline_etapas', 'oportunidad.pipeline_etapa_id', '=', 'pipeline_etapas.id')
             ->leftJoin('detalle_oportunidad', 'oportunidad.id', '=', 'detalle_oportunidad.oportunidad_id');
+        $this->applyActiveVersionFilter($funnelQuery);
         $this->applyCommercialFilter($funnelQuery, $comercialId);
         $this->applyDateFilter($funnelQuery, $fechaInicio, $fechaFin, 'oportunidad.fecha');
         $funnel = (clone $funnelQuery)
@@ -272,6 +279,7 @@ class GetDashboardUseCase
             ->join('pipeline_etapas', 'oportunidad.pipeline_etapa_id', '=', 'pipeline_etapas.id')
             ->where('pipeline_etapas.codigo', 'ACEPTADA');
 
+        $this->applyActiveVersionFilter($query);
         $this->applyCommercialFilter($query, $comercialId);
         $this->applyDateFilter($query, $fechaInicio, $fechaFin, 'oportunidad.fecha');
 
@@ -333,6 +341,7 @@ class GetDashboardUseCase
             $eq = Oportunidad::query()
                 ->whereMonth('fecha', $m)
                 ->whereYear('fecha', $year);
+            $this->applyActiveVersionFilter($eq);
             $this->applyDateFilter($eq, $fechaInicio, $fechaFin, 'oportunidad.fecha');
             $this->applyCommercialFilter($eq, $comercialId);
             $prospectos[] = (int) (clone $eq)->distinct()->count('entidad_id');
@@ -342,6 +351,7 @@ class GetDashboardUseCase
                 ->join('oportunidad', 'detalle_oportunidad.oportunidad_id', '=', 'oportunidad.id')
                 ->whereMonth('oportunidad.fecha', $m)
                 ->whereYear('oportunidad.fecha', $year);
+            $this->applyActiveVersionFilter($mq);
             $this->applyDateFilter($mq, $fechaInicio, $fechaFin, 'oportunidad.fecha');
             $this->applyCommercialFilter($mq, $comercialId);
             $montos[] = (float) ($mq->sum('detalle_oportunidad.vr_total') ?: 0);
@@ -418,6 +428,20 @@ class GetDashboardUseCase
                 ->from('entidad_usuario')
                 ->where('usuario_id', $comercialId);
         });
+    }
+
+    /**
+     * Filter to only the latest, active version of each opportunity.
+     * Avoids double-counting superseded versions (e.g. ... v1, v2, v3)
+     * in sums, counts, and distinct aggregations across all dashboard
+     * sections.
+     *
+     * Use this on every Oportunidad::query() in this use case before
+     * applying date/commercial filters.
+     */
+    private function applyActiveVersionFilter($query, string $alias = 'oportunidad'): void
+    {
+        $query->where("{$alias}.is_latest", true);
     }
 
     /**

@@ -190,11 +190,18 @@ class OportunidadCsvImportUseCase
                     // --- 3. Oportunidad (upsert by codigo) ---
                     $oppData = $this->buildOpportunityData($row, $entidadId, $contactId);
 
+                    // Versioning: parse version suffix from codigo and persist it
+                    // so the post-processing step can mark superseded versions as Inactiva.
+                    [$parsedBase, $parsedVersion] = $this->parseCodigoVersion($codigo);
+                    $oppData['version'] = $parsedVersion;
+
                     $resolvedStage = $oppData['estado'];
                     $oppData['pipeline_id'] = $pipelineId;
                     $oppData['pipeline_etapa_id'] = $stageMap[$resolvedStage] ?? $stageMap['BORRADOR'];
                     $oppData['estado'] = 'Activa';
                     $oppData['is_latest'] = true;
+                    // Parent_id is set later by postProcessVersions() once all rows
+                    // are committed and we can identify the max version per base code.
 
                     $oppData['created_at'] = $timestamp;
                     $oppData['updated_at'] = $timestamp;
@@ -231,7 +238,102 @@ class OportunidadCsvImportUseCase
             }
         });
 
+        // After all rows are inserted, mark superseded versions as Inactiva
+        // and link their parent_id to the latest version. Idempotent — safe
+        // to run on every import() call.
+        $this->postProcessVersions();
+
         return $counters;
+    }
+
+    /**
+     * Parse a codigo into [base_code, version_number].
+     * Recognises suffixes ' v1', ' V2', ' v3' (case-insensitive, optional whitespace).
+     * "GC-01-2026-105"     → ["GC-01-2026-105", 0]
+     * "GC-01-2026-105 v2"  → ["GC-01-2026-105", 2]
+     * "GC-02-2021-709 V2"  → ["GC-02-2021-709", 2]
+     */
+    private function parseCodigoVersion(string $codigo): array
+    {
+        $trimmed = trim($codigo);
+        if (preg_match('/^(.+?)\s+[Vv](\d+)$/', $trimmed, $m)) {
+            return [trim($m[1]), (int) $m[2]];
+        }
+
+        return [$trimmed, 0];
+    }
+
+    /**
+     * After opportunity insert/upsert, scan the oportunidad table and resolve
+     * the version hierarchy:
+     *
+     *   - Group all rows by base codigo (codigo with version suffix stripped)
+     *   - For each group, the row with the highest version number becomes "Activa"
+     *     with is_latest=true and parent_id=NULL
+     *   - All other rows in the group become "Inactiva" with is_latest=false
+     *     and parent_id=<latest_id>
+     *
+     * Idempotent — safe to invoke multiple times; converges to the correct
+     * state regardless of call ordering.
+     */
+    public function postProcessVersions(): array
+    {
+        $rows = DB::table('oportunidad')
+            ->select('id', 'codigo')
+            ->orderBy('id')
+            ->get();
+
+        // Group by base codigo, picking max version
+        $groups = [];
+        foreach ($rows as $r) {
+            [$base, $ver] = $this->parseCodigoVersion($r->codigo);
+            $key = $base;
+            if (! isset($groups[$key])) {
+                $groups[$key] = ['base' => $base, 'rows' => []];
+            }
+            $groups[$key]['rows'][] = ['id' => $r->id, 'ver' => $ver];
+        }
+
+        $updatedActiva = 0;
+        $updatedInactiva = 0;
+        foreach ($groups as $g) {
+            // Find max version row
+            usort($g['rows'], fn ($a, $b) => $b['ver'] <=> $a['ver']);
+            $latest = $g['rows'][0];
+            $latestId = $latest['id'];
+
+            foreach ($g['rows'] as $r) {
+                if ($r['ver'] === $latest['ver']) {
+                    // Mark as latest + activa
+                    $count = DB::table('oportunidad')
+                        ->where('id', $r['id'])
+                        ->update([
+                            'version' => $r['ver'],
+                            'is_latest' => 1,
+                            'parent_id' => null,
+                            'estado' => 'Activa',
+                        ]);
+                    $updatedActiva += $count;
+                } else {
+                    // Mark as superseded
+                    $count = DB::table('oportunidad')
+                        ->where('id', $r['id'])
+                        ->update([
+                            'version' => $r['ver'],
+                            'is_latest' => 0,
+                            'parent_id' => $latestId,
+                            'estado' => 'Inactiva',
+                        ]);
+                    $updatedInactiva += $count;
+                }
+            }
+        }
+
+        return [
+            'groups' => count($groups),
+            'updated_activa' => $updatedActiva,
+            'updated_inactiva' => $updatedInactiva,
+        ];
     }
 
     // --- Entity resolution ---

@@ -168,4 +168,25 @@ class Oportunidad extends Model
     {
         return $this->hasMany(Seguimiento::class, 'oportunidad_id');
     }
+
+    /**
+     * Only the latest, active version of each opportunity.
+     * Used by dashboard aggregations, Kanban, list views, and reports.
+     * To see ALL versions (including inactive/superseded), use the
+     * detail view of an individual opportunity (which fetches by id).
+     */
+    public function scopeLatestActiva($query)
+    {
+        return $query->where('is_latest', true)->where('estado', 'Activa');
+    }
+
+    /**
+     * Alias for is_latest=true. Convenience for charts that need
+     * the latest version per opportunity family regardless of
+     * pipeline stage.
+     */
+    public function scopeLatest($query)
+    {
+        return $query->where('is_latest', true);
+    }
 }
