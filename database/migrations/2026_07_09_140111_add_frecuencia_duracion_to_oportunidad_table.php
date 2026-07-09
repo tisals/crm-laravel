@@ -12,9 +12,9 @@ return new class extends Migration
     public function up(): void
     {
         Schema::table('oportunidad', function (Blueprint $table) {
-            $table->string('frecuencia', 20)->nullable()->after('pipeline_etapa_id')
+            $table->string('frecuencia', 20)->nullable()
                 ->comment('Frecuencia de facturación: mensual, trimestral, semestral, anual');
-            $table->unsignedSmallInteger('duracion_meses')->nullable()->after('frecuencia')
+            $table->unsignedSmallInteger('duracion_meses')->nullable()
                 ->comment('Duración del contrato en meses (para cálculo de LTV)');
         });
     }
