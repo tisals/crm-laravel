@@ -42,10 +42,50 @@ class Seguimiento extends Model
         'hora' => 'string',
     ];
 
+    /**
+     * Campos planos derivados de relaciones para el frontend.
+     * El API serializa estos como flat fields (entidad_nombre, etc.)
+     * en vez de objetos anidados (entidad: {nombre}).
+     */
+    protected $appends = [
+        'entidad_nombre',
+        'contacto_nombre',
+        'oportunidad_codigo',
+        'autor_nombre',
+    ];
+
     protected static function newFactory(): SeguimientoFactory
     {
         return SeguimientoFactory::new();
     }
+
+    // ── Accesors (appends) ──────────────────────────────────
+
+    public function getEntidadNombreAttribute(): ?string
+    {
+        return $this->entidad?->nombre;
+    }
+
+    public function getContactoNombreAttribute(): ?string
+    {
+        $c = $this->contacto;
+        if (! $c) return null;
+        return trim("{$c->nombres} {$c->apellidos}");
+    }
+
+    public function getOportunidadCodigoAttribute(): ?string
+    {
+        return $this->oportunidad?->codigo;
+    }
+
+    public function getAutorNombreAttribute(): ?string
+    {
+        $a = $this->autor;
+        if (! $a) return null;
+        return $a->nombre;
+    }
+
+    // ── Relationships ───────────────────────────────────────
 
     public function oportunidad(): BelongsTo
     {
