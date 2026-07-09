@@ -335,8 +335,12 @@ class GetDashboardUseCase
 
         return [
             'meses' => $meses,
+            // new keys (descriptive)
             'prospectos' => $prospectos,
             'montos' => $montos,
+            // legacy aliases for backward compat
+            'entidades_convertidas' => $prospectos,
+            'ventas' => $montos,
         ];
     }
 

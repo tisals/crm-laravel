@@ -116,8 +116,8 @@ class DetalleOportunidadCsvSeeder extends Seeder
                     $insertBatch[] = [
                         'oportunidad_id' => $r['oportunidad_id'],
                         'producto_id' => max(1, (int) $r['cod']),
-                        'concepto' => $r['concepto'],
-                        'descripcion' => $r['producto'] ?? $r['concepto'] ?? '',
+                        'concepto' => $r['producto'] ?? $r['concepto'] ?? '',
+                        'descripcion' => $r['concepto'] ?? '',
                         'medida' => $r['medida'],
                         'cantidad' => $r['cantidad'],
                         'vr_unitario' => $r['vr_unitario'],
