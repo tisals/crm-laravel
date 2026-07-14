@@ -29,6 +29,7 @@ class OportunidadCsvImportUseCase
 
     /** @var array<string, Producto> [lowercase_name => Producto] */
     private array $productMap = [];
+    private array $productMapById = [];
 
     /** @var array<string, string> Maestro nombre → estado interno */
     private array $estadoMap = [];
@@ -76,8 +77,10 @@ class OportunidadCsvImportUseCase
     public function setProductMap(array $products): static
     {
         $this->productMap = [];
+        $this->productMapById = [];
         foreach ($products as $product) {
             $this->productMap[strtolower(trim($product->nombre))] = $product;
+            $this->productMapById[$product->id] = $product;
         }
 
         return $this;
@@ -672,16 +675,18 @@ class OportunidadCsvImportUseCase
 
         $tipoServicio = $this->cleanStr($row['tipo_de_servicio'] ?? '');
         $cantidadStr = $this->cleanStr($row['cantidad'] ?? '');
+        $cantidad = $cantidadStr ? max(1, (int) $cantidadStr) : 1;
 
         return [
             'producto_id' => $productoId,
             'concepto' => $producto?->nombre ?? $tipoServicio ?? 'Servicio',
             'descripcion' => $producto?->descripcion ?? $tipoServicio ?? '',
             'medida' => $producto?->medida ?? 'Und',
-            'cantidad' => $cantidadStr ? max(1, (int) $cantidadStr) : 1,
+            'cantidad' => $cantidad,
             'vr_unitario' => $vrUnitario,
             'iva' => $ivaAmount,
-            'vr_total' => $vrUnitario + $ivaAmount,
+            // Correct formula: (unit price × quantity) + IVA (per unit)
+            'vr_total' => ($vrUnitario * $cantidad) + $ivaAmount,
             'created_by' => $this->defaultUserId,
         ];
     }
@@ -689,33 +694,36 @@ class OportunidadCsvImportUseCase
     // --- Product matching ---
 
     /**
-     * Match product using the `productos` column (full description) from CSV,
-     * with accent-insensitive comparison and bidirectional substring matching.
+     * Match product using the `Cod` (numeric) column first, then exact name match.
+     *
+     * Returns null if no match — caller falls back to fallbackProduct.
+     * Bidirectional substring matching was REMOVED because it produced false
+     * positives (e.g., "Medición de iluminación" matched "Medición de temperatura").
      */
     private function matchProduct(array $row): ?Producto
     {
-        // Use 'productos' column (index 3, full product description) not 'tipo_de_servicio'
+        // Priority 1: trust the Cod column (numeric) when present — source of truth
+        $codStr = $this->cleanStr($row['cod'] ?? $row['Cod'] ?? '');
+        if ($codStr !== '' && ctype_digit($codStr)) {
+            $cod = (int) $codStr;
+            if (isset($this->productMapById[$cod])) {
+                return $this->productMapById[$cod];
+            }
+        }
+
+        // Priority 2: exact normalized match against `productos` column
         $productosCol = $this->cleanStr($row['productos'] ?? $row['tipo_de_servicio'] ?? '');
         if (! $productosCol) {
-            return $this->fallbackProduct;
+            return null;
         }
 
         $normSearch = $this->normalizeForMatch($productosCol);
 
-        // Exact match on normalized key
         if (isset($this->productMap[$normSearch])) {
             return $this->productMap[$normSearch];
         }
 
-        // Bidirectional substring match with accent normalization
-        foreach ($this->productMap as $name => $product) {
-            $normName = $this->normalizeForMatch($name);
-            if (str_contains($normName, $normSearch) || str_contains($normSearch, $normName)) {
-                return $product;
-            }
-        }
-
-        return $this->fallbackProduct;
+        return null;
     }
 
     /**
