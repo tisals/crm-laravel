@@ -91,3 +91,4 @@ if (!$dryRun && count($remaining)>0) {
     $pdo->prepare("DELETE FROM entidad WHERE id IN ($ph)")->execute($ids);
     echo "  → Borradas: ".count($ids)."\n";
 }
+
