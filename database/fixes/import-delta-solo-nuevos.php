@@ -171,20 +171,30 @@ while (($row = fgetcsv($fh, 0, ";")) !== false) {
         }
     }
 
-    // Create oportunidad
-    $valor = (float) preg_replace("/[^0-9.]/", "", $row[12] ?? "0");
+    // Create oportunidad (only basic fields; valor lives in detalle_oportunidad)
     $fechaRaw = trim($row[10] ?? '');
     $fechaSql = null;
     if (preg_match("/(\d{2})\/(\d{2})\/(\d{4})/", $fechaRaw, $m)) {
         $fechaSql = "{$m[3]}-{$m[2]}-{$m[1]}";
     }
+    $fuenteCanal = trim($row[4] ?? '');
+    $lineaNegocio = trim($row[20] ?? '');
+    $estado = "Activa";
 
     try {
         if (! $dryRun) {
             $pdo->prepare("
-                INSERT INTO oportunidad (codigo, entidad_id, valor_sin_iva, fecha, estado, is_latest, version, created_at, updated_at)
-                VALUES (?, ?, ?, ?, 'Activa', TRUE, 0, NOW(), NOW())
-            ")->execute([$codigo, $entityId, $valor, $fechaSql]);
+                INSERT INTO oportunidad (codigo, entidad_id, contacto_id, fecha, fuente_canal, estado, linea_negocio, is_latest, version, created_at, updated_at)
+                VALUES (?, ?, ?, ?, ?, ?, ?, TRUE, 0, NOW(), NOW())
+            ")->execute([
+                $codigo,
+                $entityId,
+                null,  // contacto_id se asigna via update abajo si se creó
+                $fechaSql,
+                $fuenteCanal ?: null,
+                $estado,
+                $lineaNegocio ?: null,
+            ]);
         }
         $stats["created"]++;
     } catch (Exception $e) {
