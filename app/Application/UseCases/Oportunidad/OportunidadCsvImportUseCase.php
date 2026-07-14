@@ -382,25 +382,21 @@ class OportunidadCsvImportUseCase
             $id = $this->lookupEntityId($cleanNit) ?? $this->lookupEntityId($nit);
         }
 
-        // Priority 3: Normalized name
+        // Priority 3: Normalized name (sin sufijos S.A.S, LTDA, etc.)
         if (! $id) {
             $normalized = $this->normalizeEntityName($empresaName);
             $id = $this->lookupEntityId($normalized);
         }
 
-        // Priority 4: Raw lower name
+        // Priority 4: Raw lower name (fallback más laxo)
         if (! $id) {
             $nameLower = strtolower($empresaName);
             $id = $this->lookupEntityId($nameLower);
         }
 
-        // Priority 5: Keyword fuzzy match (catches typos like "Activo" vs "Activos SAS")
-        if (! $id) {
-            $csvWords = $this->extractKeyWords($empresaName);
-            if (! empty($csvWords)) {
-                $id = $this->lookupEntityIdByKeywords($csvWords);
-            }
-        }
+        // REMOVED Priority 5: Keyword fuzzy match.
+        // Causaba matches espurios: "B2B TAX LEGAL" → matcheaba con "B2B Soluciones SAS"
+        // por la keyword "b2b". Si no hay match en prioridades 1-4, se CREA nueva entidad.
 
         // Check if it is client based on billing sheet
         $isClient = false;
@@ -492,63 +488,9 @@ class OportunidadCsvImportUseCase
             ?? null;
     }
 
-    /**
-     * Fuzzy keyword matching for entity names with typos/variations.
-     * "Activo" → matches "Activos SAS" → returns its ID.
-     */
-    private function lookupEntityIdByKeywords(array $csvWords): ?int
-    {
-        // Build [entity_id => [keyword, ...]] from the combined map
-        $byId = [];
-        foreach ($this->entityMap as $key => $id) {
-            $byId[$id][] = $key;
-        }
-        foreach ($this->newEntityMap as $key => $id) {
-            $byId[$id][] = $key;
-        }
-
-        $bestMatch = null;
-        $bestScore = 0;
-
-        foreach ($byId as $id => $keys) {
-            $score = 0;
-            foreach ($csvWords as $csvWord) {
-                foreach ($keys as $key) {
-                    if (str_contains($key, $csvWord) || str_contains($csvWord, $key)) {
-                        $score++;
-                        break;
-                    }
-                }
-            }
-            if ($score > $bestScore) {
-                $bestScore = $score;
-                $bestMatch = $id;
-            }
-        }
-
-        return $bestScore >= 1 ? $bestMatch : null;
-    }
-
-    /**
-     * Extract meaningful keywords from a company name.
-     * Copied from ContactoCsvSeeder pattern.
-     */
-    private function extractKeyWords(string $name): array
-    {
-        $name = strtolower($name);
-        $name = preg_replace('/\b(sas|s\.a\.s|s\.a\.|ltda|ltd|sa|en c|sociedad|anonima)\b/i', '', $name);
-        $parts = preg_split('/[^\p{L}\p{N}]+/u', $name);
-        $stopWords = ['y', 'de', 'del', 'la', 'los', 'las', 'el', 'en', 'para', 'con', 'sin', 'por'];
-        $words = [];
-        foreach ($parts as $part) {
-            $part = trim($part);
-            if (strlen($part) >= 3 && ! in_array($part, $stopWords)) {
-                $words[$part] = $part;
-            }
-        }
-
-        return array_values($words);
-    }
+    // REMOVED: lookupEntityIdByKeywords() and extractKeyWords() — caused
+    // false-positive matches via keyword substring (e.g. "B2B" matched "B2B Soluciones").
+    // Entity matching is now strict: domain → normalized name → raw lower name.
 
     // --- Contact resolution ---
 
