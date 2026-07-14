@@ -9,22 +9,19 @@
  *   - If codigo already exists in DB → SKIP (no duplicates)
  *   - If codigo appears multiple times in this CSV → only the first row is used
  *
+ * Idempotent:
+ *   - Contacto: if email exists at a different entity, UPDATE entidad_id
+ *   - Contacto: if email exists at the same entity, skip
+ *
  * Usage:
  *   php database/fixes/import-delta-solo-nuevos.php [--dry-run] [--csv=/path/to/oportunidades.csv]
- *
- * This script is designed for the transition period: the OLD import method
- * creates duplicates when CSV rows have different entities for the same codigo.
- * This DELTA import only processes codigos that don't exist yet, using the
- * canonical logic (1 codigo = 1 opp).
- *
- * To run safely: always start with --dry-run to see what would be created.
  */
-
-$dryRun = in_array("--dry-run", $argv);
-echo $dryRun ? "=== DRY-RUN ===\n" : "=== LIVE MODE ===\n";
 
 $pdo = new PDO("mysql:host=prod_mariabd;dbname=crm_prod", "sailusdb", getenv("DBPW"));
 $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+
+$dryRun = in_array("--dry-run", $argv);
+echo $dryRun ? "=== DRY-RUN ===\n" : "=== LIVE MODE ===\n";
 
 $csvPath = "/var/www/html/database/csv/oportunidades.csv";
 foreach ($argv as $a) {
@@ -36,7 +33,7 @@ if (!file_exists($csvPath)) {
 echo "CSV: $csvPath\n\n";
 
 // ─────────────────────────────────────────────────────────
-// Helper: normalize entity name (strip suffixes, accents, lower)
+// Helpers
 // ─────────────────────────────────────────────────────────
 function normalizeEntityName(string $name): string {
     $name = strtolower(trim($name));
@@ -51,9 +48,6 @@ function normalizeEntityName(string $name): string {
     return trim($name);
 }
 
-// ─────────────────────────────────────────────────────────
-// Helper: detect social network URL
-// ─────────────────────────────────────────────────────────
 function isSocialNetworkUrl(string $value): bool {
     $domains = ["facebook.com", "instagram.com", "linkedin.com", "twitter.com", "x.com", "tiktok.com"];
     foreach ($domains as $d) {
@@ -69,20 +63,22 @@ function parseDominio(string $raw): array {
 }
 
 // ─────────────────────────────────────────────────────────
-// Step 1: Load existing data from DB
+// Step 1: Load existing data
 // ─────────────────────────────────────────────────────────
+
+// Existing codigos → skip
 $existingCodigos = [];
 foreach ($pdo->query("SELECT codigo FROM oportunidad")->fetchAll(PDO::FETCH_ASSOC) as $r) {
     $existingCodigos[$r["codigo"]] = true;
 }
-echo "Existing codigos in DB: " . count($existingCodigos) . "\n";
 
+// Entities by domain
 $entitiesByDomain = [];
 foreach ($pdo->query("SELECT id, nombre, dominio FROM entidad WHERE dominio IS NOT NULL AND dominio != ''")->fetchAll(PDO::FETCH_ASSOC) as $e) {
-    $entitiesByDomain[$e["dominio"]] = $e;
+    $entitiesByDomain[$e["dominio"]] = $e["id"];
 }
-echo "Entities with domain: " . count($entitiesByDomain) . "\n";
 
+// Entities without domain by normalized name
 $entitiesByNormName = [];
 foreach ($pdo->query("SELECT id, nombre FROM entidad WHERE dominio IS NULL OR dominio = ''")->fetchAll(PDO::FETCH_ASSOC) as $e) {
     $norm = normalizeEntityName($e["nombre"]);
@@ -90,39 +86,40 @@ foreach ($pdo->query("SELECT id, nombre FROM entidad WHERE dominio IS NULL OR do
         $entitiesByNormName[$norm] = $e["id"];
     }
 }
-echo "Entities without domain: " . count($entitiesByNormName) . "\n";
 
+// Contactos by email (with their entidad_id)
 $contactosByEmail = [];
-foreach ($pdo->query("SELECT id, entidad_id, nombres FROM contacto WHERE email_contacto IS NOT NULL AND email_contacto != ''")->fetchAll(PDO::FETCH_ASSOC) as $c) {
+foreach ($pdo->query("SELECT id, entidad_id, email_contacto FROM contacto WHERE email_contacto IS NOT NULL AND email_contacto != ''")->fetchAll(PDO::FETCH_ASSOC) as $c) {
     $contactosByEmail[$c["email_contacto"]] = $c;
 }
+
+echo "Existing codigos in DB: " . count($existingCodigos) . "\n";
+echo "Entities with domain: " . count($entitiesByDomain) . "\n";
+echo "Entities without domain: " . count($entitiesByNormName) . "\n";
 echo "Contactos with email: " . count($contactosByEmail) . "\n\n";
 
 // ─────────────────────────────────────────────────────────
 // Step 2: Process CSV — only NEW codigos
 // ─────────────────────────────────────────────────────────
+
 $fh = fopen($csvPath, "r");
 $header = fgetcsv($fh, 0, ";");
 
 $stats = [
-    "created"             => 0,
-    "skipped_existing"    => 0,
-    "skipped_dup_in_csv"  => 0,
-    "failed"              => 0,
+    "created"           => 0,
+    "skipped_existing"  => 0,
+    "skipped_dup_in_csv"=> 0,
+    "failed"            => 0,
 ];
 $csvCodigosSeen = [];
 
 while (($row = fgetcsv($fh, 0, ";")) !== false) {
     if (count($row) < 14) continue;
 
-    $codigo     = trim($row[0]);
-    $empresa    = trim($row[13]);
-    $domRaw     = trim($row[14] ?? "");
-    $email      = trim($row[9] ?? "");
-    $nombre     = trim($row[5] ?? "");
-    $valor      = (float) preg_replace("/[^0-9.]/", "", $row[12] ?? "0");
-    $fecha      = trim($row[10] ?? "");
-    $lineaNeg   = trim($row[20] ?? "");  // Línea Negocio
+    $codigo     = trim($row[0] ?? '');
+    $empresa    = trim($row[13] ?? '');
+    $domRaw     = trim($row[14] ?? '');
+    $email      = trim($row[9] ?? '');
 
     if (! $codigo || ! $empresa) continue;
 
@@ -131,95 +128,102 @@ while (($row = fgetcsv($fh, 0, ";")) !== false) {
         $stats["skipped_existing"]++;
         continue;
     }
-    // Skip duplicates WITHIN the CSV (only first wins)
+    // Skip duplicates within this CSV
     if (isset($csvCodigosSeen[$codigo])) {
         $stats["skipped_dup_in_csv"]++;
         continue;
     }
     $csvCodigosSeen[$codigo] = true;
 
-    // Parse dominio
+    $empresaNorm = normalizeEntityName($empresa);
     $parsed = parseDominio($domRaw);
-    $dominio   = $parsed["dominio"];
+    $dominio = $parsed["dominio"];
     $redSocial = $parsed["red_social"];
 
-    // 1. Find or create entity
+    // Find or create entity
     $entityId = null;
     if ($dominio && isset($entitiesByDomain[$dominio])) {
-        $entityId = $entitiesByDomain[$dominio]["id"];
-    } else if (! $dominio) {
-        $norm = normalizeEntityName($empresa);
-        if (isset($entitiesByNormName[$norm])) {
-            $entityId = $entitiesByNormName[$norm];
-        }
+        $entityId = $entitiesByDomain[$dominio];
+    } elseif (! $dominio && isset($entitiesByNormName[$empresaNorm])) {
+        $entityId = $entitiesByNormName[$empresaNorm];
     }
 
     if (! $entityId) {
-        // Create new entity (canonical: 1 (empresa, dominio) = 1 entity)
-        if (! $dryRun) {
-            $stmt = $pdo->prepare("
-                INSERT INTO entidad (nombre, nombre_comercial, linea_negocio, dominio, red_social_url, estado, created_at, updated_at)
-                VALUES (?, ?, ?, ?, ?, 'Activo', NOW(), NOW())
-            ");
-            $stmt->execute([$empresa, $empresa, $lineaNeg, $dominio, $redSocial]);
-            $entityId = $pdo->lastInsertId();
-            // Update indexes for next rows
-            if ($dominio) {
-                $entitiesByDomain[$dominio] = ["id" => $entityId, "nombre" => $empresa, "dominio" => $dominio];
-            } else {
-                $entitiesByNormName[normalizeEntityName($empresa)] = $entityId;
-            }
-        } else {
-            $entityId = "NEW";
-        }
-    }
-
-    // 2. Find or create contacto (only if email)
-    $contactoId = null;
-    if ($email) {
-        if (isset($contactosByEmail[$email])) {
-            $existing = $contactosByEmail[$email];
-            $contactoId = $existing["id"];
-            // Re-asign if needed
-            if (! $dryRun && $entityId !== "NEW" && $existing["entidad_id"] != $entityId) {
-                $pdo->prepare("UPDATE contacto SET entidad_id = ?, updated_at = NOW() WHERE id = ?")
-                    ->execute([$entityId, $contactoId]);
-            }
-        } else {
-            if (! $dryRun) {
-                $stmt = $pdo->prepare("
-                    INSERT INTO contacto (entidad_id, nombres, apellidos, email_contacto, estado, created_at, updated_at)
-                    VALUES (?, ?, ' ', ?, 'Activo', NOW(), NOW())
-                ");
-                $stmt->execute([is_numeric($entityId) ? $entityId : 0, $nombre ?: "Sin nombre", $email]);
-                $contactoId = $pdo->lastInsertId();
-                $contactosByEmail[$email] = ["id" => $contactoId, "entidad_id" => $entityId, "nombres" => $nombre];
-            } else {
-                $contactoId = "NEW";
-            }
-        }
-    }
-
-    // 3. Create oportunidad
-    if (! $dryRun && is_numeric($entityId)) {
         try {
-            // Parse fecha (DD/MM/YYYY)
-            $fechaSql = null;
-            if (preg_match("/(\d{2})\/(\d{2})\/(\d{4})/", $fecha, $m)) {
-                $fechaSql = "{$m[3]}-{$m[2]}-{$m[1]}";
+            if (! $dryRun) {
+                $linea = trim($row[20] ?? '');
+                $stmt = $pdo->prepare("
+                    INSERT INTO entidad (nombre, nombre_comercial, linea_negocio, dominio, red_social_url, estado, created_at, updated_at)
+                    VALUES (?, ?, ?, ?, ?, 'Activo', NOW(), NOW())
+                ");
+                $stmt->execute([$empresa, $empresa, $linea, $dominio, $redSocial]);
+                $entityId = $pdo->lastInsertId();
+                if ($dominio) {
+                    $entitiesByDomain[$dominio] = $entityId;
+                } else {
+                    $entitiesByNormName[$empresaNorm] = $entityId;
+                }
             }
-            $stmt = $pdo->prepare("
-                INSERT INTO oportunidad (codigo, entidad_id, valor_sin_iva, fecha, estado, is_latest, version, created_at, updated_at)
-                VALUES (?, ?, ?, ?, 'Activa', TRUE, 0, NOW(), NOW())
-            ");
-            $stmt->execute([$codigo, $entityId, $valor, $fechaSql]);
-            $stats["created"]++;
         } catch (Exception $e) {
             $stats["failed"]++;
-            echo "  FAIL: {$codigo} → " . $e->getMessage() . "\n";
+            echo "  FAIL creating entity for {$codigo}: " . $e->getMessage() . "\n";
+            continue;
         }
-    } else if ($dryRun) {
+    }
+
+    // Create oportunidad
+    $valor = (float) preg_replace("/[^0-9.]/", "", $row[12] ?? "0");
+    $fechaRaw = trim($row[10] ?? '');
+    $fechaSql = null;
+    if (preg_match("/(\d{2})\/(\d{2})\/(\d{4})/", $fechaRaw, $m)) {
+        $fechaSql = "{$m[3]}-{$m[2]}-{$m[1]}";
+    }
+
+    try {
+        if (! $dryRun) {
+            $pdo->prepare("
+                INSERT INTO oportunidad (codigo, entidad_id, valor_sin_iva, fecha, estado, is_latest, version, created_at, updated_at)
+                VALUES (?, ?, ?, ?, 'Activa', TRUE, 0, NOW(), NOW())
+            ")->execute([$codigo, $entityId, $valor, $fechaSql]);
+        }
         $stats["created"]++;
+    } catch (Exception $e) {
+        $stats["failed"]++;
+        echo "  FAIL creating opp {$codigo}: " . $e->getMessage() . "\n";
+        continue;
+    }
+
+    // Handle contacto (idempotent)
+    if ($email !== "" && ! $dryRun) {
+        $existing = $contactosByEmail[$email] ?? null;
+        $nombre = trim(explode("\n", trim($row[5] ?? ''))[0] ?? '');
+
+        if ($existing) {
+            // Contacto exists — update entity if different
+            if ((int) $existing["entidad_id"] !== (int) $entityId) {
+                try {
+                    $pdo->prepare("UPDATE contacto SET entidad_id = ?, updated_at = NOW() WHERE id = ?")
+                        ->execute([$entityId, $existing["id"]]);
+                    $contactosByEmail[$email]["entidad_id"] = $entityId;
+                } catch (Exception $e) {
+                    // FK or other constraint — log and skip
+                    echo "  SKIP contacto update {$email}: " . $e->getMessage() . "\n";
+                }
+            }
+        } else {
+            try {
+                $pdo->prepare("
+                    INSERT INTO contacto (entidad_id, nombres, apellidos, email_contacto, estado, created_at, updated_at)
+                    VALUES (?, ?, ' ', ?, 'Activo', NOW(), NOW())
+                ")->execute([$entityId, $nombre ?: "Sin nombre", $email]);
+                $contactosByEmail[$email] = [
+                    "id" => $pdo->lastInsertId(),
+                    "entidad_id" => $entityId,
+                ];
+            } catch (Exception $e) {
+                echo "  SKIP contacto insert {$email}: " . $e->getMessage() . "\n";
+            }
+        }
     }
 }
 fclose($fh);
