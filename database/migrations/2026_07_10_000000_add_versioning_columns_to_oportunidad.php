@@ -19,19 +19,29 @@ return new class extends Migration
 {
     public function up(): void
     {
-        Schema::table('oportunidad', function (Blueprint $table) {
+        $columns = collect(Schema::getConnection()->select(
+            "SHOW COLUMNS FROM oportunidad"
+        ))->pluck('Field')->all();
+
+        Schema::table('oportunidad', function (Blueprint $table) use ($columns) {
             // parent_id points to the latest version's id for superseded rows
-            $table->foreignId('parent_id')
-                ->nullable()
-                ->after('pipeline_etapa_id')
-                ->constrained('oportunidad')
-                ->onDelete('set null');
+            if (! in_array('parent_id', $columns)) {
+                $table->foreignId('parent_id')
+                    ->nullable()
+                    ->after('pipeline_etapa_id')
+                    ->constrained('oportunidad')
+                    ->onDelete('set null');
+            }
 
             // version: 0 for base (no suffix), N for "vN" suffix
-            $table->integer('version')->default(0)->after('parent_id');
+            if (! in_array('version', $columns)) {
+                $table->integer('version')->default(0)->after('parent_id');
+            }
 
             // is_latest: true only for the highest version of each opportunity family
-            $table->boolean('is_latest')->default(true)->after('version');
+            if (! in_array('is_latest', $columns)) {
+                $table->boolean('is_latest')->default(true)->after('version');
+            }
         });
     }
 
