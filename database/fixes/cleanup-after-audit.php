@@ -2,15 +2,22 @@
 /**
  * Cleanup script for data integrity issues found by audit-data-integrity.php
  *
- * Priority 1: Reasign 7 opps with wrong entity (vs CSV)
- * Priority 2: Move contactos from Tecnoinnsoft catch-all to correct entities
- * Priority 3: Delete confirmed shells (0 opps, 0 contactos, dominio NULL)
+ * Improved algorithm (v2):
+ *   1. Reasign opps to CSV canonical entity (normalized match)
+ *   2. Move ALL opps from wrong entities when consolidating
+ *   3. Delete EMPTY similar entities (typos, duplicates)
+ *   4. Don't create new entity if current has data
+ *   5. Delete empty current entity only if no similar match exists
  *
  * Usage:
  *   php database/fixes/cleanup-after-audit.php [--dry-run] [--apply]
  */
 
-$pdo = new PDO("mysql:host=prod_mariabd;dbname=crm_prod", "sailusdb", getenv("DBPW"));
+$pdo = new PDO(
+    "mysql:host=" . (getenv("DB_HOST") ?: "prod_mariabd") . ";dbname=" . (getenv("DB_NAME") ?: "crm_prod"),
+    getenv("DB_USER") ?: "sailusdb",
+    getenv("DBPW")
+);
 $pdo->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
 
 $apply = in_array("--apply", $argv);
@@ -30,16 +37,45 @@ function normalizeEntityName(string $name): string {
     return trim($name);
 }
 
+/**
+ * Find entities with normalized name similar to $csvName.
+ * Returns entities that have BOTH: lower(name) match OR lower(normalized) match.
+ * Excludes the entity with id $excludeId.
+ */
+function findSimilarEntities(PDO $pdo, string $csvName, string $csvNorm, int $excludeId): array {
+    $lowerName = strtolower($csvName);
+    $stmt = $pdo->prepare("
+        SELECT id, nombre,
+               (SELECT COUNT(*) FROM oportunidad WHERE entidad_id = e.id) AS opps,
+               (SELECT COUNT(*) FROM contacto WHERE entidad_id = e.id) AS contactos
+        FROM entidad e
+        WHERE (LOWER(TRIM(nombre)) = ?
+            OR LOWER(TRIM(REGEXP_REPLACE(nombre, '\\\\s+(s\\\\.?a\\\\.?s\\\\.?|ltda|cia|spa)\\\\\\\\s*\\\\.?$', ''))) = ?)
+          AND e.id != ?
+    ");
+    $stmt->execute([$lowerName, $csvNorm, $excludeId]);
+    return $stmt->fetchAll(PDO::FETCH_ASSOC);
+}
+
+/**
+ * Move ALL opps from $fromEntityId to $toEntityId.
+ */
+function moveAllOpps(PDO $pdo, int $fromEntityId, int $toEntityId): int {
+    if ($fromEntityId === $toEntityId) return 0;
+    $stmt = $pdo->prepare("UPDATE oportunidad SET entidad_id = ?, updated_at = NOW() WHERE entidad_id = ?");
+    $stmt->execute([$toEntityId, $fromEntityId]);
+    return $stmt->rowCount();
+}
+
 // ─────────────────────────────────────────────────────────
-// STEP 1: Reasign 7 opps with wrong entity (vs CSV)
+// STEP 1: Reasign 311 opps with wrong entity (vs CSV)
 // ─────────────────────────────────────────────────────────
-echo "=== STEP 1: Reasign 7 opps with wrong entity ===\n\n";
+echo "=== STEP 1: Reasign opps with wrong entity ===\n\n";
 
 $csvPath = "/var/www/html/database/csv/oportunidades.csv";
 if (! file_exists($csvPath)) {
     echo "WARNING: CSV not found at $csvPath, skipping step 1\n\n";
 } else {
-    // Build canonical map: codigo -> normalized empresa name
     $csvByCodigo = [];
     $fh = fopen($csvPath, "r");
     $header = fgetcsv($fh, 0, ";");
@@ -54,73 +90,115 @@ if (! file_exists($csvPath)) {
     }
     fclose($fh);
 
-    // Find opps with mismatched entity name vs CSV
-    $stmt = $pdo->query("
-        SELECT o.id, o.codigo, o.entidad_id, e.nombre AS entidad_actual
-        FROM oportunidad o
-        JOIN entidad e ON o.entidad_id = e.id
-    ");
-    $mismatched = [];
-    foreach ($stmt as $r) {
-        if (! isset($csvByCodigo[$r["codigo"]])) continue;
-        $csvName = normalizeEntityName($csvByCodigo[$r["codigo"]]);
-        $dbName = normalizeEntityName($r["entidad_actual"]);
-        if ($csvName !== $dbName) {
-            $mismatched[] = $r;
-        }
-    }
+    // Find all opps in DB
+    $stmt = $pdo->query("SELECT o.id, o.codigo, o.entidad_id, e.nombre AS entidad_actual FROM oportunidad o JOIN entidad e ON o.entidad_id = e.id");
+    $allOpps = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-    if (empty($mismatched)) {
-        echo "(no mismatches found)\n\n";
-    } else {
-        $fixed = 0;
-        foreach ($mismatched as $r) {
-            $codigo = $r["codigo"];
-            $csvEmpr = $csvByCodigo[$codigo];
+    $moved = 0;
+    $consolidated = []; // entities deleted
+    $reassignedOps = []; // ops reasigned
 
-            // Find or create the canonical entity
-            $csvNorm = normalizeEntityName($csvEmpr);
-            $existing = $pdo->prepare("SELECT id FROM entidad WHERE LOWER(TRIM(nombre)) = ? OR LOWER(TRIM(REGEXP_REPLACE(nombre, '\\\\s+(s\\\\.?a\\\\.?s\\\\.?|ltda|cia|spa)\\\\\\\\s*\\\\.?$', ''))) = ? LIMIT 1");
-            $existing->execute([strtolower($csvEmpr), $csvNorm]);
-            $targetId = $existing->fetchColumn();
+    foreach ($allOpps as $r) {
+        $codigo = $r["codigo"];
+        if (! isset($csvByCodigo[$codigo])) continue;
+        $csvEmpr = $csvByCodigo[$codigo];
+        $csvNorm = normalizeEntityName($csvEmpr);
+        $dbNorm = normalizeEntityName($r["entidad_actual"]);
 
-            if (! $targetId) {
-                // Create new entity
-                if (! $dryRun) {
-                    $insert = $pdo->prepare("
-                        INSERT INTO entidad (nombre, nombre_comercial, estado, created_at, updated_at)
-                        VALUES (?, ?, 'Activo', NOW(), NOW())
-                    ");
-                    $insert->execute([$csvEmpr, $csvEmpr]);
-                    $targetId = $pdo->lastInsertId();
-                } else {
-                    $targetId = "NEW";
+        // If normalized names match, the opp is already correctly assigned
+        if ($csvNorm === $dbNorm) continue;
+
+        // Find similar entities (excluding current)
+        $similars = findSimilarEntities($pdo, $csvEmpr, $csvNorm, $r["entidad_id"]);
+
+        // Decide target entity
+        $targetId = null;
+        $deleteEntityIds = [];
+
+        if (!empty($similars)) {
+            // Pick canonical: prefer exact name match, then entity with most data
+            usort($similars, function ($a, $b) {
+                $aScore = (strtolower(trim($a["nombre"])) === strtolower(trim($GLOBALS["_csvName"] ?? "")) ? 100 : 0)
+                    + ($a["opps"] + $a["contactos"]);
+                $bScore = (strtolower(trim($b["nombre"])) === strtolower(trim($GLOBALS["_csvName"] ?? "")) ? 100 : 0)
+                    + ($b["opps"] + $b["contactos"]);
+                return $bScore <=> $aScore;
+            });
+            $canonical = $similars[0];
+            $targetId = $canonical["id"];
+
+            // Move ALL opps from other similar entities to canonical
+            // (handles case where wrong entity has multiple opps to consolidate)
+            foreach (array_slice($similars, 1) as $other) {
+                $movedCount = moveAllOpps($pdo, $other["id"], $targetId);
+                if ($movedCount > 0) {
+                    $reassignedOps[] = "{$movedCount} opps from '{$other['nombre']}' → '{$canonical['nombre']}'";
+                }
+                // If other is empty (0 opps, 0 contactos), delete it
+                if ($other["opps"] == 0 && $other["contactos"] == 0) {
+                    if (! $dryRun) {
+                        $pdo->prepare("DELETE FROM entidad WHERE id = ?")->execute([$other["id"]]);
+                    }
+                    $consolidated[] = "{$other['nombre']} (id {$other['id']})";
                 }
             }
+        } else {
+            // No similar entity. Check if current entity is empty
+            $current = $pdo->prepare("
+                SELECT
+                    (SELECT COUNT(*) FROM oportunidad WHERE entidad_id = ?) AS opps,
+                    (SELECT COUNT(*) FROM contacto WHERE entidad_id = ?) AS contactos
+            ");
+            $current->execute([$r["entidad_id"], $r["entidad_id"]]);
+            $curr = $current->fetch(PDO::FETCH_ASSOC);
 
-            $opStr = $r["id"];
-            $oldStr = $r["entidad_actual"];
-            if ($dryRun) {
-                echo "  [DRY] opp#{$opStr} {$codigo}: {$oldStr} → {$csvEmpr} (new id: {$targetId})\n";
-            } else {
-                $pdo->prepare("UPDATE oportunidad SET entidad_id = ?, updated_at = NOW() WHERE id = ?")
-                    ->execute([$targetId, $opStr]);
-                echo "  opp#{$opStr} {$codigo}: {$oldStr} → {$csvEmpr} (id {$targetId})\n";
+            if ($curr["opps"] == 0 && $curr["contactos"] == 0) {
+                // Current is empty, delete it and create new
+                if (! $dryRun) {
+                    $pdo->prepare("DELETE FROM entidad WHERE id = ?")->execute([$r["entidad_id"]]);
+                }
+                $consolidated[] = "{$r['entidad_actual']} (id {$r['entidad_id']})";
             }
-            $fixed++;
+
+            // Create new entity with canonical name
+            if (! $dryRun) {
+                $insert = $pdo->prepare("
+                    INSERT INTO entidad (nombre, nombre_comercial, estado, created_at, updated_at)
+                    VALUES (?, ?, 'Activo', NOW(), NOW())
+                ");
+                $insert->execute([$csvEmpr, $csvEmpr]);
+                $targetId = $pdo->lastInsertId();
+            } else {
+                $targetId = "NEW";
+            }
         }
-        echo "\n  Total: $fixed opps reasignadas\n\n";
+
+        // Reasign this opp
+        if ($dryRun) {
+            $newName = $similars[0]["nombre"] ?? $csvEmpr;
+            echo "  [DRY] opp#{$r['id']} {$codigo}: '{$r['entidad_actual']}' (id {$r['entidad_id']}) → " . ($targetId === "NEW" ? "'{$newName}' (new)" : "'{$newName}' (id {$targetId})") . "\n";
+        } else {
+            $pdo->prepare("UPDATE oportunidad SET entidad_id = ?, updated_at = NOW() WHERE id = ?")
+                ->execute([$targetId, $r["id"]]);
+        }
+        $moved++;
     }
+
+    echo "\n  Total opps reasignadas: $moved\n";
+    echo "  Entidades consolidadas/eliminadas: " . count($consolidated) . "\n";
+    if (! empty($consolidated)) {
+        echo "    - " . implode("\n    - ", array_slice($consolidated, 0, 20)) . "\n";
+        if (count($consolidated) > 20) echo "    ... y " . (count($consolidated) - 20) . " más\n";
+    }
+    echo "\n";
 }
 
 // ─────────────────────────────────────────────────────────
-// STEP 2: Move contactos from Tecnoinnsoft (id 128) to correct entities
+// STEP 2: Move Tecnoinnsoft catch-all contactos
 // ─────────────────────────────────────────────────────────
 echo "=== STEP 2: Move Tecnoinnsoft catch-all contactos ===\n\n";
 
 $tecnoinnsoftId = 128;
-
-// Find emails @X in Tecnoinnsoft and target entity X
 $rows = $pdo->query("
     SELECT c.id, c.email_contacto, SUBSTRING_INDEX(c.email_contacto, '@', -1) AS email_domain
     FROM contacto c
@@ -140,8 +218,6 @@ if (empty($rows)) {
     $moved = 0;
     foreach ($rows as $r) {
         $domain = $r["email_domain"];
-
-        // Find target entity with matching dominio
         $target = $pdo->prepare("SELECT id, nombre FROM entidad WHERE dominio = ? LIMIT 1");
         $target->execute([$domain]);
         $targetEntity = $target->fetch(PDO::FETCH_ASSOC);
@@ -152,14 +228,13 @@ if (empty($rows)) {
         }
 
         $targetId = $targetEntity["id"];
-
         if ($dryRun) {
-            echo "  [DRY] contacto[{$r['id']}] {$r['email_contacto']}: Tecnoinnsoft → {$targetEntity['nombre']} (id {$targetId})\n";
+            echo "  [DRY] contacto[{$r['id']}] {$r['email_contacto']}: Tecnoinnsoft → '{$targetEntity['nombre']}' (id {$targetId})\n";
         } else {
             try {
                 $pdo->prepare("UPDATE contacto SET entidad_id = ?, updated_at = NOW() WHERE id = ?")
                     ->execute([$targetId, $r["id"]]);
-                echo "  contacto[{$r['id']}] {$r['email_contacto']}: Tecnoinnsoft → {$targetEntity['nombre']} (id {$targetId})\n";
+                echo "  contacto[{$r['id']}] {$r['email_contacto']}: Tecnoinnsoft → '{$targetEntity['nombre']}' (id {$targetId})\n";
                 $moved++;
             } catch (Exception $e) {
                 echo "  FAIL contacto[{$r['id']}]: " . $e->getMessage() . "\n";
@@ -170,7 +245,7 @@ if (empty($rows)) {
 }
 
 // ─────────────────────────────────────────────────────────
-// STEP 3: Delete confirmed shells (0 opps, 0 contactos, dominio NULL)
+// STEP 3: Delete remaining confirmed shells
 // ─────────────────────────────────────────────────────────
 echo "=== STEP 3: Delete confirmed shells ===\n\n";
 
@@ -188,8 +263,7 @@ if (empty($shells)) {
     echo "Shells encontradas: " . count($shells) . "\n";
     if ($dryRun) {
         echo "(no se borra nada en dry-run)\n";
-        // List first 20
-        foreach (array_slice($shells, 0, 20) as $s) {
+        foreach (array_slice($shells, 0, 30) as $s) {
             echo "  [{$s['id']}] {$s['nombre']}\n";
         }
     } else {
