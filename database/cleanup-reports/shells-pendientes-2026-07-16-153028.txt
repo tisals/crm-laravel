@@ -1,0 +1,2809 @@
+═══════════════════════════════════════════════════════════════
+  REPORTE DE ENTIDADES CON DOMINIO NULL (post-cleanup)
+═══════════════════════════════════════════════════════════════
+
+Generado: 2026-07-16 15:30:28
+Base de datos: tecnoinnsoft_crm
+
+───────────────────────────────────────────────────────────────
+RESUMEN
+───────────────────────────────────────────────────────────────
+Total entidades con dominio NULL (que NO son shells vacíos): 698
+  - Con NIT (candidatas a inferir dominio): 45
+  - Con al menos 1 oportunidad: 661
+  - Con al menos 1 contacto: 686
+
+NOTA: Estas entidades NO son shells vacíos. Tienen datos (opps y/o
+contactos) pero les falta el campo `dominio`. El script cleanup-v3
+no las elimina porque perderíamos datos. Requieren:
+  1. Asignación manual de dominio (o inferencia via NIT/email)
+  2. O consolidación si están duplicadas con otra entidad
+
+───────────────────────────────────────────────────────────────
+DETALLE COMPLETO (ordenado por # contactos DESC)
+───────────────────────────────────────────────────────────────
+
+[68] HIPRA COLOMBIA SAS
+    opps=0 contactos=9 NIT=900801391 estado=Cliente linea=(NULL)
+    emails: agroplast.sas@hotmail.com, anggie.c.2470@hotmail.com, geraldine.garzon@hotmail.com, laurenfranco1236@hotmail.com, LISDAPAPRI@HOTMAIL.COM, Ruedaaliss18@hotmail.com, sanmar_89@hotmail.com, simarelec@hotmail.com, sstlondonosepulveda@hotmail.com
+
+[98] MICROSITIOS SAS
+    opps=0 contactos=7 NIT=830083023 estado=Cliente linea=(NULL)
+    emails: analsitacompras@mueeusme.co, camila.rodriguez@mrm.com, directorasig@mogotax.co, lidergestionintegral@grupomilagros.com, manieto@mktteam.com, yaguirre@mintransporte.gov.co, Zharickwilchez@gmail.com
+
+[62] GENUINE TECH SAS
+    opps=0 contactos=6 NIT=901588265 estado=Cliente linea=(NULL)
+    emails: administracion@gonzalezabogados.org, ayazo@geoandina.net, darly.prada@genuinelab.us, HSEQ@G-DECORACION.COM, rdiaz@greensqa.com, seguridadysalud@grasslandsas.com
+
+[55] FET GROUP SAS
+    opps=3 contactos=4 NIT=901286797 estado=Cliente linea=(NULL)
+    emails: asistenteseguridadsalud@gmail.com, blankisvelez@gmail.com, psicoleidydt@gmail.com, sst-desarrollo@ficmac.org
+
+[15] BBC HOLDING SAS
+    opps=1 contactos=4 NIT=901139486 estado=Cliente linea=(NULL)
+    emails: administrativa@bera-group.com, blankisvelez@gmail.com, sgpesvbeta@gmail.com, sgsst.bbcholding@gmail.com
+
+[3] ALVEAR ESCOBAR ASOCIADOS S.A.S
+    opps=0 contactos=4 NIT=900694193 estado=Cliente linea=(NULL)
+    emails: administrativo@anker.com.co, Analista.Compras1@americasbps.com, analista.compras2@americasbps.com, ansgsst2023@gmail.com
+
+[66] HACIK SOLUCIONES INTEGRALES DE INGENIERIA SAS
+    opps=0 contactos=4 NIT=800054984 estado=Cliente linea=(NULL)
+    emails: camila.rodriguez@mrm.com, supervisor.procesos@hfdotaciones.com, tecnico2@haumaru.com.co, yuly.silva@hias.org
+
+[92] LUCTA GRANCOLOMBIA SAS
+    opps=0 contactos=4 NIT=860001999 estado=Cliente linea=(NULL)
+    emails: chernandez@maderasyterminados.com.co, seguridadybienestar23@gmail.com, talentohumano@lupajuridica.co, talentohumanomanarfruit@gmail.com
+
+[102] Organizaciones Oliver SAS
+    opps=0 contactos=4 NIT=900335662 estado=Cliente linea=(NULL)
+    emails: comercialgeco@outlook.com, Jgomez@originit.com.co, pavaro210@outlook.com, yucadavid@outlook.com
+
+[106] PILYQ COLOMBIA S.A.S.
+    opps=0 contactos=4 NIT=900579862 estado=Cliente linea=(NULL)
+    emails: calidad@presservac.com.co, compras.johanalopez@plaspel.co, deisy.moncaleano@polinter.com.co, sehila.leon@polinter.com.co
+
+[119] SERVIPETROLEOS S.A.S
+    opps=0 contactos=4 NIT=800054239 estado=Cliente linea=(NULL)
+    emails: coordinadoradministrativo@sgvc.co, nbohorquez@sofistic.com, paola.ciprian@servitel.co, solucionesenriesgoslaborales@gmail.com
+
+[1864] INVERSIONES LONDOÑO SEPULVEDA
+    opps=3 contactos=3 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: Lidagonza@hotmail.com, sstinversioneslondonosepulveda@hotmail.com, sstlondonosepulveda@hotmail.com
+
+[56] FIDEICOMISOS SOCIEDAD FIDUCIARIA DE OCCIDENTE SA
+    opps=0 contactos=3 NIT=830054076 estado=Cliente linea=(NULL)
+    emails: auxiliartesoreria@fonclarocorporativo.com.co, eaguilar@fidubogota.com, recursoshumanos@floresdelacampina.com
+
+[64] GRUPO S I E SAS
+    opps=0 contactos=3 NIT=900423678 estado=Cliente linea=(NULL)
+    emails: auxiliar.ssta@gsasas.com, cristian.cagua@grupostt.com, l.ibarra@gsh.com.co
+
+[76] INVERSIONES FRANQUIHER S A S
+    opps=0 contactos=3 NIT=900022013 estado=Cliente linea=(NULL)
+    emails: asistenteseguridadsalud@gmail.com, psicoleidydt@gmail.com, sstinversioneslondonosepulveda@hotmail.com
+
+[101] NAVAR SOLUCIONES S.A.S
+    opps=0 contactos=3 NIT=901070126 estado=Cliente linea=(NULL)
+    emails: Administrativo@hrupoempresarialoliver.com, leidy.cardenas@nearsol.com, oscar.tovar@opusingenieria.com
+
+[116] ROYCO SOLUCIONES SAS
+    opps=0 contactos=3 NIT=901342609 estado=Cliente linea=(NULL)
+    emails: marcela.rodriguez@rsmco.co, patricia.llerena@s2ringenieros.com, programacionrp4@rpservices.com.co
+
+[123] SOLUCIONES INDUSTRIALES MONTERREY SAS
+    opps=0 contactos=3 NIT=901000847 estado=Cliente linea=(NULL)
+    emails: asistentegerencia@soplascol.com, solutioncopy.sst2@gmail.com, sst.sproyectos.sas@gmail.com
+
+[1126] CONSTRUCTORA SARA LTDA
+    opps=5 contactos=2 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: administracion@constructorasara.com, constructorasara.admon@hotmail.com
+
+[756] PROYECTOS HG S.A.S
+    opps=4 contactos=2 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: MULLERSISOMA@GMAIL.COM, sst@hgproyectos.com
+
+[235] FLORES PRISMA
+    opps=3 contactos=2 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: marcelaruiz522@gmail.com, saludocupacional@floresprisma.com
+
+[608] MANUFACTURAS REYMON
+    opps=3 contactos=2 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: ambientalreymon@gmail.com, SALUDOCUPACIONAL@REYMON.COM.CO
+
+[1017] BIOPLAST
+    opps=2 contactos=2 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: ltdiazv9608@gmail.com, talentohumano@bioplast.co
+
+[2003] CMOC
+    opps=2 contactos=2 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: cmoc.obrasciviles@gmail.com, cmonc.obrasciviles@gmail.com
+
+[1632] COMERCIALIZADORA THE FARM
+    opps=2 contactos=2 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: gerencia@salatyvegetaleslistos.com, salaty1@hotmail.com
+
+[564] GOBERNACIÓN DE BOYACÁ
+    opps=2 contactos=2 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: karen.sanchez.saenz@gmail.com, sst@boyaca.gov.co
+
+[254] GRUPO SAKA S.A.S
+    opps=2 contactos=2 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: luzadrianariverasalcedo@gmail.com, recursoshumanos@marathon.com.co
+
+[866] ISMET COLOMBIA SAS
+    opps=2 contactos=2 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: marcelaromeroseg@gmail.com, psicoleidydt@gmail.com
+
+[1130] JARDÍN INFATIL PLATERO Y YO
+    opps=2 contactos=2 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: cartera@plateroyyo.edu.co, maritz2020@hotmail.com
+
+[1446] LOGROS FACTORING COLOMBIA
+    opps=2 contactos=2 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: alejandrobastidasg@gmail.com, analistasst@logrosfactoring.com
+
+[1113] MARPRINT SAS
+    opps=2 contactos=2 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: Ing.siho2020@gmail.com, sgsst@marprint.co
+
+[178] SOLUTEC
+    opps=2 contactos=2 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: andres@solutec-it.co, julianafb.sst@gmail.com
+
+[1015] TESLA INGENIEROS
+    opps=2 contactos=2 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: coordinadorsst@teslacol.com, Inspectorssttesla@gmail.com
+
+[5] Antonio Cely SAS
+    opps=1 contactos=2 NIT=901234560 estado=Cliente linea=(NULL)
+    emails: andri17cely@gmail.com, info@apiarioselpinar.com
+
+[22] CAVACOR S.A.S
+    opps=1 contactos=2 NIT=830137517 estado=Cliente linea=(NULL)
+    emails: cavacor9@gmail.com, finanzas@checorepuestos.com
+
+[71] INDUSTRIA COLOMBIANA DE PERFILES METALICOS S.A.
+    opps=0 contactos=2 NIT=830098290 estado=Cliente linea=(NULL)
+    emails: aysarom2014@gmail.com, edisson.ceron@inpec.gov.co
+
+[75] INSUMOS VETERINARIOS Y FARMACEUTICOS DE COLOMBIA SAS
+    opps=0 contactos=2 NIT=830017648 estado=Cliente linea=(NULL)
+    emails: compras@intergraficas.com.co, servicioalcliente@integraldeimpermeables.com
+
+[80] IPROMEGA S.A.S.
+    opps=0 contactos=2 NIT=900350747 estado=Cliente linea=(NULL)
+    emails: pgisas@gmail.com, SGI@ISTHO.COM.CO
+
+[103] PACKVISION SAS
+    opps=0 contactos=2 NIT=900277192 estado=Cliente linea=(NULL)
+    emails: sgsst@pactoglobal-colombia.org, supervisorasst@papelesdecolombia.com
+
+[109] PRODUCTORA INTERAMERICANA DE PLASTICOS S.A.S.
+    opps=0 contactos=2 NIT=900396116 estado=Cliente linea=(NULL)
+    emails: leonardo.tique@aseoregional.com, talentohumano@productostr.com
+
+[117] SBS SEGUROS COLOMBIA S A
+    opps=0 contactos=2 NIT=860037707 estado=Cliente linea=(NULL)
+    emails: people@scd.com.co, recursoshumanos@schcivilesyservicios.com
+
+[118] SEQ CONSULTORES LTDA
+    opps=0 contactos=2 NIT=830086023 estado=Cliente linea=(NULL)
+    emails: admon@servimatcolombia.com, servimosdetumano@gmail.com
+
+[1867] CAVELIER ABOGADOS SAS
+    opps=5 contactos=1 NIT=(NULL) estado=Cliente linea=Deseguridad
+    emails: solucionesenriesgoslaborales@gmail.com
+
+[1109] ICOPERFILES SA
+    opps=4 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: icoperfiles.sst@gmail.com
+
+[79] Inversiones Sajamib SAS
+    opps=4 contactos=1 NIT=901030518 estado=Cliente linea=(NULL)
+    emails: sst.sajamib@gmail.com
+
+[1524] MAKRO RECICLAJES
+    opps=4 contactos=1 NIT=(NULL) estado=Cliente linea=Deseguridad
+    emails: seguridadybienestar23@gmail.com
+
+[2061] SOLUCIONES CREATIVAS Y TURISTICAS
+    opps=4 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: costos.sct@gmail.com
+
+[1669] CÍA MINERA Y COMERCIALIZADORA LEMUS ORTIZ
+    opps=3 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: companialemusortiz@gmail.com
+
+[691] Flota Guaitara SA
+    opps=3 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: talentohumano.fguaitara@gmail.com
+
+[270] QTECH S.A.S
+    opps=3 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: sigqtech@gmail.com
+
+[1754] SOLUCIONES OMEGA
+    opps=3 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: a.sstomega@gmail.com
+
+[1948] TNS
+    opps=3 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: fabianhseqtns@gmail.com
+
+[1179] AEF SAS
+    opps=2 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: info.aefsas@gmail.com
+
+[2217] ALFONSO URIBE
+    opps=2 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: ausvial2018@gmail.com
+
+[427] ANA HOLGUIN
+    opps=2 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: ANYHOL19@HOTMAIL.COM
+
+[1391] ANASYA AMBIENTAL SAS
+    opps=2 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: anasyaambiental@gmail.com
+
+[2169] AND TOPOGRAFIA E INGENIERIA SAS
+    opps=2 contactos=1 NIT=(NULL) estado=Cliente linea=Deseguridad
+    emails: admon.andtop@gmail.com
+
+[1660] ASC CORRUGADOS Y EMPAQUES
+    opps=2 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: gloriaihedez@gmail.com
+
+[2469] ASEGURAMOS JL LTDA
+    opps=2 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: aseguramosarl@gmail.com
+
+[1294] CENDAL SAS
+    opps=2 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: sstcendal@gmail.com
+
+[1843] COMERCIALIZADORA HERREROS SAS
+    opps=2 contactos=1 NIT=(NULL) estado=Cliente linea=Deseguridad
+    emails: solucionesenriesgoslaborales@gmail.com
+
+[1096] CONSORCIO GRUPO GB
+    opps=2 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: diego.subar@gmail.com
+
+[35] CONSTRUCCIONES CIVILES JMR S.A.S
+    opps=2 contactos=1 NIT=900693605 estado=Cliente linea=(NULL)
+    emails: reparacioneslocativas.ramos@hotmail.com
+
+[1997] CONSTRUCTORA DARHOGAR SAS
+    opps=2 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: SYSDARHOGAR@GMAIL.COM
+
+[826] CONSULTORIAS Y PROYECTOS DEL CESAR S.A.S
+    opps=2 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: sstcpc1@gmail.com
+
+[880] Deici Espejo
+    opps=2 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: Despejo24@yahoo.com
+
+[535] FIRST COLOMBIA
+    opps=2 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: sg.sst.first@gmail.com
+
+[553] FORMADERAS
+    opps=2 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: sstformaderas@hotmail.com
+
+[327] GRINSA INGENIERIA S.A.S
+    opps=2 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: SSTGRINSAINGENIERIA@GMAIL.COM
+
+[1905] INPROSEPINAL
+    opps=2 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: aysarom2014@gmail.com
+
+[283] INTERCONS S.A.S
+    opps=2 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: sgiintercons@gmail.com
+
+[646] INVERSIONES BAOL LTDA
+    opps=2 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: asisgerbaol@hotmail.com
+
+[84] LABORATORIO MAXPROTEC S.A.S.
+    opps=2 contactos=1 NIT=900443730 estado=Cliente linea=(NULL)
+    emails: sstmxp@gmail.com
+
+[852] LADRILLOS SUR
+    opps=2 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: huertas.sara@gmail.com
+
+[280] LAVANDERIA CLEANMAX
+    opps=2 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: cleamontexpres@gmail.com
+
+[281] LAVANDERIA EXPRESS AND CLEAN
+    opps=2 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: cleamontexpres@gmail.com
+
+[282] LAVANDERÍA MONTERREY
+    opps=2 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: cleamontexpres@gmail.com
+
+[1695] LEGALITER AFC & ASOCIADOS
+    opps=2 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: legaliterafc@gmail.com
+
+[1392] Liliana Patricia Medina Florez
+    opps=2 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: profesional.sgsst.154@gmail.com
+
+[287] LINDA VERA OLIVEROS
+    opps=2 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: lindarose10164@gmail.com
+
+[1442] MANUEL GARCIA MECANICOS
+    opps=2 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: MANUELGARCIA0407@HOTMAIL.COM
+
+[1850] MEJORCDT SAS
+    opps=2 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: solucionesenriesgoslaborales@gmail.com
+
+[954] S.I.A SAS
+    opps=2 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: saludocupacionalsia1@gmail.com
+
+[772] SALUD INTEGRAL
+    opps=2 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: Dvargas.saludintegral@hotmail.com
+
+[149] SERVICOURIER S.A.S
+    opps=2 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: servirehumanos@gmail.com
+
+[1874] SIMTEC LB SAS
+    opps=2 contactos=1 NIT=(NULL) estado=Cliente linea=Deseguridad
+    emails: solucionesenriesgoslaborales@gmail.com
+
+[1917] TKALMACENA
+    opps=2 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: psicoleidydt@gmail.com
+
+[1918] TKARGA SAS
+    opps=2 contactos=1 NIT=(NULL) estado=Cliente linea=Deseguridad
+    emails: psicoleidydt@gmail.com
+
+[623] UNIÓN TEMPORAL OPERACIONES NEVADO
+    opps=2 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: dianamarin0130@gmail.com
+
+[1499] 9ALLIANCE
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: alejandrauribemontes@gmail.com
+
+[1136] AAA
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: u2003201723@gmail.com
+
+[2094] ABARROTES EL 27 SAS
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: sivonne30@gmail.com
+
+[1516] ABOGRAN
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: wivin2001@outlook.es
+
+[2037] ACAC INGENIERIA
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: sg-sst.acacingenieria@hotmail.com
+
+[598] ADA & COMPAÑÍA SAS
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: asistenteadmon.ada@gmail.com
+
+[1455] ADAMENA COLOMBIA
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: 2820elianis@gmail.com
+
+[151] ADEL
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: andreaidrobo138@gmail.com
+
+[352] Adela Cañon
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: adelaca2009@gmail.com
+
+[1981] AEROTURBO DE COLOMBIA
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: aeroturbo.hseq@gmail.com
+
+[1594] AFLATTO DISEÑO
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: aflattogestionhumana@gmail.com
+
+[181] AGREGADOS TERRA
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: agregadosterrasst@gmail.com
+
+[881] AGRICOLA MAYORCA S.A.S
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: biguivi0425@gmail.com
+
+[1789] AGROQUIMICOS DE COLOMBIA
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: lvlizyver2@gmail.com
+
+[1313] AK SOLUTIONS
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: akconsultingco@gmail.com
+
+[1172] ALCALDIA CUCUNUBA
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: alcaldiacucunuba.sst@gmail.com
+
+[556] ALCALDIA DE SALAMINA
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: gestorsstalcaldiasalamina@gmail.com
+
+[1744] ALCALDIA MUNICIPAL DE SUBACHOQUE
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: dianaortizvega29@gmail.com
+
+[1549] ALCALDIA SAN VICENTE DEL CAGUNA
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: Hse.Urbina@gmail.com
+
+[2004] ALF SOLUCIONES METÁLICAS SAS
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: sgesstionamos@gmail.com
+
+[1973] ALFATRADING SAS
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: luzmacorrearodriguez@gmail.com
+
+[1001] ALIANZA
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: edgarcia9@hotmail.com
+
+[1943] ALIMENTOS JUSTOS DE COLOMBIA
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: comunidadesproductivas.col@gmail.com
+
+[663] ALIMENTOS MARLUZ
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: ALIMENTOSMARLUZSGSST@GMAIL.COM
+
+[1734] ALIMENTOS Y VEGETALES RONI SAS
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: cursossgsstroni@gmail.com
+
+[143] ALMACEN ARCE
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: dpleandrosaludocupacional@gmail.com
+
+[913] AMBIENTE Y SOLUCIONES INTEGRALES
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: angelanova_1998@hotmail.com
+
+[1100] AMERICAN CARPAS SAS
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: ladysanchez29@hotmail.com
+
+[538] ANA PARA
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: anampc@hotmail.com
+
+[848] ANDREA DEL PILAR AGATÓN IBARRA
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: andreitaai_19@hotmail.com
+
+[2097] ANDREA ECHEVERRI
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: daechev@gmail.com
+
+[612] Andres Ricardo Sierra Santacruz
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: andres0sierra@hotmail.com
+
+[1327] Andy Bruges Barcelo
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: andybrugesb@gmail.com
+
+[2157] ANGELICA MOLINA
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: ansgsst2023@gmail.com
+
+[1454] ANGIE TATIANA CARDOMA RIXO
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: sstcomercializadoravial2@gmail.com
+
+[1570] ANTIADHERENTES Y MAQUINADOS ARIZA SAS
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: DPHUERTAS11@GMAIL.COM
+
+[896] AOD
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: andre_arh94@hotmail.com
+
+[503] ARCILLAS MCL S.A.S
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: arcillasmlcsas@gmail.com
+
+[1812] AREA WORK SAS
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: admonareawork.1@gmail.com
+
+[1151] AREGADOS Y SUMINISTROS LYD SAS
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: sstvidriossantafe1sas@yahoo.com
+
+[1080] ARKEC SOLUCIONES Y PROYECTOS
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: asistentehse.arkec@gmail.com
+
+[890] Arley Hernandez Montero
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: ARLEYHERNANDEZMONTERO96@GMAIL.COM
+
+[1037] ARMY HUELLAS
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: Magnegrete13@gmail.com
+
+[839] ARRA CONSTRUCCIONES S.A.S
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: arra_lizeth@hotmail.com
+
+[1557] ASECONSST
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: shair-martinez@hotmail.com
+
+[1168] ASEOMAX
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: linajimenez872@gmail.com
+
+[1335] ASERDIESEL SAS
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: saludocupacional_aserdiesel@hotmail.com
+
+[1280] ASESORIAS DE GESTIÓN HSEQ
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: asesoriasensistemasdegestionhseq@gmail.com
+
+[1420] ASOCARBONO
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: jhimar.1108@gmail.com
+
+[1429] ASOCIACIÓN CIVIL SIN ANIMO DE LUCRO LABORATORIA CO
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: naiza01@hotmail.com
+
+[1290] ASOCOLDRO
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: asocoldrosst@hotmail.com
+
+[984] ASOMUTUALCO
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: yorli_xilena1807@hotmail.com
+
+[996] ASPLABEL
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: Juancardona3@gmail.com
+
+[914] Astrid Avendaño
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: sstvidriossantafe1sas@yahoo.com
+
+[1164] ATOMATIZACIÓN POTENCIA Y CONTROL WD
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: jarbynho@hotmail.com
+
+[14] BARRO BLANCO FARMS SAS
+    opps=1 contactos=1 NIT=900747203 estado=Cliente linea=(NULL)
+    emails: adelaca2009@gmail.com
+
+[1901] BATERIAS COLOMBIA
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: seguridadsocialbatcolombia@gmail.com
+
+[543] BCC SAS
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: seguridadsocial.cr@gmail.com
+
+[1851] BELLAIZA VELEZ SAS
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: blankisvelez@gmail.com
+
+[347] BIENAVENTURANZA IPS
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: Marjorieacostag@gmail.com
+
+[1274] BIENESTAR E INVERSIONES SAS
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: habilitaciondentalcenter@gmail.com
+
+[1138] BIHOV FARMACEUTICA SAS
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: sgsstbihovf@gmail.com
+
+[2035] BIOINTEGRALES Y SOLUCIONES SAS
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: biointegralesysoluciones@gmail.com
+
+[1002] BOG AND GO COLOMBIA TRAVEL
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: asistente1pasec@gmail.com
+
+[1188] BOGAL VET SAS
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: VIVI.CORTES23@HOTMAIL.ES
+
+[1374] BVIOLET JEANS SAS
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: b.violetjeans.sandra@gmail.com
+
+[1811] C&M SERVICIOS E INGENIERIA SAS
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: sst.serviciosingenieria@gmail.com
+
+[1038] CALEGO SAS
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: ylopezmonsa@gmail.com
+
+[305] CAMBIOS ZURICH
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: andreacb30@hotmail.com
+
+[859] Camilo Andres Cruz
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: auxadmon@hotmail.com
+
+[2368] CANTERA VILLA PAULA
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: ambientalcanteravillapaula@gmail.com
+
+[2255] CAP GEO SAS
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: fpuentes.14@gmail.com
+
+[384] CAPITAL GROUP AC SAS
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: rrhhcamposoya@gmail.com
+
+[317] CAPRICHOS TOMMY
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: mileloaiza1@gmail.com
+
+[1841] CARLOS ELIAS MARIN CARREÑO
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: ING.CARLOSMARIN20@GMAIL.COM
+
+[372] CARNES FRÍAS ITALIA
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: seguridadsaludeneltrabajo91@gmail.com
+
+[525] CARNES FRIS ITALIA
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: seguridadsaludeneltrabajo91@gmail.com
+
+[757] CAROLINA CETRE CORDOBA
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: carolinacetre@gmail.com
+
+[231] CASA CONECT
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: cafras06@gmail.com
+
+[625] CASAVIVA
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: globo17_1969@yahoo.es
+
+[868] CASTILLA R INGENIEROS
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: guilleleonr39@gmail.com
+
+[1861] CATALINA ANGEL
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: catalinaa64@hotmail.com
+
+[1870] CDA TECNIMOTO AUTOS ESPINAL
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: tecnimotosespinal@gmail.com
+
+[475] CENTRAL DE ABASTOS DE VILLAVICENCIO
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: benilce.he.caballero@gmail.com
+
+[891] CENTRO COMERCIAL 156 PH
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: sgsstce156@gmail.com
+
+[979] CENTRO COMERCIAL BELAIRE PLAZA
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: sociedadbelairesas@gmail.com
+
+[1761] CENTRO COMERCIAL CIPRES PLAZA
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: cipresplazaadmon@gmail.com
+
+[864] CENTRO COMERCIAL TAIWAN
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: centrocomercial_taiwan@hotmail.com
+
+[456] CENTRO MEDICO RICAURTE
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: centromedicoricaurte@gmail.com
+
+[159] CHELARTE
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: marcelaperdomo@hotmail.com
+
+[1228] CHUNCHUMIX
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: Julianabravo169@gmail.com
+
+[1715] CIA MINERA Y COMERCIALIZADORA LEMUS ORTIZ
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: Companialemusortiz@gmail.com
+
+[974] CICLO ETERNO SL
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: saramongecortes@gmail.com
+
+[1694] CINTRIX
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: Sst.cintrix@gmail.com
+
+[1810] CLARA INES JARAMILLO
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: geralor@gmail.com
+
+[1304] CLENA EMPRESAS
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: cleamontexpres@gmail.com
+
+[214] CLINICA DE REHABILITACIÓN INTEGRAL HOWARD GARDNER
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: talentohumanocrihg@gmail.com
+
+[1535] CLINICA SAN RAFAEL NATURISTA
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: SEGURIDADYSALUDSRAFAEL@GMAIL.COM
+
+[664] CLINICA VETERINARIA ABANIMAL
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: ferocampo17@gmail.com
+
+[414] CLUB CAMPESTERE LA SABANA
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: lalaes09@hotmail.com
+
+[2442] COCERGAN
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: sstcoexcaya@gmail.com
+
+[511] COCINA GOURMET DE EDUAR Y BETSY
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: deriannjuan@gmail.com
+
+[831] CODACOM
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: codacomsas@gmail.com
+
+[1800] COENEQ SAS
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: nfpabon@gmail.com
+
+[541] COLCUIDAR S.A.S
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: supervisoracolcuidar@gmail.com
+
+[1288] COLEGIO LICEO JUAN MIGUEL
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: loremurillo0704@gmail.com
+
+[1527] COLEGIO MADRE ADELA
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: colmadreadela@gmail.com
+
+[554] COLEMPAQUES
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: cesar0113@yahoo.com.mx
+
+[912] COLOMBIA AGRO FORESTAL
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: coord.sstcolombiaagroforestal@gmail.com
+
+[1717] COLVALVULAS
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: yikacordobaort@gmail.com
+
+[406] COMCORD
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: laumalagon83@gmail.com
+
+[1398] COMECHOC SAS
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: solsele14@gmail.com
+
+[1412] COMER4CIALIZADORA CHOCOLATES
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: solsele14@gmail.com
+
+[1202] COMERCIALIZADORA CENTRALES
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: dianapguzmanperez@hotmail.co
+
+[2449] COMERCIALIZADORA MASTER SPEED
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: dominicamartinezh@gmail.com
+
+[1182] COMPAÑÍA DE SERVICIOS INTEGRALES Y AMBIENTALES LTDA
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: serviambientalesltda@gmail.com
+
+[1117] COMPAÑÍA FERRETERA DE ANJEOS Y MALLAS
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: ANJEOSYMALLASCERTIFICADOS@HOTMAIL.COM
+
+[422] COMPAÑÍA MINERA B&M S.A.S
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: yudys87@yahoo.es
+
+[1994] COMPUSOLUCIONES
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: LISDAPAPRI@HOTMAIL.COM
+
+[1569] COMUNIDADES PRODUCTIVAS SAS
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: comunidadesproductivas.col@gmail.com
+
+[1157] CONASE
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: erikandrea0810@gmail.com
+
+[2272] CONDETER SAS
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: tatiana.condeter@gmail.com
+
+[997] CONDOMINIO LA COLINA
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: Newruro@hotmail.com
+
+[1302] CONEKTA SOLUCIONES
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: conekta.soluciones.sas@gmail.com
+
+[1771] CONFECCIONES PARCHES
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: practicantesstlc0@gmail.com
+
+[894] CONFORT INMOBILIARIO S.A.S
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: mullersisoma@gmail.com
+
+[2303] CONJUNTO PORTAL DE LAS FLORES
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: Portal.flores.pqr@gmail.com
+
+[2177] CONJUNTO RESIDENCIAL CASTILLA RESERVADO
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: Admoncastillareservado@gmail.com
+
+[1496] CONJUNTO RESIDENCIAL CIUDAD CENTRAL PH
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: paulaalban10@gmail.com
+
+[2274] CONJUNTO RESIDENCIAL VILLA DEL RIO
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: Villadelrioreservado@gmail.com
+
+[1949] CONMEL INDUSTRIAL LTDA
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: freen36@gmail.com
+
+[276] CONSERVYS S.A.S
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: servys21@gmail.com
+
+[269] CONSORCIO REDES METRO
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: sstredesmetro@gmail.com
+
+[1268] CONSORCIO RENOVACIÓN RIO BLANCO
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: Comprascrrb@gmail.com
+
+[1022] CONSTRUCCIONES ELV SAS
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: construccioneselvsas@hotmail.com
+
+[2383] CONSTRUCCIONES Y ESPACIOS PUBLICOS MJ
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: construccionesyespaciospmj@gmail.com
+
+[964] CONSTRUCTORA PROYECTOS SOSTENIBLES
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: jmg.borjasst@gmail.com
+
+[713] CONSTRUCTORA RORAIMA
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: roraimasst@gmail.com
+
+[862] CONSULTORIA COLOMBIANA ISO
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: consultor.colombia.iso@gmail.com
+
+[162] CONSUNALES S.A.S
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: consunaleshbsst@gmail.com
+
+[1639] COOPERATIVA DE COMUNICACIONES
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: mariao2023@outlook.es
+
+[815] cooperativa de la universidad nacional de Colombia
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: alejahale@gmail.com
+
+[1353] COOPERVISIÓN
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: soficalidad@gmail.com
+
+[876] CORORINOQUIA
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: sstcoorinoquia@gmail.com
+
+[1273] CORPORACIÓN PRODESARROLLO Y SEGURIDAD MUNICIPIO DE GIRARDOT
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: sgsstprodesarrollo@gmail.com
+
+[981] CORPORACIÓN SER COLOMBIA
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: seguridadsercolombia@gmail.com
+
+[847] COVALEDA SEGUROS 
+Fundación ICAL
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: covaleda.seguros@gmail.com
+
+[893] CPC SAS
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: sstcpc1@gmail.com
+
+[1329] CRC VALIDAMOS SAS
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: daniel_moli10@yahoo.es
+
+[180] CUPAR SERVICES S.A.S
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: cuparserviceshse@gmail.com
+
+[1756] D´LAPEL
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: dlapel@outlook.com
+
+[1206] DAVILA PEÑA Y CIA SAS
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: yeicha2009@hotmail.com
+
+[1356] DAYOZ LTDA
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: dayozsst@gmail.com
+
+[1008] DBELEN SAS
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: gestionh.belen@gmail.com
+
+[1634] DBG CONSTRUCCIONES EU
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: deissyb16@gmail.com
+
+[1618] DCALIDAD SAS
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: sstdcalidad@gmail.com
+
+[1078] DEL MENU CARNICOS
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: alonsodelosriosg@gmail.com
+
+[2360] DELICIAS GALLETAS
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: katherine0112lopez@gmail.com
+
+[2326] DELIFOOD
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: delifoodgestionambiental@gmail.com
+
+[1615] DELTA LIGHT COLOMBIA
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: angelica.granados.delta@gmail.com
+
+[1895] DEMARIMAR
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: sandramolina.sigma@gmail.com
+
+[1275] DENTAL CENTER
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: habilitaciondentalcenter@gmail.com
+
+[1701] DERIVADOS LACTEOS DEL LLANO
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: sstderilacteos@gmail.com
+
+[249] DESIGN AND GITFS S.A.S
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: sgcdesign10@gmail.com
+
+[1641] DIPLAST SAS
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: hseqdiplast@gmail.com
+
+[2493] DISEÑO Y CONTRUCCIONES DE REDES ELECTRICAS
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: darramma99@gmail.com
+
+[230] DISEÑOS Y TEXTILES DE ORIENTE S.A.S
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: sstcnt1@gmail.com
+
+[2127] DISMEPS
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: karinsilva601@gmail.com
+
+[488] DISMIVAR S.A.S
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: dismivarsgsst@gmail.com
+
+[2152] DISSTECH
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: disstechsst@outlook.es
+
+[1295] DISTRIBUCIONES LA ALDEA SAS
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: SISTEMADEGESTIONALDEA@GMAIL.COM
+
+[1262] DISTRIBUIDORA ANCLA SAS
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: distribuidoraanclabarranquilla@gmail.com
+
+[679] DISTRUIBUCIONES GAMARRA S.A.S
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: cesarv_29@hotmail.com
+
+[939] DM INGENIERIA SAS
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: d.mingenieriasas2018@hotmail.com
+
+[2141] DMS INGENIERIA Y DESARROLLO INDUSTRIAL
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: linamartinezsuarez045@gmail.com
+
+[1190] DUQUE Y CIA
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: sgsst.remolquesdial@gmail.com
+
+[404] DYM INDUSTRIAS METALICAS
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: isabellopez20e@gmail.com
+
+[1437] E MARTINEZ INTEGRALES
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: rodriguezcoronadomayra@gmail.com
+
+[278] EBC CONSTRUCCIONES S.A.S
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: jjsolersa@hotmail.com
+
+[1426] ECCOGROUP
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: sst.eccogroup@gmail.com
+
+[870] ECOASEO
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: cablemovilecoaseo@gmail.com
+
+[1048] ECOASISTHIR
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: ecoasisthirltda@gmail.com
+
+[1382] ECOGLOBAL SURVEYING LTDA
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: ecoglobal.coordinacionhseq@gmail.com
+
+[424] ECONORTE
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: seguridadsaludeneltrabajo91@gmail.com
+
+[1384] ECOTRAFFIC
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: yulid.sst@gmail.com
+
+[1418] ED CONSTRUCCIONES 2023 SAS
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: sstbohorquez2023@gmail.com
+
+[2393] EDIFICIO SEQUOIA
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: ed.sequoia@hotmail.com
+
+[1926] EDIFICIO TORRE PLATINO
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: johanap.gonzalezr28@gmail.com
+
+[2423] EDIFICIO VITA
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: Admon.ed.vita@gmail.com
+
+[1611] EFI CIENCIA OCUPACIONAL
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: danteneira@gmail.com
+
+[930] EL DOLARITO
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: cambiosdolarito@hotmail.com
+
+[844] EL MERENGON
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: alejandra0395@gmail.com
+
+[911] EL MILAGRO DE LAS FLORES S.A.S
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: sstmilagrodelasflores@gmail.com
+
+[1741] EL MOLINO
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: sstpaisas@gmail.com
+
+[878] Elizabeth Espitia
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: espitiaeliza123@gmail.com
+
+[530] ELKUB ARQUITECTURA Y CONSTRUCCIÓN
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: auxsstelkub2022@gmail.com
+
+[238] EMADAGUA S.A.S ESP
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: sgsstemadagua@gmail.com
+
+[428] EMPRESA DE ACUEDCUTO Y ALCANTARILLADO EL RINCÓNO
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: emarsaesp@gmail.com
+
+[602] EMPRESA DE MINERIA
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: yeiimy.mol@gmail.com
+
+[951] EMPRESA DE SERVICIOS TECNOLOGICOS Y COMUNICACIÓN
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: elretornoalalibertad@gmail.com
+
+[1044] EMPRESA FAMILIAR
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: juliocesarvisbalgomez@gmail.com
+
+[241] EMTB SERVICIOS INMOBILIARIOS
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: Emtbsogamoso@gmail.com
+
+[719] ENCOFRAR S.A.S
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: ocbconsultores@gmail.com
+
+[1181] ENGINEERING  CONSTRUCTION GROUP
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: sst.engineering22@gmail.com
+
+[1169] ENLACES AMBIENTALES
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: prietoary@hotmail.com
+
+[1492] ERALC
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: marlenycruz43@gmail.com
+
+[1403] ERUM
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: vannesa.buenolopez@gmail.com
+
+[1922] ESCUELA DE CAPACITACIÓ EN ALTURAS
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: elisa.lis95@gmail.com
+
+[1860] ESE CENTRO HOSPITAL DIVINO NIÑO
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: LALO187@HOTMAIL.COM
+
+[1733] ESPECIAL CARGO
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: especialcargosas@gmail.com
+
+[1663] ESTELA REDES Y CABLEADO ESTRUCTURADO
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: JOHN.CASTANO2309@GMAIL.COM
+
+[1197] ESTRUCCON INGENIERIA
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: greisy.antequera20@gmail.com
+
+[1257] ESTRUCTURADORES LEGALES SAS
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: Lauraangelicarincon@gmail.com
+
+[1899] EUROFIL
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: da.orjuelap@gmail.com
+
+[1586] EXPANSIÓN JL SAS
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: psicoleidydt@gmail.com
+
+[1565] EXPRESS AND CLEAN
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: cleamontexpres@gmail.com
+
+[1677] EYG INGENIERIA Y PARTES
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: ssteygingenieria@gmail.com
+
+[418] FAJAS CANELA
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: fajascanelasst@gmail.com
+
+[505] FAWY DE COLOMBIA
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: seguridadsaludeneltrabajo91@gmail.com
+
+[618] FELISER
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: Feliserempresas@gmail.com
+
+[520] FELTEXA SAS
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: dianamarin0130@gmail.com
+
+[1616] FERRELECTRICOS MORENO
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: calidad.fem22@outlook.com
+
+[1589] FIEL HOUSE
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: falejacastro@gmail.com
+
+[889] FILIA
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: marco.pinilla@hotmail.com
+
+[1016] FINANCIERA JURISCOOP
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: taniasv08@gmail.com
+
+[1311] FIRPOL SAS
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: talentohumanofirpol@gmail.com
+
+[228] FISIORAD S.A.S
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: calidadauditoriafisiorad@gmail.com
+
+[1112] FLOR BENAVIDES
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: flor120870@hotmail.com
+
+[165] FLORA MEDICINAL COLOMBIANA S.A.S
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: facturacionflomecol@gmail.com
+
+[1208] FLORES EL PANDERO
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: felpandero@gmail.com
+
+[1176] FOEMSALUD
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: foemsalud.sst@gmail.com
+
+[698] Food Trucks Guaymaral
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: marco_bernal@hotmail.com
+
+[419] FORMALETAS E INDUSTRIALIZADOS S.A.S
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: formainsas@hotmail.com
+
+[1876] FRESCO POLLO DE LAS NIEVES SAS
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: freskopollog@gmail.com
+
+[2068] FRIGONOVILLO
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: jennyrocio41@hotmail.com
+
+[1683] FRIGOTAURUS SAS
+    opps=1 contactos=1 NIT=(NULL) estado=Cliente linea=Deseguridad
+    emails: rrhh.frigotaurus1@gmail.com
+
+[1577] FRIOTECNICO OF SAS
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: martinezkarol310@gmail.com
+
+[1833] FUMIAGRO SAS
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: fumiagrosstbogota@gmail.com
+
+[991] FUNDACIÓN ESCUELA TALLER DE CALI
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: nbn.escuelatallercali@gmail.com
+
+[1785] FUNDIPLACAS
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: ladalsago.97@gmail.com
+
+[385] FURESAS E.S.P
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: dg.asesoriasgsst@gmail.com
+
+[1685] G5 INGENIERIA
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: gingeneriasas1@gmail.com
+
+[1095] GAMBA MIGRATION & EDUCATION SAS
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: jmonsalvea03@gmail.com
+
+[742] GAMMA SAS
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: gammaasesor@gmail.com
+
+[1198] GASTROADVANCED SAS
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: sstgastroadvanced@gmail.com
+
+[2182] GECO COLOMBIA INGENIEROS
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: comercialgeco@outlook.com
+
+[1900] GEINCOR SAS
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: juliana.lcanaval@gmail.com
+
+[2105] GENERACIÓN DE TALENTOS - ADASCO
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: sstzadasco@gmail.com
+
+[311] GEOVALORES S.A.S
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: sgsst.geovalores@gmail.com
+
+[182] GESEIN
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: marlon7478@hotmail.com
+
+[1838] GESTIÓN QHSE SAS
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: anasanchezmieles@gmail.com
+
+[1521] GIMNASIO CAMPESTRE ARRAYANES
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: elsymbolivar3@gmail.com
+
+[1393] GJS CONSTRUCICONES METALICAS SAS
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: mcr1796@gmail.com
+
+[1082] GLOBAL MULTISERVIS SAS
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: sst.ardila@gmail.com
+
+[189] GOCITEX S.A.S
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: gocitex.sst@gmail.com
+
+[1310] GOLDEN FLEX SA
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: sgsstgoldenflexsa@gmail.com
+
+[1367] GRANYPROC
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: lesvytrujillo19@gmail.com
+
+[1794] GREEN FOREST
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: gestionhumanagreenforestco@gmail.com
+
+[1332] GREEN FOREST CO SAS
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: gestionhumanagreenforestco@gmail.com
+
+[402] GRUPO ALC ASOCIADOS S.A.S
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: areasstgrupoalc@gmail.com
+
+[1218] GRUPO ARES SUPPLIES COLOMBIA SAS
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: SGSSTGRUPOARES@GMAIL.COM
+
+[1696] GRUPO D&M SAS
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: grupodimsas@outlook.com
+
+[1625] GRUPO EMPRESARIAL INGEMA SAS
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: Geingemasas@gmail.com
+
+[1647] GRUPO EMPRESARIAL PROTECCIÓN SAS
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: sgsst@gmail.com
+
+[342] GRUPO ENERGÉTICO SANTANDER
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: Camilasanchezpsst@gmail.com
+
+[1298] GRUPO IDSE SAS
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: k.ayala.idse@gmail.com
+
+[1487] GRUPO INVERAGRO
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: mjbg1012@gmail.com
+
+[292] GRUPO LEON TEX LTDA
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: camipineda2@gmail.com
+
+[1031] GRUPO MLS SAS
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: kmi111206@gmail.com
+
+[793] H&M
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: gerenciaservicioshym@gmail.com
+
+[2224] HALCAR INGENIERIA
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: halcaringenieria.sst@hotmail.com
+
+[1743] HANIEL SAS
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: COORDINADORHSETEKTON@GMAIL.COM
+
+[1955] HAWYM HENAO
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: hawym.henao@gmail.com
+
+[555] Hector Rodriguez
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: COORDINADORSSTPRODUCTORA@GMAIL.COM
+
+[272] HERMANAS MISIONERAS DE LA MADRES LAURA
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: veroniicacr@gmail.com
+
+[2188] Hernandez Bonilla & Asociados SAS
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: coordinadorsst.supercamilo@gmail.com
+
+[1581] HIDRAULICOS Y MAQUINARIA
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: Hidraulicosmaquinaria@gmail.com
+
+[1686] HIELO EL NEVADO
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: xiomaramontoya9112@gmail.com
+
+[1825] HISO INGENIERIA
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: hisohigiene@yahoo.es
+
+[1571] HODRAULICOS Y MAQUINARIA
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: Hidraulicosmaquinaria@gmail.com
+
+[1781] HOSPITAL SAN ANTONIO DE CHIA
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: hchiasgsst@gmail.com
+
+[1312] HOTEL EL PORTAL DE LA DORADA
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: gerhotelelportaldeladorada@gmail.com
+
+[361] HSEQ ESTRATEGIAS
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: garzoncindy11@gmail.com
+
+[470] HUMING SAS
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: gestorsst.huming@outlook.com
+
+[2170] HUMPLAST
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: solucionesenriesgoslaborales@gmail.com
+
+[1472] IARK
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: angielizbena@gmail.com
+
+[521] ICC SAS
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: icc.sas.admi@gmail.com
+
+[500] IG MONTAJES Y SERVICIOS SAS
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: liyi18-93@hotmail.com
+
+[1962] IMAGINING SAS
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: alozano.ansac@gmail.com
+
+[1699] IMC QP INDUSTRIAS METALICAS CÚCUTA
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: leonelquijano.imcqp@gmail.com
+
+[650] IMEIN CORPORACIÓN EDUCATIVA
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: imein7@hotmail.com
+
+[1596] IMPORINOX SAS
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: sst.imporinox@gmail.com
+
+[1573] IMPROFARME
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: improfarme@gmail.com
+
+[732] INCOLFRUTA S.A.S
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: asistente.incolfruta@gmail.com
+
+[604] INDEPENDIENTE
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: cindyk.ruiz@gmail.com
+
+[573] INDUMINERALS
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: zuly_losada@hotmail.com
+
+[2166] INDUSTRIA AVICOLA FLORA AMARILLO
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: dayanagalvis390@gmail.com
+
+[1675] INDUSTRIA Y SOLUCIONES METALMECANICAS COLOMBIA SAS
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: marcelaromeroseg@gmail.com
+
+[1141] INDUSTRIAL PLASTICS SAS
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: induplastics@hotmail.com
+
+[647] INDUSTRIAS DON PEPE S.A.S
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: steven.astudillo1190@gmail.com
+
+[506] INDUSTRIAS FAWY
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: recursoshumanosfawy@gmail.com
+
+[349] INDUSTRIAS FLIV
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: diviancastro@gmail.com
+
+[2054] INDUSTRIAS KERAMIT LTDA
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: industriaskeramitltda@yahoo.com
+
+[2341] INDUSTRIAS METÁLICAS CUCUTA
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: leonelquijano.imcqp@gmail.com
+
+[2051] INDUSTRIAS SUELER SAS
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: admonsueler@gmail.com
+
+[1272] ING NOVATION
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: dayannayeritzamorenomanzano@gmail.com
+
+[426] INGENIERIA GRAFICA S.A.S
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: rodriguezlopezalexander@gmail.com
+
+[982] INGENIERIA INTEGRAL NORSI
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: ing.norsi@gmail.com
+
+[1706] INGENIERIA STM SAS
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: ing.stm.hseq@gmail.com
+
+[1568] INGEVOLCO
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: sst.ingevolco@gmail.com
+
+[1120] INGTEMEC SAS
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: mjmartinez1523@gmail.com
+
+[1482] INNOVA TALENTO HUMANO SAS
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: seleccion2.innovath@gmail.com
+
+[926] INNOVO LAB SAS
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: auxcontableinnovo@gmail.com
+
+[1951] INR INVERSIONES
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: PS.DIANAMORENO@GMAIL.COM
+
+[620] INSE INGENIERIA Y SEGURIDAD
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: profesionalsst92@gmail.com
+
+[1753] INSTALACIONES HIDRAULICAS SANITARIAS Y DE GAS INOCENCIO LOPEZ SAS
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: coordinadorhsqhilsas@gmail.com
+
+[1525] INSTALACIONES HIDROSANITARIAS ATL SAS
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: azucena27ochoa@gmail.com
+
+[661] INSTITUCIÓN EDUCATIVA LICEO LOS ANGELES
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: gelemelo@hotmail.com
+
+[1094] INTEGRANS
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: crnocua@gmail.com
+
+[925] INTITEX DE COLOMBIA
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: humanaszuhaila@gmail.com
+
+[1021] INVEAJUSTES
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: juancespindola16@gmail.com
+
+[1282] INVERCAM DE LA SABANA
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: sstinvercam03@gmail.com
+
+[2135] INVERORTIZ (RAFAEL ORTIZ)
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: inverortiz08@yahoo.es
+
+[1185] INVERSIONES AMM SAS
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: Jeancarlitos2464@gmail.com
+
+[1453] INVERSIONES COMERANDINA
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: alejagarcia120506@gmail.com
+
+[1887] INVERSIONES GUADALUPE JS SAS
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: recursoshumanosguadalupejs@gmail.com
+
+[2126] INVERSIONES JADME
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: sgsstinvercionesjadmesas@gmail.com
+
+[1019] INVERSIONES LUFRAN LTDA
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: ana.pmoreno@hotmail.com
+
+[1066] INVERSIONES LyG
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: yohanasanchez660@gmail.com
+
+[2027] INVERSIONES MARQUESA
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: gestionhumanamarquesa@gmail.com
+
+[1823] INVERSIONES SAJMIB
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: gerencia.g.sajamib@gmail.com
+
+[1792] INVERSIONES ULEE
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: inversionesulee@gmail.com
+
+[1265] INVERSIONISTAS HERMANOS RODRIGUEZ
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: vivianaocampoz@gmail.com
+
+[242] IOCOM LTDA
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: linasanchezd@gmail.com
+
+[1415] IPET PLACE SAS
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: talentohumanoipetplace@gmai.com
+
+[421] IPS
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: Zas@gmail.com
+
+[1541] IPS PGI PROFESIONALES GESTIÓN INTEGRADA
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: pgisas@gmail.com
+
+[908] IPS PREVENIR
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: juansebastiangalvisnava@gmail.com
+
+[2030] IPS SERVICIOS MÉDICOS ESPECIALIZADOS
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: nataliae40@gmail.com
+
+[386] ISINTEG SAS
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: mafesitalopez3@gmail.com
+
+[749] ISMOCOL S.A
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: luciasierra06@hotmail.com
+
+[1650] ISTORE COLOMBIA
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: u0800913@gmail.com
+
+[1989] IVAN GONZALEZ SAS
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: clamicape@gmail.com
+
+[1140] JAL VIAL
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: transformarenseguridad@gmail.com
+
+[1896] JAMONERIA SAN FRANCISCO EU
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: psheidybabativa@gmail.com
+
+[578] JARDINES DE JULIA
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: jardinesdejulia@gmail.com
+
+[1364] JC SOLUCIONES INMOBILIARIAS
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: inmobiliariasjcsoluciones@gmail.com
+
+[202] Jennifer Marin
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: faje019@hotmail.com
+
+[944] Jenny Alonso
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: dlapel@outlook.com
+
+[507] JEP INGENIERIA SAS
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: jepingenieria@hotmail.com
+
+[455] JF LASER DE COLOMBIA
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: jflasersgsst@gmail.com
+
+[1819] JJ NETWORKS
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: psicoleidydt@gmail.com
+
+[948] JK INVERSORES
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: kagudelob@gmail.com
+
+[262] JMK INVERSIONES
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: moralesadrianamarcela@gmail.com
+
+[768] Johnathan Jair Casas Quira
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: jcasasquira@gmail.com
+
+[339] Jose Ricardo Valderrama
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: richard3889@hotmail.com
+
+[1173] JUKALNU SAS
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: Julyethsanchezl08@gmail.com
+
+[1163] JULIO BALSERO
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: jbalseroseguridad2022@gmail.com
+
+[2092] JUNTA DE ACCIÓN COMUNAL NUEVA GRANADA
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: yucadavid@outlook.com
+
+[781] JVILLADA SAS
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: josevilladamarin@hotmail.com
+
+[1111] JVS Y SERVICIOS SAS
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: joestiba@hotmail.com
+
+[1928] KAEL INGENIEROS
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: rhkael@gmail.com
+
+[867] Karen Quito
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: karenquito99@hotmail.com
+
+[2253] KATHERIM OSORIO
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: dayanita0321@hotmail.com
+
+[382] LA CAVA GROUP SAS
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: rrhhcamposoya@gmail.com
+
+[1331] LA NUEVA IMAGEN PUBLICIDAD
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: do_ruiz@hotmail.com
+
+[1644] LABORATORIO DE COSMETICOS LUMELI
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: sst.lumeli@gmail.com
+
+[340] LACTEOS EL PORTILLO
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: el.portillo@hotmail.com
+
+[1301] LADOINSA SAS
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: solicitudsgi@gmail.com
+
+[1574] LAMINAS Y CORTES
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: jenvi0610@gmail.com
+
+[1763] LAS SOPITAS
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: infolassopitas@gmail.com
+
+[296] LASS
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: SEGURIDADYSALUD.LASS@GMAIL.COM
+
+[2335] LATINO BI CONSULTING
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: latinobisgsst@gmail.com
+
+[627] Laura Maria Botello Rojas
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: laurabotello250486@hotmail.com
+
+[1025] LAVASET S.A.S
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: rhumanoslavaset@gmail.com
+
+[2080] LB CONTABILIDAD
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: Contabilidadeslb20@gmail.com
+
+[576] LEFCOM SAS
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: lefcomsas.sgsst@gmail.com
+
+[2089] LEMY INGENIERIA
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: sstlemy.ingenieria@gmail.com
+
+[771] LILIANA PATRICIA ESQUIVEL
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: patricia.esquivelesquivel@gmail.com
+
+[2477] LINDA POLO
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: rosalindasirrach@hotmail.com
+
+[1764] LOGISTICA INTELIGENTE
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: l_laura95@hotmail.com
+
+[1673] LOS JUVENALES CONSTRUCCIONES
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: sgsst.losjuvenalessas@gmail.com
+
+[522] MAHECHA INGENIERIA
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: rhseq.mahechaing@gmail.com
+
+[2176] MANAR FRUIT SAS
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: talentohumanomanarfruit@gmail.com
+
+[388] MARCAS EUROPEAS S.A.S
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: sg.sst.grupoeuropea@gmail.com
+
+[1656] MARCELA ROMERO
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: marcelaromeroseg@gmail.com
+
+[1212] MARIA FERNANDA MELO
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: mfernandamelo07@gmail.com
+
+[1018] Mariana Negrete
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: Magnegrete13@gmail.com
+
+[1467] Marilux Aguilar
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: mmarilux1@hotmail.com
+
+[247] MARTHA L. MANTILLA
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: MARLIMAN2@HOTMAIL.COM
+
+[537] MARTHA ROCIO ROMERO SIERRA
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: maro5920@hotmail.com
+
+[2124] MARTINEZ LOGISTIC SERVICE
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: Ruedaaliss18@hotmail.com
+
+[1497] MARWIND SAS
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: NPJIMENEZ@GMAIL.COM
+
+[969] MATELC SAS
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: SSTMATELCSAS@GMAIL.COM
+
+[1316] MATERIALES Y SOLUCIONES PARA LA CONSTRUCCIÓN
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: distribuidoraanclabarranquilla@gmail.com
+
+[918] MATINA FLOWERS S.A.S
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: saludocupacionalmacuira@gmail.com
+
+[927] MATINA FLOWERS S.A.S (FINCA MACUIRA - COGUA)
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: saludocupacionalmacuira@gmail.com
+
+[928] MATINA FLOWERS S.A.S (FINCA MOKANA - SUESCA)
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: saludocupacionalmacuira@gmail.com
+
+[929] MATINA FLOWERS S.A.S (FINCA SAN PEDRO - GUASCA)
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: saludocupacionalmacuira@gmail.com
+
+[2440] MATSER
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: matserserviciosyasesorias@gmail.com
+
+[1366] MECANIZADOS FM SAS
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: sstmecanizamos@gmail.com
+
+[1461] MEGA GROUP
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: aarosriv@gmail.com
+
+[1365] MEGA WEB INGENIERIA
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: Yadyzapata1@gmail.com
+
+[782] MEGACHORIZOS
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: sstmegachorizos@gmail.com
+
+[1114] MEKADESCUENTOS
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: coordinadorasstmkd@gmail.com
+
+[2145] MINA LAS VEGAS
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: glaj27@gmail.com
+
+[1964] MINTREX
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: nataliarodriguezmintrex@gmail.com
+
+[2371] MOCAUCHOS EMPAQUES INDUSTRIALES
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: practicasth1011@gmail.com
+
+[2168] MOLINO DE ARROZ ECOGRANO
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: Zharickwilchez@gmail.com
+
+[255] MONSU S.A.S
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: seguridadysalud.fv@gmail.com
+
+[651] MONTAJES ARS
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: recursoshumanosmontajesarsas@gmail.com
+
+[946] MONTAJES SOLDARTE
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: c.soldarte@hotmail.com
+
+[2301] MORAR HERMANOS SAS
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: Orientacionpampuri@gmail.com
+
+[701] MPM CONSULTORIA EN RH
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: mpmconsultoriaenrh@hotmail.com
+
+[990] MPR CONSULTORES
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: Patriciauseche@gmail.com
+
+[1359] MSN LABS AMERICAS SAS
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: sstmsnlabs@gmail.com
+
+[872] MUEBLES ALBURA S.A.S
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: dbgsaludaux@gmail.com
+
+[714] MUNDIAL DE PERFILES
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: adrivarang@gmail.com
+
+[1979] MUNDO EMPRESARIAL E INDUSTRIAL SAS
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: muneisst@gmail.com
+
+[348] MUNICIPIO DE COGUA - CUNDINAMARCA
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: faquinter@hotmail.com
+
+[487] NARVAEZ PRADO
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: carolinanarvaezprado@gmail.com
+
+[1222] Natalia Salas
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: n.salaspsg@gmail.com
+
+[1029] NEXTPHARMA
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: sg.sst.nexthpharma@gmail.com
+
+[1387] Norma Escobar Orozco
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: normaluesco@hotmail.com
+
+[1613] NOTARIA ÚNICA DE COTA
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: notariacota@gmail.com
+
+[171] NUTRIR PEREIRA
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: direccionnutrirpereira@hotmail.com
+
+[529] OCUPASALUD IPS
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: ocupasaludbtacomercial3@gmail.com
+
+[615] OFTALMOQUIMICA S.A
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: subgerencia.oftalmoquimica@gmail.com
+
+[2201] OPERACIONES DIAMANTES SAS
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: sstaoperacionesdiamantes@gmail.com
+
+[1853] ORION SAS
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: orionsaludocupacional@gmail.com
+
+[1985] ORTHOCENTER
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: geraldine.garzon@hotmail.com
+
+[484] OTILIO NICOLAS MORENO BLANCO LTDA
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: otiliolaura@hotmail.com
+
+[1538] PACHSAN OIBA LTDA
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: poima896@gmail.com
+
+[2110] PALMIRANA DE TRANSPORTES
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: PROCESOCONDUCTORES@GMAIL.COM
+
+[1064] PANADERIA FLOR DE TRIGO
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: flordeltrigo@hotmail.com
+
+[955] PARQUE INDUSTRIAL SAN JORGE
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: asissgsstsanjorge@gmail.com
+
+[1063] PARQUES MAGICOS COLOMBIA
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: INFOPARQUESMAGICOS@GMAIL.COM
+
+[1055] PASTELERIA FLORIDA LTDA
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: pasfloridasgsst@gmail.com
+
+[1416] PASTELEROS SAS
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: pasteleros2014@hotmail.com
+
+[300] PEDRIPLASTICOS CIA
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: pedriplasticos53@yahoo.es
+
+[1255] PEKE DREAMS
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: linavelilla@gmail.com
+
+[1137] PERROS Y GATOS CIA SAS
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: sgsstperrosgatos@gmail.com
+
+[1542] PETS WORLD COLOMBIA SAS
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: accesoriosluna28@hotmail.com
+
+[947] PINTURAS ESPECIALES
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: rossycortes73@gmail.com
+
+[323] PKF CABRERA INTERNACIONAL
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: jenniferh1994@hotmail.com
+
+[2270] PLÁSTICOS Y ACRILICOS
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: dimagogo29@gmail.com
+
+[1443] PLASTICOS Y MADERAS RECICLABLES
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: soficalidad@gmail.com
+
+[383] PLASTICS  & PET
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: rrhhcamposoya@gmail.com
+
+[1991] POLIPACK
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: SST.POLIPACK@GMAIL.COM
+
+[1061] POLITÉCNICO MAYOR ANDINO
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: politecnicomayorandino@hotmail.com
+
+[973] PORTAFOLIO SOSTENIBLE GROUP
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: k.lopezpsg@gmail.com
+
+[1183] PROCERENAL SAS
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: rrhhprocerenal@gmail.com
+
+[794] PROCESOS VERTICALES SAS
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: amguevarap1@gmail.com
+
+[935] PRODUCTORA ANCONA
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: procesosancona@gmail.com
+
+[1652] PRODUCTOS CERAMICOS SANTA PALOMA
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: productosceramicosjorgeperez@gmail.com
+
+[1167] PROENSOFT MR SAS
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: proensoftmrsas@gmail.com
+
+[1299] PROING SAS
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: analistasstproing@gmail.com
+
+[1143] PROMOTORA INMOBILIARIA ENFOQUE URBANO
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: enfoqueurbano2011@gmail.com
+
+[2128] PROPYG SAS
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: profesionalgestionlaboral@gmail.com
+
+[808] PROSOI SAS
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: prosoi.sas@gmail.com
+
+[587] PROSPERANDO
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: mabe_2370@hotmail.com
+
+[1862] PROTEGER
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: esterling13@gmail.com
+
+[1836] PROYECTOS BUSWAY SAS
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: comprasbusway@gmail.com
+
+[324] PROYECTOS ELÉCTRICOS DE INGENIERIA S.A.S
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: angie.proyelect@gmail.com
+
+[568] PSYNAPSIS SALUD MENTAL
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: psynapsis.susanamejia@gmail.com
+
+[221] PSYNFONIA
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: psynfonia@gmail.com
+
+[204] PUBLIDOTAR
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: dpleandrosaludocupacional@gmail.com
+
+[2242] PURA IMAGEN
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: sst.purabox@gmail.com
+
+[1585] PURO COCO HELADOS S.A.S
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: arieltalentohumano@gmail.com
+
+[1091] PYS GESTIÓN INTEGRAL
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: pysgestionintegral@gmail.com
+
+[527] PYS Gestión Integral S.A.S
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: pysgestionintegral@gmail.com
+
+[1826] QUIMICOS ALBOR
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: tatianaherreramar@gmail.com
+
+[483] RECICLAIR S.A.S
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: hseq.reciclair2@gmail.com
+
+[463] RECURSOS ESTRATEGICOS DE COLOMBIA
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: vivianacruz.recconsultortes@gmail.com
+
+[752] REDES & DISEÑOS SAS
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: hseqredesydisenos@gmail.com
+
+[1070] RESTAURANTE CARDAMOMO
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: lizaldanag22@hotmail.com
+
+[2481] RETURBOS INGENIERIA
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: eturbosing.sst@gmail.com
+
+[1774] RH PREVENCIÓN
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: rhprevencion.sst@gmail.com
+
+[1506] ROKA
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: GESTIONHUMANAROKA@GMAIL.COM
+
+[1909] ROYALTY ETERTEIMENT SAS
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: healthandsafety.job@gmail.com
+
+[1727] RPQ LTDA
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: S.vegarh@gmail.com
+
+[788] RUSH STREET
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: gruposempresariall@gmail.com
+
+[1835] S&D SERVICIOS TÉCNICOS E INGENIERIA SAS
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: servicios.syd.sas@gmail.com
+
+[648] S&H SOLUCIONES
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: yolymah2801@gmail.com
+
+[268] SAFETY WORK INDUSTRIAS
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: alejandralesmeshseq@hotmail.com
+
+[196] SALUD P&P
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: VIPAF1003@GMAIL.COM
+
+[304] SALUD Y ESTETICA B&B S.A.S
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: marcela.beltran138@gmail.com
+
+[1369] SARA HUERTAS
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: huertas.sara@gmail.com
+
+[1972] SARGO LTDA
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: haroldamayac@gmail.com
+
+[2429] SECURITY PRO
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: carvajaldany2016@gmail.com
+
+[736] SED BOLIVAR
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: Mae042009@hotmail.com
+
+[900] SEGURIDAD MISERINO
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: seguridadmiserinosg.sst@gmail.com
+
+[1969] SEILAM
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: serviciosambientales.seilam@gmail.com
+
+[1640] SELARIOS LTDA
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: saludocupacionalselarios@gmail.com
+
+[1020] SELECTA S.A
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: ana.pmoreno@hotmail.com
+
+[933] SENSATA
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: sensatasesoria@gmail.com
+
+[666] SENTIDO Y REALIDAD
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: sentidoyrealidad20@gmail.com
+
+[857] SER CONSCIENTES
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: marialeja512@hotmail.com
+
+[1279] SERTIL LTDA
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: sertillhes@gmail.com
+
+[1684] SERVI INTEGRAL SAS
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: contabilidad1.servirintegral@gmail.com
+
+[491] SERVICIOS PROFESIONALES IH S.A.S
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: rhserviciosprofesionales.ih@gmail.com
+
+[1340] SERVILOGIST SAS
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: alejandra.ramirez1491@gmail.com
+
+[1566] SERVITRANS EXPRESS
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: jullyalexandra86@gmail.com
+
+[1379] SF WELL SERVICES
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: sanchezsanabria70@gmail.com
+
+[316] SGE S.A.S
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: erikatpc29@gmail.com
+
+[1131] SHERON SAS
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: kellyochoa04@gmail.com
+
+[420] SIG CONSULTORES ASOCIADOS S.A.S
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: Sigconsultoresasociados@gmail.com
+
+[1067] SIMGEA
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: coordinacionsimgea@gmail.com
+
+[2198] SIMTEC LM SAS
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: solucionesenriesgoslaborales@gmail.com
+
+[1869] SIMTEC LN SAS
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: solucionesenriesgoslaborales@gmail.com
+
+[1053] SINAPSYS IT
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: pasfloridasgsst@gmail.com
+
+[1897] SINCOS
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: GERENCIASINCOS@GMAIL.COM
+
+[582] SIQUIMA EXPRESS S.A.
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: siquima_express@hotmail.com
+
+[466] SIVALTRIPLEX
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: carolinavargas015@gmail.com
+
+[343] SKALLSTORE
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: psictatianapacheco@gmail.com
+
+[800] SOCIEDAD DE ANESTESIOLOGOS DEL COUNTRY
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: info.sacountrysa@gmail.com
+
+[2443] SOCIEDAD RyZ INGENIEROS CONSTRUCTORES
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: danielafajardo925@gmail.com
+
+[1156] SOINTECOL SAS
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: jeilen0328@gmail.com
+
+[1154] SOL CARGA
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: Helena_Bermudez79@Hotmail.com
+
+[1291] SOLASERVIS OUTSOURCING
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: olisheral1966@hotmail.com
+
+[2462] SOLUCIONES CREATIVAS Y TURÍSTICAS
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: costos.sct@gmail.com
+
+[1342] SOLUCIONES DE ALISTAMIENTO Y PINTURA JAV SAS
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: pintujav@gmail.com
+
+[490] SOLUCIONES DE INGENIERIA A&H S.A.S
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: sofia.villanueva.ah@gmail.com
+
+[313] SOLUCIONES ECOLOGICAS GAIA
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: profesionalgaia1@gmail.com
+
+[606] SOLUCIONES EN ALTURAS S.A.S
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: soluciones.alturas@gmail.com
+
+[591] SOLUCIONES INTEGRALES
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: danilondono1106@hotmail.com
+
+[1083] SOMEDYT
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: seguridadsomedyt@gmail.com
+
+[303] SORENSO LTDA
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: dpleandrosaludocupacional@gmail.com
+
+[1471] SST MOOLS
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: asesor3sstmoolsass@gmail.com
+
+[1775] SUDEN SAS
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: contabilidad.suden@gmail.com
+
+[1932] SUGEEK SAS
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: miguel.sanabria6006@gmail.com
+
+[1540] SUMINGEN
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: sstsumingensas@gmail.com
+
+[1844] SUPERMERCADOS DON CAMILO
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: coordinadorsst.supercamilo@gmail.com
+
+[626] SUPERPLAST
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: superplastsst.2022@gmail.com
+
+[1153] SUPLACOM SAS
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: SUPLACOM.SST@GMAIL.COM
+
+[1123] SUPRISA SAS
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: consultorhseq.2@gmail.com
+
+[1177] TALLER DE MOTOS SA
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: Gualdronalejandra0@gmail.com
+
+[709] TATIANA CASTAÑEDA
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: Tcastanedacastillo@gmail.com
+
+[746] TECNICELDAS
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: Nidiadeavila@hotmail.es
+
+[319] TECNICOMPRESORES S.A.S
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: Jackeline.hse@gmail.com
+
+[1661] TECNIMONTACARGAS DUAL LTDA
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: sgssttecnimontacargasdual@gmail.com
+
+[1267] TECNINEVADO SAS
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: tecninevadosst@hotmail.com
+
+[1868] TECNOINCOL
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: gestionesambientales2@gmail.com
+
+[2501] TERRAZAS PARK WAY PH
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: consejoterrazas025@gmail.com
+
+[502] TEXTICOLOR
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: zulval005@gmail.com
+
+[545] TEXTILES LA FLORESTA
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: sylviaorgo@yahoo.com
+
+[222] TH-E POWER
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: dparra6@gmail.com
+
+[1590] TORNOMETALES DOS TORRES
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: mateo.l.h@hotmail.com
+
+[188] TOTAL CLEAN XPRESS S.A.S
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: sgsst.totalcleanxpres1@hotmail.com
+
+[514] TOUR TRANSPORTE
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: elirios8424@gmail.com
+
+[533] TRANSCARGA MUNDIAL
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: SEGURIDADSSTTRANSCARGAMUNDIAL@GMAIL.COM
+
+[2016] TRANSFARCO
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: hseq.transfarco@gmail.com
+
+[906] TRANSFRIGOANDINOS
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: calidadfrigoandinos@gmail.com
+
+[937] TRANSPORTES LLANOCOL SAS
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: recursoshumanosllanocolsas@gmail.com
+
+[1010] TRANSPORTES S.A
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: manuela.consultoriasst@gmail.com
+
+[707] TRANSPORTES SANTORO
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: aprendiz.transportesantoro@gmail.com
+
+[337] TRANSVASUR LTDA
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: erikatpc29@gmail.com
+
+[774] TRANZAPATA SAS
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: tzgestionhumana@gmail.com
+
+[2490] TRATAMIENTO GALVÁNICOS SAS
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: johannapardoasesorias@gmail.com
+
+[1626] TRES CASA INMOBILIARIAS
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: blozanofonnegra2@gmail.com
+
+[252] TRICONO S.A.S
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: sigtricono@gmail.com
+
+[1978] UNIKAPITAL
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: laurenfranco1236@hotmail.com
+
+[512] UNIPERFILES
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: hansaviacion@gmail.com
+
+[1042] UT SIBATÉ INCLUSIVA
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: sibateinclusiva@gmail.com
+
+[1953] VALENZA CONSULTORES
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: mogollonyesika@gmail.com
+
+[417] VANEGAS ASOCIADOS
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: wilsonfo1977@yahoo.es
+
+[658] VIAYCONS S.A.S
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: mc.ramirezv95@gmail.com
+
+[1150] VIDRIOS SANTAFE 1 S.A.S
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: sstvidriossantafe1sas@yahoo.com
+
+[871] VILLAS DE HATO CHICO
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: miledcg@gmail.com
+
+[2023] VIOTRANSCOLOMBIA
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: analista.hseqviotranscol@gmail.com
+
+[1751] VISUAL GROUP DESIGN SAS
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: VGDDIRADMON@GMAIL.COM
+
+[1045] WHITE SERVICES
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: lilohenao@hotmail.com
+
+[1244] WILDLIFE WORKS COLOMBIA
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: wwc.sgsst@gmail.com
+
+[1116] WILER SAS
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: auxiliar.consorciowd@gmail.com
+
+[2232] WILMAR FERNANDEZ
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: wilfer2404@gmail.com
+
+[1604] WRLDING GLOBAL
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: bricenoingridlorena@gmail.com
+
+[513] Yeily Carreño
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: YEILYCB@HOTMAIL.COM
+
+[1450] YLB
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: marioly713@hotmail.com
+
+[1205] ZANEO
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: Ansgsst2023@gmail.com
+
+[2147] ZIELLO INTIMO SAS
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: consultorayc1@gmail.com
+
+[722] ZUHAILA
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: humanaszuhaila@gmail.com
+
+[170] ZUROCK ASOCIADOS LTDA
+    opps=1 contactos=1 NIT=(NULL) estado=Prospecto linea=Deseguridad
+    emails: fmcm76@hotmail.com
+
+[8] ASOCIACION RED DE DEFENSORES Y DEFENSORAS DE DERECHOS HUMANOS
+    opps=0 contactos=1 NIT=900813505 estado=Cliente linea=(NULL)
+    emails: ioaira.vega@assaabloy.com
+
+[44] Diana Sirley Torres Escalona
+    opps=0 contactos=1 NIT=52258867 estado=Cliente linea=(NULL)
+    emails: auxsst@grupomercadeo.com
+
+[65] H & S FRANQUICIAS SAS
+    opps=0 contactos=1 NIT=901218098 estado=Cliente linea=(NULL)
+    emails: asistenteseguridadsalud@gmail.com
+
+[83] K-2 INGENIERIA S.A.S.
+    opps=0 contactos=1 NIT=804007055 estado=Cliente linea=(NULL)
+    emails: coordinacionsst@kaysserck.com
+
+[86] LACTEOS APPENZELL S.A.S
+    opps=0 contactos=1 NIT=832009861 estado=Cliente linea=(NULL)
+    emails: sst@ladrilleragredos.com
+
+[89] LILIANA MERCEDES ANDRADE SERRANO
+    opps=0 contactos=1 NIT=55158870 estado=Cliente linea=(NULL)
+    emails: ambiental@lime.com.co
+
+[91] LOGROS FACTORY COLOMBIA S.A
+    opps=0 contactos=1 NIT=900300965 estado=Cliente linea=(NULL)
+    emails: analistasst@logrosfactoring.com
+
+[94] MASTERLINE COLOMBIA SOCIEDAD POR ACCIONES SIMPLIFICADA
+    opps=0 contactos=1 NIT=900444251 estado=Cliente linea=(NULL)
+    emails: compras@mazdel.com
+
+[105] PATRIMONIOS AUTONOMOS FIDUCIARIA BANCOLOMBIA S A SOCIEDAD FIDUCIARIA
+    opps=0 contactos=1 NIT=83005453 estado=Cliente linea=(NULL)
+    emails: mauricioalvarado_301@hotmail.com
+
+[111] PURICOL LTDA
+    opps=0 contactos=1 NIT=900133423 estado=Cliente linea=(NULL)
+    emails: mperalta@quantumtys.co
+
+[112] QUICK HELP S.A.S
+    opps=0 contactos=1 NIT=830124778 estado=Cliente linea=(NULL)
+    emails: sgst@rascontenedores.com
+
+[114] RENAL MEDICAL MARKETING LIMITADA
+    opps=0 contactos=1 NIT=800182918 estado=Cliente linea=(NULL)
+    emails: rhumanos@restrepoobrasciviles.com
+
+[120] SOFTESTING SAS
+    opps=0 contactos=1 NIT=900555571 estado=Cliente linea=(NULL)
+    emails: hseq@soldmant.com
+
+[122] Soluciones Avanzadas de Ingeniería SAS
+    opps=0 contactos=1 NIT=900249638 estado=Cliente linea=(NULL)
+    emails: gestionhumana@tubosSDI.com.co
+
+[127] TBTB GLOBAL LAB SAS
+    opps=0 contactos=1 NIT=901034854 estado=Cliente linea=(NULL)
+    emails: coordinadorhseq@technodrill.com.co
+
+[2526] INVERSIONES FRANQUIHER
+    opps=9 contactos=0 NIT=(NULL) estado=Activo linea=(NULL)
+
+[2548] EVALCOM
+    opps=6 contactos=0 NIT=(NULL) estado=Activo linea=(NULL)
+
+[2539] CONSTRUCTORA DE MARCAS
+    opps=2 contactos=0 NIT=(NULL) estado=Activo linea=(NULL)
+
+[2527] H&S FRANQUICIAS
+    opps=2 contactos=0 NIT=(NULL) estado=Activo linea=(NULL)
+
+[2537] INDU-B
+    opps=2 contactos=0 NIT=(NULL) estado=Activo linea=(NULL)
+
+[2521] ARCILLAS MLC
+    opps=1 contactos=0 NIT=(NULL) estado=Activo linea=(NULL)
+
+[2550] DIMTEC
+    opps=1 contactos=0 NIT=(NULL) estado=Activo linea=(NULL)
+
+[2561] ENERXIA.NEL SAS
+    opps=1 contactos=0 NIT=(NULL) estado=Activo linea=(NULL)
+
+[2557] HERNANDEZ BONILLA Y ASOCIADOS
+    opps=1 contactos=0 NIT=(NULL) estado=Activo linea=(NULL)
+
+[2556] INGCO
+    opps=1 contactos=0 NIT=(NULL) estado=Activo linea=(NULL)
+
+[2555] MAHOU
+    opps=1 contactos=0 NIT=(NULL) estado=Activo linea=(NULL)
+
+[2503] TORRE PICASOP PH
+    opps=1 contactos=0 NIT=(NULL) estado=Prospecto linea=Deseguridad
+
+───────────────────────────────────────────────────────────────
+FIN DEL REPORTE
+───────────────────────────────────────────────────────────────

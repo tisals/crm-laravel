@@ -1,0 +1,267 @@
+═══════════════════════════════════════════════════════════════
+  STAGE 1: Opps a reasignar según CSV (canonical_id conocido)
+═══════════════════════════════════════════════════════════════
+
+  opp[356] GC-01-2022-301
+    Inicial: COMPONENTE DIGITAL (id=443)
+    Final:   COMPONENTE SERVIEX (id=444) [EXISTENTE, dom=componenteserviex.com]
+    Razón:   CSV canonical=COMPONENTE SERVIEX
+
+  opp[410] GC-01-2022-348
+    Inicial: SOLAING (id=2358)
+    Final:   SOLAING SOLUCIONES AVANZADAS DE INGENIERIA (id=814) [EXISTENTE, dom=solaing.com]
+    Razón:   CSV canonical=SOLAING
+
+  opp[582] GC-01-2022-348 v1
+    Inicial: SOLAING (id=2358)
+    Final:   SOLAING SOLUCIONES AVANZADAS DE INGENIERIA (id=814) [EXISTENTE, dom=solaing.com]
+    Razón:   CSV canonical=SOLAING
+
+  opp[813] GC-02-2022-706
+    Inicial: SOLAING (id=2358)
+    Final:   SOLAING SOLUCIONES AVANZADAS DE INGENIERIA (id=814) [EXISTENTE, dom=solaing.com]
+    Razón:   CSV canonical=SOLAING SOLUCIONES AVANZADAS DE INGENIERIA
+
+  opp[859] GC-02-2022-766
+    Inicial: DIPREM (id=2489)
+    Final:   DIPREM COLOMBIA (id=2324) [EXISTENTE, dom=diprem.com]
+    Razón:   CSV canonical=DIPREM
+
+  opp[1376] GC-02-2023-473
+    Inicial: Instituto Nacional Penitenciario y Carcelario – INPEC (id=1558)
+    Final:   INSTITUTO NACIONAL PENITENCIARIO (id=NEW) [NUEVA, dom=]
+    Razón:   CSV canonical=INSTITUTO NACIONAL PENITENCIARIO
+
+  opp[1688] GC-01-2024-040
+    Inicial: Instituto Nacional Penitenciario y Carcelario – INPEC (id=1558)
+    Final:   INSTITUTO NACIONAL PENITENCIARIO (id=NEW) [NUEVA, dom=]
+    Razón:   CSV canonical=INSTITUTO NACIONAL PENITENCIARIO
+
+  opp[1759] GC-01-2024-102
+    Inicial: SOLAING (id=2358)
+    Final:   SOLAING SOLUCIONES AVANZADAS DE INGENIERIA (id=814) [EXISTENTE, dom=solaing.com]
+    Razón:   CSV canonical=SOLAING
+
+  opp[2209] GC-02-2024-506
+    Inicial: SOLAING (id=2358)
+    Final:   SOLAING SOLUCIONES AVANZADAS DE INGENIERIA (id=814) [EXISTENTE, dom=solaing.com]
+    Razón:   CSV canonical=SOLAING
+
+  opp[2602] GC-02-2025-321
+    Inicial: DIPREM (id=2489)
+    Final:   DIPREM COLOMBIA (id=2324) [EXISTENTE, dom=diprem.com]
+    Razón:   CSV canonical=DIPREM COLOMBIA
+
+  opp[2635] GC-02-2025-354
+    Inicial: ASOCIACIÓN CLUB CAMASATA (id=2234)
+    Final:   ASOCIACION CASAMATA (id=2352) [EXISTENTE, dom=asocasamata.com 
+recursoshumanos@asocasamata.com]
+    Razón:   CSV canonical=ASOCIACION CASAMATA
+
+  opp[2642] GC-02-2025-361
+    Inicial: SOLAING (id=2358)
+    Final:   SOLAING SOLUCIONES AVANZADAS DE INGENIERIA (id=814) [EXISTENTE, dom=solaing.com]
+    Razón:   CSV canonical=SOLAING
+
+  opp[2643] GC-02-2025-360
+    Inicial: ASOCIACIÓN CLUB CAMASATA (id=2234)
+    Final:   ASOCIACION CASAMATA (id=2352) [EXISTENTE, dom=asocasamata.com 
+recursoshumanos@asocasamata.com]
+    Razón:   CSV canonical=ASOCIACIÓN CASAMATA
+
+  opp[2677] GC-02-2025-393
+    Inicial: DIPREM (id=2489)
+    Final:   DIPREM COLOMBIA (id=2324) [EXISTENTE, dom=diprem.com]
+    Razón:   CSV canonical=DIPREM
+
+  opp[2695] GC-01-2026-023
+    Inicial: DIPREM (id=2489)
+    Final:   DIPREM COLOMBIA (id=2324) [EXISTENTE, dom=diprem.com]
+    Razón:   CSV canonical=DIPREM
+
+  opp[2696] GC-01-2026-026
+    Inicial: DIPREM (id=2489)
+    Final:   DIPREM COLOMBIA (id=2324) [EXISTENTE, dom=diprem.com]
+    Razón:   CSV canonical=DIPREM
+
+  opp[2697] GC-01-2026-029
+    Inicial: SOLAING (id=2358)
+    Final:   SOLAING SOLUCIONES AVANZADAS DE INGENIERIA (id=814) [EXISTENTE, dom=solaing.com]
+    Razón:   CSV canonical=SOLAING
+
+  opp[2700] GC-01-2026-025
+    Inicial: DIPREM (id=2489)
+    Final:   DIPREM COLOMBIA (id=2324) [EXISTENTE, dom=diprem.com]
+    Razón:   CSV canonical=DIPREM
+
+  opp[2708] GC-01-2026-033
+    Inicial: DIPREM (id=2489)
+    Final:   DIPREM COLOMBIA (id=2324) [EXISTENTE, dom=diprem.com]
+    Razón:   CSV canonical=DIPREM
+
+  opp[2765] GC-01-2026-092
+    Inicial: DIPREM (id=2489)
+    Final:   DIPREM COLOMBIA (id=2324) [EXISTENTE, dom=diprem.com]
+    Razón:   CSV canonical=DIPREM
+
+  opp[2766] GC-01-2026-602
+    Inicial: DIPREM (id=2489)
+    Final:   DIPREM COLOMBIA (id=2324) [EXISTENTE, dom=diprem.com]
+    Razón:   CSV canonical=DIPREM
+
+  opp[2775] GC-01-2026-025 v1
+    Inicial: DIPREM (id=2489)
+    Final:   DIPREM COLOMBIA (id=2324) [EXISTENTE, dom=diprem.com]
+    Razón:   CSV canonical=DIPREM
+
+  opp[2802] GC-01-2026-123
+    Inicial: DIPREM (id=2489)
+    Final:   DIPREM COLOMBIA (id=2324) [EXISTENTE, dom=diprem.com]
+    Razón:   CSV canonical=DIPREM
+
+  opp[2803] GC-01-2026-122
+    Inicial: DIPREM (id=2489)
+    Final:   DIPREM COLOMBIA (id=2324) [EXISTENTE, dom=diprem.com]
+    Razón:   CSV canonical=DIMTEC
+
+  opp[2810] GC-01-2026-132
+    Inicial: DIPREM (id=2489)
+    Final:   DIPREM COLOMBIA (id=2324) [EXISTENTE, dom=diprem.com]
+    Razón:   CSV canonical=DIPREM
+
+  opp[2815] GC-01-2026-133
+    Inicial: DIPREM (id=2489)
+    Final:   DIPREM COLOMBIA (id=2324) [EXISTENTE, dom=diprem.com]
+    Razón:   CSV canonical=DIPREM
+
+  opp[2822] GC-02-2026-143
+    Inicial: DIPREM (id=2489)
+    Final:   DIPREM COLOMBIA (id=2324) [EXISTENTE, dom=diprem.com]
+    Razón:   CSV canonical=DIPREM
+
+  opp[2823] GC-02-2026-142
+    Inicial: DIPREM (id=2489)
+    Final:   DIPREM COLOMBIA (id=2324) [EXISTENTE, dom=diprem.com]
+    Razón:   CSV canonical=DIPREM
+
+  opp[2824] GC-02-2026-145
+    Inicial: DIPREM (id=2489)
+    Final:   DIPREM COLOMBIA (id=2324) [EXISTENTE, dom=diprem.com]
+    Razón:   CSV canonical=DIPREM
+
+  opp[2832] GC-02-2026-150
+    Inicial: DIPREM (id=2489)
+    Final:   DIPREM COLOMBIA (id=2324) [EXISTENTE, dom=diprem.com]
+    Razón:   CSV canonical=DIPREM
+
+
+Total: 30 opps a reasignar (2 requieren crear entidad NUEVA)
+
+═══════════════════════════════════════════════════════════════
+  STAGE 2: Opps a reasignar según dominio de contacto
+═══════════════════════════════════════════════════════════════
+
+  opp[859] GC-02-2022-766
+    Inicial:    DIPREM (id=2489) [contacto=cospinamendez@diprem.com, dom=diprem.com]
+    Final:      DIPREM COLOMBIA (id=2324) [EXISTENTE]
+    Razón:      Contacto email domain coincide con entidad destino
+
+  opp[2210] GC-02-2024-505
+    Inicial:    CUATRECASAS - ADECCO (id=2006) [contacto=maryorly.silva@adecco.com, dom=adecco.com]
+    Final:      ORGANIZACIÓN SOLARTE & CIA CA (id=156) [EXISTENTE]
+    Razón:      Contacto email domain coincide con entidad destino
+
+  opp[2642] GC-02-2025-361
+    Inicial:    SOLAING (id=2358) [contacto=laura.velasquez@solaing.com, dom=solaing.com]
+    Final:      SOLAING SOLUCIONES AVANZADAS DE INGENIERIA (id=814) [EXISTENTE]
+    Razón:      Contacto email domain coincide con entidad destino
+
+  opp[2802] GC-01-2026-123
+    Inicial:    DIPREM (id=2489) [contacto=comercial.colombia@diprem.com, dom=diprem.com]
+    Final:      DIPREM COLOMBIA (id=2324) [EXISTENTE]
+    Razón:      Contacto email domain coincide con entidad destino
+
+
+Total: 4 opps a reasignar por dominio de contacto (todos van a entidades EXISTENTES)
+
+═══════════════════════════════════════════════════════════════
+  STAGE 3: Inferir dominio para entidades sin dominio (NIT + contactos)
+═══════════════════════════════════════════════════════════════
+
+  [3] ALVEAR ESCOBAR ASOCIADOS S.A.S [NIT=900694193]
+    Inicial:  dominio=(NULL)
+    Final:    dominio=americasbps.com (EXISTENTE, UPDATE)
+    Razón:    2 contactos con @americasbps.com
+
+  [106] PILYQ COLOMBIA S.A.S. [NIT=900579862]
+    Inicial:  dominio=(NULL)
+    Final:    dominio=polinter.com.co (EXISTENTE, UPDATE)
+    Razón:    2 contactos con @polinter.com.co
+
+
+Total: 2 entidades con dominio inferible
+
+═══════════════════════════════════════════════════════════════
+  STAGE 4: Consolidar entidades duplicadas (mismo nombre normalizado)
+═══════════════════════════════════════════════════════════════
+
+  Nombre normalizado: 'brinks colombia'
+    GANADOR: [219] BRINKS COLOMBIA [dom=brinks.com.co, NIT=(NULL)]
+    Perdedores:
+      [274] BRINKS COLOMBIA [dom=brinks.com.co, NIT=(NULL)] → MOVER opps+contactos a ganador, BORRAR entidad
+      [550] BRINKS COLOMBIA [dom=brinks.com.co, NIT=(NULL)] → MOVER opps+contactos a ganador, BORRAR entidad
+
+  Nombre normalizado: 'brinks colombia- pyc'
+    GANADOR: [288] BRINKS COLOMBIA- PyC [dom=brinks.com.co, NIT=(NULL)]
+    Perdedores:
+      [551] BRINKS COLOMBIA- PyC [dom=brinks.com.co, NIT=(NULL)] → MOVER opps+contactos a ganador, BORRAR entidad
+
+  Nombre normalizado: 'brinks colombia - epago'
+    GANADOR: [289] BRINKS COLOMBIA - EPAGO [dom=brinks.com.co, NIT=(NULL)]
+    Perdedores:
+      [552] BRINKS COLOMBIA - EPAGO [dom=brinks.com.co, NIT=(NULL)] → MOVER opps+contactos a ganador, BORRAR entidad
+
+
+Total: 4 entidades perdedoras a borrar (mega-clusters excluidos)
+
+═══════════════════════════════════════════════════════════════
+  STAGE 5a: Shells iniciales (0 opps, 0 contactos, dominio NULL)
+═══════════════════════════════════════════════════════════════
+
+Total: 0 shells iniciales a borrar
+
+═══════════════════════════════════════════════════════════════
+  STAGE 5b: Shells post-movimiento (calculados tras stages 1-4)
+═══════════════════════════════════════════════════════════════
+
+Total: 0 shells adicionales detectados post-movimiento
+
+═══════════════════════════════════════════════════════════════
+  RESUMEN FINAL — ACCIONES PROPUESTAS
+═══════════════════════════════════════════════════════════════
+
+Tabla: cleanup_proposed_changes
+  Stage 1 (reassign by CSV):    30
+  Stage 2 (reassign by contact): 4
+  Stage 3 (infer dominio):     2
+  Stage 4 (consolidate):       4
+  Stage 5 (delete shells):     0
+
+Reporte: /var/www/html/database/fixes/../cleanup-reports/cleanup-pending-2026-07-16-160909.txt
+
+Para revisar:
+  SELECT * FROM cleanup_proposed_changes WHERE status = 'pending';
+
+Para AGREGAR OBSERVACIONES (notas que se preservan entre corridas):
+  UPDATE cleanup_proposed_changes SET user_notes = 'TEXTO' WHERE id = X;
+  UPDATE cleanup_proposed_changes SET user_notes = CONCAT(IFNULL(user_notes,''), ' | nuevo texto') WHERE id = X;
+  UPDATE cleanup_proposed_changes SET user_notes = NULL WHERE id = X;  (limpiar)
+
+Para aprobar/rechazar:
+  UPDATE cleanup_proposed_changes SET status = 'approved' WHERE id IN (...);
+  UPDATE cleanup_proposed_changes SET status = 'rejected' WHERE id IN (...);
+
+Para aplicar DESPUÉS de revisar:
+  php database/fixes/cleanup-v3.php --apply --from-temp-table
+
+Las notas se preservan entre corridas (basado en hash del payload).

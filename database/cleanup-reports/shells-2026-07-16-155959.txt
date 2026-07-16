@@ -1,0 +1,124 @@
+═══════════════════════════════════════════════════════════════
+  SHELLS — Entidades con 0 opps, dominio NULL, NO Cliente
+═══════════════════════════════════════════════════════════════
+
+Generado: 2026-07-16 15:59:59
+Base de datos: tecnoinnsoft_crm
+Filtro: dominio IS NULL OR '' AND COUNT(oportunidad) = 0 AND estado != 'Cliente'
+
+───────────────────────────────────────────────────────────────
+CRITERIO DE SHELL REAL
+───────────────────────────────────────────────────────────────
+Estas entidades:
+  - NO son clientes activos (estado != 'Cliente')
+  - NO tienen oportunidades (jamás generaron negocio)
+  - NO tienen dominio asignado
+  - Son leads/prospectos muertos sin conversión
+
+Recomendación: revisar antes de borrar.
+  - Si tienen contactos activos → contactar antes de borrar
+  - Si NO tienen contactos ni interacción reciente → borrar
+
+───────────────────────────────────────────────────────────────
+DETALLE
+───────────────────────────────────────────────────────────────
+
+[2532] ALFONSO URIBE S y CIA SA
+    estado=Activo contactos=0 NIT=(NULL) creado=2026-07-15
+
+[2553] ANKER
+    estado=Activo contactos=0 NIT=(NULL) creado=2026-07-15
+
+[2514] AXIOMATICA
+    estado=Activo contactos=0 NIT=(NULL) creado=2026-07-15
+
+[2542] B&P CAPITAL SAS
+    estado=Activo contactos=0 NIT=(NULL) creado=2026-07-15
+
+[2546] BARRETO SEGUROS
+    estado=Activo contactos=0 NIT=(NULL) creado=2026-07-15
+
+[2547] BARRETO Y CIA LTDA
+    estado=Activo contactos=0 NIT=(NULL) creado=2026-07-15
+
+[2549] BETA SERVICIOS TEMPORALES
+    estado=Activo contactos=0 NIT=(NULL) creado=2026-07-15
+
+[2544] BOCCHERINI
+    estado=Activo contactos=0 NIT=(NULL) creado=2026-07-15
+
+[2528] CI DYNAMIC TRADING CORP
+    estado=Activo contactos=0 NIT=(NULL) creado=2026-07-15
+
+[2523] CINOC CALDAS
+    estado=Activo contactos=0 NIT=(NULL) creado=2026-07-15
+
+[2540] CLUB PAYANDÉ
+    estado=Activo contactos=0 NIT=(NULL) creado=2026-07-15
+
+[2518] COLOMBIANA DE ENVASES INDUSTRIALES S.A
+    estado=Activo contactos=0 NIT=(NULL) creado=2026-07-15
+
+[2530] COLVINSA
+    estado=Activo contactos=0 NIT=(NULL) creado=2026-07-15
+
+[2516] COMERCIALIZADOR GIRALDO GOMEZ
+    estado=Activo contactos=0 NIT=(NULL) creado=2026-07-15
+
+[2531] CONAMBIENTE
+    estado=Activo contactos=0 NIT=(NULL) creado=2026-07-15
+
+[2551] CORPORACIÓN CLUB PAYANDE
+    estado=Activo contactos=0 NIT=(NULL) creado=2026-07-15
+
+[2554] COSMOELEC
+    estado=Activo contactos=0 NIT=(NULL) creado=2026-07-15
+
+[2558] EXPRESS & CLEAN LAVANDERIA
+    estado=Activo contactos=0 NIT=(NULL) creado=2026-07-15
+
+[2533] EZGO S.A
+    estado=Activo contactos=0 NIT=(NULL) creado=2026-07-15
+
+[2522] FENALCO
+    estado=Activo contactos=0 NIT=(NULL) creado=2026-07-15
+
+[2543] FENALCO BOGOTÁ
+    estado=Activo contactos=0 NIT=(NULL) creado=2026-07-15
+
+[2535] GENERAL RIGS SERVICES
+    estado=Activo contactos=0 NIT=(NULL) creado=2026-07-15
+
+[2517] GESTORES RRHH EU
+    estado=Activo contactos=0 NIT=(NULL) creado=2026-07-15
+
+[2529] GRS SA.S.
+    estado=Activo contactos=0 NIT=(NULL) creado=2026-07-15
+
+[2536] GRUPO ETRA
+    estado=Activo contactos=0 NIT=(NULL) creado=2026-07-15
+
+[2541] IES CINOC de Pensilvania - Caldas
+    estado=Activo contactos=0 NIT=(NULL) creado=2026-07-15
+
+[2559] SINERGYSOL
+    estado=Activo contactos=0 NIT=(NULL) creado=2026-07-15
+
+[2538] SOLUCIONES RP SAS
+    estado=Activo contactos=0 NIT=(NULL) creado=2026-07-15
+
+[2545] SUPPLYTEC - DYCSA
+    estado=Activo contactos=0 NIT=(NULL) creado=2026-07-15
+
+[2534] SUPPLYTECH - DYCSA
+    estado=Activo contactos=0 NIT=(NULL) creado=2026-07-15
+
+[2513] VUELTA CANELA S.A.S
+    estado=Activo contactos=0 NIT=(NULL) creado=2026-07-15
+
+[2552] WALSON SAS
+    estado=Activo contactos=0 NIT=(NULL) creado=2026-07-15
+
+───────────────────────────────────────────────────────────────
+TOTAL: 32 entidades
+───────────────────────────────────────────────────────────────

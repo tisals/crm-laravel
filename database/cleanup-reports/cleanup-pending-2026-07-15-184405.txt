@@ -1,0 +1,362 @@
+=== REPORTE PENDIENTES - 2026-07-15-184405 ===
+
+Total aprobadas (listas para ejecutar): 795
+Total pendientes (requieren revision): 304
+Total rechazadas: 25
+
+=== RESUMEN ===
+  opp_reasign                    approved   536
+  opp_reasign_by_contact         pending    304
+  opp_reasign_by_contact         rejected   13
+  entity_infer_dominio           rejected   2
+  entity_consolidate             approved   259
+  entity_consolidate             rejected   10
+
+=== STAGE 2: opp_reasign_by_contact (PENDIENTES) ===
+
+  ID     Opp          Admin  Entidad Origen                                -> Entidad Destino                          Notes
+--------------------------------------------------------------------------------------------------------------------------------------------
+  537    #27 (GC-01-2023-014) 4      CLINICA PALERMO                               -> CLINICA PALERMO                          
+  538    #38 (GC-01-2022-038) 3      TECNOLOGÍA DE OFICINA S.A.S                  -> TECNOLOGIA DE OFICINA S.A.S.             
+  542    #106 (GC-01-2022-094) 3      STOCKOIL S.A.S                                -> STOCKOIL S.A.S                           
+  543    #108 (GC-01-2022-092) 1      IPS RANGEL REHABILITACIÓN                    -> IPS CARLOS EDUARDO RANGEL GALVIS         
+  544    #137 (GC-01-2022-114) 1      PANAMERICA LIBRERÍA Y PAPELERIA S.A          -> CORPORACIÓN CLUB EL NOGAL               
+  545    #140 (GC-01-2022-052 v1) 1      CANCILLERIA DE COLOMBIA                       -> CANCILLERIA DE COLOMBIA                  
+  547    #167 (GC-01-2022-117 v1) 1      ASEOS LA PERFECCIÓN S.A.S                    -> ASEOS LA PERFECCIÓON S.A.S              
+  550    #205 (GC-01-2022-075) 3      IC ESCULTURAS                                 -> PROSPERIDAD SOCIAL                       
+  551    #222 (GC-01-2022-190) 1      ACEROS MAPA                                   -> ACEROS MAPA                              
+  552    #250 (GC-01-2022-206) 4      PROMOTORA HOTELERA DE LA SABANA               -> CONSTRUCCIONES Y PROYECTOS DE LA SABANA  
+  553    #251 (GC-01-2022-205) 1      INVERSIONES AMTIZ ALDANA                      -> CONSTRUCCIONES Y PROYECTOS DE LA SABANA  
+  554    #264 (GC-01-2022-226) 1      INPERSINTETICOS S.A.S                         -> SOILMEC COLOMBIA S.A.S                   
+  555    #268 (GC-01-2022-230) 3      VIGAF COMPANY S.A.S                           -> GRUPO P&G INVERSIONES LTDA               
+  556    #269 (GC-01-2022-229) 4      TH ANYSA S.A.S                                -> GRUPO P&G INVERSIONES LTDA               
+  557    #291 (GC-01-2022-052 v3) 1      CANCILLERIA DE COLOMBIA                       -> CANCILLERIA DE COLOMBIA                  
+  558    #295 (GC-01-2022-250) 1      HV TELEVISIÓN S.A.S                          -> ADMINISTRACIÓN DE REDES Y PROYECTOS     
+  559    #304 (GC-01-2022-256) 4      INVERSIONES MATIZ ALDANA                      -> CONSTRUCCIONES Y PROYECTOS DE LA SABANA  
+  560    #307 (GC-01-2022-253) 4      IPS RANGEL REHABILITACIÓN                    -> IPS CARLOS EDUARDO RANGEL GALVIS         
+  561    #314 (GC-01-2022-277) 3      SERVICE TOTAL TALENT GROUP                    -> BETA SERVICIOS TEMPORALES S A S          
+  562    #346 (GC-01-2022-294) 3      XYZ CALL CENTER SOLUTIONS S.A.S               -> QUALITYSER S.A.S                         
+  563    #348 (GC-01-2022-299) 1      NOVASOFT                                      -> NOVASOFT S.A.S                           
+  564    #352 (GC-01-2022-305) 1      JUNIPER                                       -> HACIENDA CASA BLANCA                     
+  565    #353 (GC-01-2022-304) 3      HANGAR PARK SAS                               -> HACIENDA CASA BLANCA                     
+  566    #354 (GC-01-2022-303) 4      NEXO S.A.S                                    -> HACIENDA CASA BLANCA                     
+  567    #356 (GC-01-2022-301) 3      COMPONENTE SERVIEX                            -> COMPONENTE DIGITAL                       
+  568    #361 (GC-01-2022-069 v1) 3      MANAGEMENT SOLUTIONS                          -> MANAGEMENT SOLUTIONS                     
+  569    #380 (GC-01-2022-329) 1      ARINDEC S.A.S                                 -> ARINDEC                                  
+  570    #397 (GC-01-2022-343) 1      TECNOLOGÍA DE OFICINA                        -> TECNOLOGIA DE OFICINA S.A.S.             
+  571    #403 (GC-01-2022-287 v1) 1      FONDO BIENESTAR CONTRAOLORIA GENERAL          -> FONDO BIENESTAR CONTRAOLORIA GENERAL     
+  572    #428 (GC-01-2022-373) 3      POLINTER S.A.S                                -> POLINTER S.A.S                           
+  573    #436 (GC-01-2022-381) 1      ST JUDE MEDICAL COLOMBIA                      -> ABBOTT RAPID DIAGNOSTICS COLOMBIA        
+  574    #437 (GC-01-2022-380) 3      ABBOTT LABORATORIES DE COLOMBIA               -> ABBOTT RAPID DIAGNOSTICS COLOMBIA        
+  575    #478 (GC-01-2022-420) 3      SECRETARIA DISTRITAL DE SALUD                 -> FONDO FINANCIERO DISTRITAL DE SALUD      
+  579    #493 (GC-01-2022-437) 1      GVS COLOMBIA S.A.S                            -> GVS COLOMBIA S.A.S                       
+  580    #550 (GC-02-2022-493) 4      Instituto de Investigación de Recursos Biológicos
+Alexander von Humboldt -> INSTITUTO HUMBOLDT                       
+  581    #564 (GC-02-2022-501) 4      KLARZEN GREEN TECHNOLOGY INC                  -> KLARZEN GREEN TECHNOLOGY INC             
+  582    #576 (GC-02-2022-509) 4      DEPARTAMENTO NACIONAL DE PLANEACIÓN          -> DEPARTAMENTO NACIONAL DE PLANEACIÓN     
+  583    #578 (GC-01-2022-507) 3      COOPIDROGAS                                   -> COOPIDROGAS                              
+  584    #580 (GC-02-2022-735) 4      POLINTER S.A.S                                -> POLINTER S.A.S                           
+  585    #582 (GC-01-2022-348 v1) 3      SOLAING                                       -> SOLAING                                  
+  586    #593 (GC-02-2022-522 v1) 4      IDCBIS                                        -> IDCBIS                                   
+  587    #621 (GC-02-2022-550) 4      AEROPUERTOS DE ORIENTE                        -> AEROPUERTOS DE ORIENTE S.A.S             
+  588    #634 (GC-02-2022-527 v1) 1      FINANCIERA COMULTRASAN                        -> FINANCIERA COMULTRASAN                   
+  589    #640 (GC-02-2022-570) 3      PSP SOLUTIONS S.A.S                           -> ORGANIZACIÓN SOLARTE & CIA CA           
+  590    #644 (GC-02-2022-518 v1) 3      UNIVERSIDAD COLEGIO MAYOR DE CUNDINAMARCA     -> UNIVERSIDAD COLEGIO MAYOR DE CUNDINAMARCA 
+  591    #655 (GC-02-2022-575) 4      DISTRIBUIDORA COLCEMENTO S.A.S                -> DISTRIBUIDORA COLCEMENTO S.A.S           
+  592    #667 (GC-02-2022-583) 1      EMSERFUSA E.S.P                               -> EMSERFUSA ESP                            
+  593    #669 (GC-02-2022-583 v2) 4      EMPRESA DE SERVICIOS PÚBLICOS DE FUSAGASUGÁ Emserfusa E.S.P -NIT 890680053 -> EMSERFUSA ESP                            
+  594    #672 (GC-01-2022-129 v1) 3      SWISSLUB S.A.S                                -> SWISSLUB S.A.S                           
+  595    #698 (GC-02-2022-605) 4      VALUE ADDES SERVICE                           -> VAS S.A.S                                
+  596    #709 (GC-02-2022-583 v5) 4      EMPRESA DE SERVICIOS PÚBLICOS DE FUSAGASUGÁ Emserfusa E.S.P -NIT 890680053 -> EMSERFUSA ESP                            
+  597    #726 (GC-02-2022-625) 4      CONTRALORIA DEPARTAMENTAL VALLE DEL CAUCA     -> INTEGRA 21 S.A.S                         
+  598    #740 (GC-02-2022-650) 4      FLOTA MACARENA                                -> FLOTA MACARENA                           
+  599    #789 (GC-02-2022-688) 4      GRUPO TROPI                                   -> VENTAS Y MARCAS SAS                      
+  600    #801 (GC-02-2022-696) 1      TERMOEMCALI I S.A .E.S.P a CONTOURGLOBAL COMPANY -> TERMOENCALI S.A E.S.P                    
+  601    #810 (GC-02-2022-709) 4      Instituto Nacional de Metrología de Colombia -> INSTITUTO NACIONAL DE METROLOGIA DE COLOMBIA 
+  602    #813 (GC-02-2022-706) 4      SOLAING SOLUCIONES AVANZADAS DE INGENIERIA    -> SOLAING                                  
+  603    #818 (GC-02-2022-701) 3      UIB COLOMBIA SA                               -> UIB COLOMBIA S.A                         
+  604    #842 (GC-02-2022-731) 4      MONITOREO INTELIGENTE S.A.S                   -> MONITOROE INTELIGENTE                    
+  605    #848 (GC-02-2022-760) 3      ADVANCED GEAR OFS                             -> ADVANCED GEAR                            
+  606    #851 (GC-02-2022-757) 3      ERPO C&A                                      -> ERPO CONSULTORES Y ASESORES              
+  607    #852 (GC-02-2022-761) 4      POLINTER SAS                                  -> POLINTER S.A.S                           
+  608    #857 (GC-02-2022-762) 1      ORINOCO                                       -> ORINOCO MINERIA URBANA                   
+  609    #861 (GC-02-2022-770) 3      G-5 SAS                                       -> G5 S.A.S                                 
+  610    #884 (GC-01-2023-017) 4      LUCTA GRANCOLOMBIANA SAS                      -> LUCTA GRANCOLOMBIANA SAS                 
+  611    #890 (GC-01-2023-026) 3      MSI                                           -> FUNDACION MSI COLOMBIA                   
+  612    #908 (GC-01-2023-035) 3      EUROFARMA                                     -> EUROFARMA                                
+  613    #910 (GC-01-2023-004 v1) 1      POLINTER S.A.S                                -> POLINTER S.A.S                           
+  614    #932 (GC-01-2023-061) 3      ROYCO                                         -> ROYCO                                    
+  615    #959 (GC-01-2023-087) 3      SALUD MASIN                                   -> AXON 360                                 
+  616    #965 (GC-01-2023-099) 1      SERVITEL                                      -> SERVITELECOMUNICACIONES S.A.S            
+  617    #974 (GC-01-2023-100) 4      STT GROUP                                     -> BETA SERVICIOS TEMPORALES S A S          
+  618    #975 (GC-01-2023-017 v2) 1      LUCTA GRANCOLOMBIANA SAS                      -> LUCTA GRANCOLOMBIANA SAS                 
+  619    #978 (GC-01-2023-108) 4      FUNDACIÓN ANDI                               -> FUNDACIÓN ANDI                          
+  620    #1017 (GC-01-2023-013 v1) 1      SEGURIDAD CANADA                              -> SEGURIDAD CANADA                         
+  621    #1018 (GC-01-2023-141) 3      GRASSLAND SAS                                 -> GRASSLAND S.A.S                          
+  622    #1019 (GC-01-2023-140) 4      JIMECO SAS                                    -> HERVALLE SAS                             
+  623    #1022 (GC-01-2023-117 v1) 1      Patrimonio Natural, Fondo para la Biodiversidad y Áreas Protegidas. -> Patrimonio Natural, Fondo para la Biodiversidad y Áreas Protegidas. 
+  624    #1039 (GC-01-2023-160) 3      PROMOTEC LTDA AGENCIA DE SEGUROS              -> PROCOMOERCIO SAS                         
+  625    #1041 (GC-01-2023-158) 4      FINANZAUTO                                    -> PROCOMOERCIO SAS                         
+  626    #1058 (GC-01-2023-177) 3      POLICIA NACIONAL 
+Dirección de Investigación Criminal e Interpol -> POLIICIA NACIONAL -MENEV                 
+  627    #1059 (GC-01-2023-176) 4      KRC INGENIEROS                                -> KRC INGENIEROS                           
+  628    #1106 (GC-01-2023-227) 3      GRUPO PYG                                     -> GRUPO P&G INVERSIONES LTDA               
+  629    #1115 (GC-01-2023-232) 4      FLORES PRISMA                                 -> FLORES PRISMA SA                         
+  630    #1116 (GC-01-2023-231) 1      MONITOREO INTELIGENTE                         -> MONITOROE INTELIGENTE                    
+  631    #1131 (GC-01-2023-167 v1) 4      GRUPO KOPELLE SAS                             -> GRUPO KOPELLE SAS                        
+  632    #1137 (GC-01-2023-182 v1) 4      BONEMA                                        -> BONEMA                                   
+  633    #1143 (GC-01-2023-255) 3      DISTRIBUIDORA SURTILIMA                       -> VENTAS Y MARCAS SAS                      
+  634    #1149 (GC-01-2023-263) 4      RP SERVICES                                   -> RADIOLOGICAL PROTECTION SERVICES SAS     
+  635    #1150 (GC-01-2023-262) 1      AEROPUERTOS DE ORIENTE                        -> AEROPUERTOS DE ORIENTE S.A.S             
+  636    #1151 (GC-01-2023-261) 3      INSTITUTO NACIONAL DE METROLOGIA              -> INSTITUTO NACIONAL DE METROLOGIA DE COLOMBIA 
+  637    #1158 (GC-01-2023-271) 3      INSTITUTO HUMBOLDT COLOMBIA                   -> INSTITUTO HUMBOLDT                       
+  638    #1171 (GC-01-2023-275) 3      COLGEIO NUESTRA SEÑORA DE FÁTIMA            -> POLIICIA NACIONAL -MENEV                 
+  639    #1183 (GC-01-2023-292) 4      LIME                                          -> LIMPIEZA METROPOLITANA SAS ESP           
+  640    #1186 (GC-01-2023-289) 4      POLINTER S.A.S                                -> POLINTER S.A.S                           
+  641    #1199 (GC-01-2023-199 v1) 1      Q2SM SAS                                      -> Q2SM SAS                                 
+  642    #1206 (GC-01-2023-306) 3      GRUPO PYG INVERSIONES                         -> GRUPO P&G INVERSIONES LTDA               
+  643    #1220 (GC-01-2023-073 v2) 4      4LIFE RESEARCH COLOMBIA                       -> 4LIFE RESEARCH COLOMBIA                  
+  644    #1221 (GC-01-2023-316) 1      ATECNO (Samsung)                              -> ATECNO (hewlett packard)                 
+  645    #1222 (GC-01-2023-262 v2) 3      AEROPUERTOS DE ORIENTE                        -> AEROPUERTOS DE ORIENTE S.A.S             
+  646    #1236 (GC-01-2023-300 v1) 4      FAMISANAR EPS                                 -> FAMISANAR EPS                            
+  647    #1241 (GC-02-2023-333) 1      PROGRESION SOCIEDAD COMICIONISTA DE BOLSA     -> PROGRESION SOCIEDAD COMISIONISTA DE BOLSA 
+  648    #1250 (GC-01-2023-347) 1      LA GAITAN FARMS                               -> GAITANA FARMS                            
+  649    #1270 (GC-02-2023-370) 4      UIB COLOMBIA SEGUROS                          -> UIB COLOMBIA S.A                         
+  654    #1308 (GC-02-2023-395) 4      GRUPO BIOCOSTA                                -> GRUPO BIOCOSTA                           
+  655    #1312 (GC-02-2023-402) 1      PROYECTOS HG SAS                              -> PROYECTOS HG SAS                         
+  656    #1314 (GC-02-2023-400) 4      IDCBIS                                        -> IDCBIS                                   
+  657    #1316 (GC-02-2023-417) 3      HV SERVICES & SUPPLY                          -> FEPCO ZONA FRANCA SAS                    
+  658    #1337 (GC-02-2023-408 v1) 4      UNIDAD MÉDICO QUIRÚRGICA DE ORL SAS         -> UNIMEQ ORL                               
+  659    #1339 (GC-02-2023-428) 1      AEROPUERTOS DE ORIENTE                        -> AEROPUERTOS DE ORIENTE S.A.S             
+  660    #1352 (GC-02-2023-430) 1      PANAMERICANA FORMAS E IMPRESOS                -> PANAMERICANA FORMAS E IMPRESOS           
+  661    #1355 (GC-02-2023-443) 1      LIME LIMPIEZA METROPOLITANA S.A ESP           -> LIMPIEZA METROPOLITANA SAS ESP           
+  662    #1371 (GC-02-2023-461) 4      HOSPITAL UNIVERSITARIO DE LA SAMARITANA       -> HOSPITAL LA SAMARITANA                   
+  663    #1394 (GC-02-2023-490) 4      HOTELES ROTAL                                 -> HOTELES ROYAL                            
+  664    #1397 (GC-02-2023-487) 4      POLICIA NACIONAL                              -> POLICIA NACIONAL                         
+  665    #1401 (GC-02-2023-461 v1) 1      HOSPITAL UNIVERSITARIO DE LA SAMARITANA       -> HOSPITAL LA SAMARITANA                   
+  666    #1405 (GC-02-2023-493) 1      LA GAITANA FARMS                              -> GAITANA FARMS                            
+  667    #1408 (GC-02-2023-509) 1      POLICIA METROPOLITANA SAN JOSÉ DE MONTERIA   -> POLIICIA NACIONAL -MENEV                 
+  668    #1414 (GC-02-2023-498) 1      Policía Nacional - Colegio Nuestra Señora de Fátima Montería -> POLICIA NACIONAL                         
+  669    #1417 (GC-02-2023-400 v1) 4      IDCBIS                                        -> IDCBIS                                   
+  670    #1423 (GC-02-2023-514) 3      DIENES Y CIA SAS                              -> FUNDACIÓN COLEGIO SAN CARLOS            
+  671    #1431 (GC-02-2023-518) 4      CUATRECASAS                                   -> ORGANIZACIÓN SOLARTE & CIA CA           
+  672    #1432 (GC-02-2023-517) 1      UNIDAD PRESTADORA DE SALUD DE RISARALDA       -> POLIICIA NACIONAL -MENEV                 
+  673    #1434 (GC-02-2023-515) 4      CENTRO COLOMBO AMERICANO                      -> CENTRO COLOMBO AMERICANO                 
+  674    #1438 (GC-02-2023-525) 4      POLINTER S.A.S                                -> POLINTER S.A.S                           
+  675    #1483 (GC-02-2023-580) 1      COLEGIO VIRTUAL SIGLO XXI                     -> COLEGIO VIRTUAL SIGLO XXI                
+  676    #1489 (GC-02-2023-574) 4      INSOLAB                                       -> INSOLAB                                  
+  677    #1497 (GC-02-2023-379 v3) 3      FURGONES ESPECIALES                           -> FURGONES ESPECIALES                      
+  678    #1503 (GC-02-2023-590) 4      POLICIA NACIONAL 
+Metropolitana de Santa Marta -> POLIICIA NACIONAL -MENEV                 
+  679    #1505 (GC-02-2023-592) 3      RECAUDO SIT BARRANQUILLA SAS                  -> RECAUDOS SIT BARRANQUILLA                
+  680    #1514 (GC-02-2023-400 v2) 3      IDCBIS                                        -> IDCBIS                                   
+  681    #1525 (GC-02-2023-608) 3      GRUPO KOPELLE                                 -> GRUPO KOPELLE SAS                        
+  682    #1526 (GC-02-2023-566 v1) 4      AMERICAS BPS                                  -> AMERICAS BPS                             
+  683    #1527 (GC-02-2023-614) 1      GRUPO P&G INVERSIONES                         -> GRUPO P&G INVERSIONES LTDA               
+  684    #1530 (GC-02-2023-619) 4      CODERE COLOMBIA S.A                           -> CODERE ONLINE COLOMBIA S.A.S             
+  685    #1531 (GC-02-2023-618) 1      BINGOS CODERE S.A                             -> CODERE ONLINE COLOMBIA S.A.S             
+  686    #1544 (GC-01-2023-627) 4      CHEIL COLOMBIA                                -> CHEIL DE COLOMBIA                        
+  687    #1554 (GC-02-2023-642) 3      TBTB GLOBAL                                   -> SST MOOL SAS                             
+  688    #1573 (GC-02-2023-719 v1) 3      PANAMERICANA                                  -> PANAMERICANA FORMAS E IMPRESOS           
+  689    #1583 (GC-02-2023-671) 3      ORINOCO e- Scrap SAS                          -> ORINOCO MINERIA URBANA                   
+  690    #1590 (GC-02-2023-682) 3      GRUPO STT                                     -> BETA SERVICIOS TEMPORALES S A S          
+  691    #1595 (GC-02-2023-800) 1      GRUPO P&G                                     -> GRUPO P&G INVERSIONES LTDA               
+  692    #1628 (GC-02-2023-566 v2) 4      AMERICAS BPS                                  -> AMERICAS BPS                             
+  693    #1642 (GC-02-2023-642 v1) 1      TBTB GLOBAL                                   -> SST MOOL SAS                             
+  694    #1646 (GC-02-2023-732) 3      BIOANALISIS FARMACEUTICOS SAS                 -> BIOANALISIS FARMACEUTICOS SAS            
+  695    #1655 (GC-02-2023-740) 3      WRUSSY INGENIEROS SAS                         -> WRUSSY INGENIEROS SAS                    
+  696    #1656 (GC-02-2023-739) 4      FURGONES ESPECIALES                           -> FURGONES ESPECIALES                      
+  697    #1661 (GC-01-2024-001) 1      COOPIDROGAS                                   -> COOPIDROGAS                              
+  698    #1670 (GC-01-2024-018) 4      Instituto Nacional Penitenciario y Carcelario – INPEC -> INSTITUTO NACIONAL PENITENCIARIO         
+  699    #1700 (GC-01-2025-019) 4      PANAMERICANA                                  -> PANAMERICANA FORMAS E IMPRESOS           
+  700    #1724 (GC-01-2024-063) 3      UNIVERSIDAD DISTRITAL FRANCISCO JOSE DE CALDAS -> UNIVERSIDAD DISTRITAL FRANCISCO JOSE DE CALDAS 
+  701    #1728 (GC-01-2024-073) 4      AMERICA TENIS CLUB                            -> AMERICA TENIS CLUB                       
+  702    #1729 (GC-01-2024-072) 1      SUPPLYNG TOTAL TALENT SAS                     -> BETA SERVICIOS TEMPORALES S A S          
+  703    #1730 (GC-01-2024-071) 3      BETA SERVICIO TEMPORALES SAS                  -> BETA SERVICIOS TEMPORALES S A S          
+  704    #1731 (GC-01-2024-070) 4      SERVICE TOTAL TALENT
+GROUP                    -> BETA SERVICIOS TEMPORALES S A S          
+  705    #1752 (GC-01-2024-087) 1      IKSO SAS                                      -> IKEA COLOMBIA                            
+  706    #1759 (GC-01-2024-102) 3      SOLAING                                       -> SOLAING                                  
+  707    #1772 (GC-01-2024-111) 4      GRUPO STT                                     -> BETA SERVICIOS TEMPORALES S A S          
+  708    #1773 (GC-01-2024-110) 1      JIMECO SAS                                    -> HERVALLE SAS                             
+  709    #1779 (GC-01-2024-127) 1      DYMM INGENIERIA                               -> DYMM INGENIERIA SAS                      
+  710    #1781 (GC-01-2024-125) 4      BT CONSULTORES                                -> BT CONSULTORES                           
+  711    #1792 (GC-01-2024-132) 1      PSP SOLUTIONS SAS                             -> PSP SOLUTIONS SAS                        
+  712    #1803 (GC-01-2024-141) 1      MASTER-LINE  LOGISTICS                        -> MASTER LINE                              
+  713    #1809 (GC-01-2024-146) 3      CORPORACIÓN ABRAHAM LINCOLN                  -> CORPORACIÓN ABRAHAM LINCOLN             
+  714    #1821 (GC-01-2024-150) 3      CORPORACIÓN AMBIENTAL EMPRESARIAL CAEM       -> CORPORACIÓN AMBIENTAL EMPRESARIAL       
+  715    #1823 (GC-01-2024-148) 1      AEROPUERTOS DE ORIENTE                        -> AEROPUERTOS DE ORIENTE S.A.S             
+  716    #1832 (GC-01-2024-166) 1      CHEIL COLOMBIA                                -> CHEIL DE COLOMBIA                        
+  717    #1848 (GC-01-2024-182 v1) 4      TECNICA VIAL SAS                              -> C.I GRODCO INGENIEROS CIVILES            
+  718    #1850 (GC-01-2024-181) 1      GRODCO                                        -> C.I GRODCO INGENIEROS CIVILES            
+  719    #1860 (GC-01-2024-207) 4      INMOV SAS                                     -> INMOV SAS                                
+  720    #1861 (GC-01-2024-205) 1      E SINERGIA SAS                                -> E SINERGIA SAS                           
+  721    #1862 (GC-01-2024-204) 3      EJERXA SERVICIOS INTEGRALES SAS               -> CONEXOS LOGISTICA                        
+  722    #1868 (GC-01-2024-197) 3      PORTOI Y COMPAÑÍA LTDA                      -> PORTO & Cia Ltda                         
+  723    #1869 (GC-01-2024-196) 4      CENTRO SOCIAL DE OFICIALES POLICIA NACIONAL   -> POLIICIA NACIONAL -MENEV                 
+  724    #1877 (GC-01-2024-212) 3      PROYECTOS HG SAS                              -> PROYECTOS HG SAS                         
+  725    #1892 (GC-01-2024-217) 1      PINZUAR                                       -> PINZUAR                                  
+  726    #1894 (GC-01-2024-223) 3      HELISA - PROASISTEMAS                         -> PROASISTEMAS                             
+  727    #1909 (GC-01-2024-233) 4      RMS                                           -> RMS S.A.S                                
+  728    #1938 (GC-01-2024-262) 4      FIDUCIARIA BOGOTÁ                            -> FIDUCIARIA BOGOTÁ                       
+  729    #1940 (GC-01-2024-266 v1) 3      FRIGORIFICOS BLE SAS                          -> FRIGORIFICOS BLE                         
+  730    #1944 (GC-01-2024-700) 1      AMERICAS BPS                                  -> AMERICAS BPS                             
+  731    #1949 (GC-01-2024-271) 4      SUPPLYNG TOTAL TALENT SAS                     -> BETA SERVICIOS TEMPORALES S A S          
+  732    #1951 (GC-01-2024-269 v1) 1      STT STAFF                                     -> BETA SERVICIOS TEMPORALES S A S          
+  733    #1963 (GC-01-2024-280) 3      SERVITEL                                      -> SERVITELECOMUNICACIONES S.A.S            
+  734    #1965 (GC-01-2024-286) 1      CORPORACIÓN INDUSTRIAL MINUTO DE DIOS        -> CORPORACIÓN INDUSTRIAL MINUTO DE DIOS   
+  735    #1967 (GC-01-2024-283) 4      MACORAC                                       -> MACORAC                                  
+  736    #1969 (GC-01-2024-290) 1      AEROPUERTO DE ORIENTE                         -> AEROPUERTOS DE ORIENTE S.A.S             
+  737    #1974 (GC-01-2024-294) 4      FRUTALES DE LA VILLA                          -> FRUTALES LA VILLA                        
+  738    #1975 (GC-01-2024-293) 1      COOPERATIVA DE IMPRESORES DE BOGOTÁ          -> COOPERATIVA DE IMPRESORES DE BOGOTÁ     
+  739    #1979 (GC-01-2024-300) 1      EMPRESA DE SERVICIOS
+PÚBLICOS DE FUSAGASUGÁ
+Emserfusa E.S.P -NIT 890680053 -> EMSERFUSA ESP                            
+  740    #1980 (GC-01-2024-299) 3      GRUPO STT                                     -> BETA SERVICIOS TEMPORALES S A S          
+  741    #1996 (GC-01-2024-066 v2) 4      NOVVAI SYSTEMS SAS                            -> NOVVAI SYSTEMS SAS                       
+  742    #2003 (GC-01-2024-323) 4      GREEN SQA                                     -> GREENSQA                                 
+  743    #2005 (GC-01-2024-321) 3      E-SINERGIA SAS                                -> E SINERGIA SAS                           
+  744    #2006 (GC-01-2024-320) 4      SINERGYM                                      -> syco ingeneria                           
+  745    #2009 (GC-01-2024-325) 3      JPHOIS                                        -> BETA SERVICIOS TEMPORALES S A S          
+  746    #2013 (GC-01-2024-328) 4      WALTER CARNES FRIAS                           -> WALTER CARNES FRIAS                      
+  747    #2016 (GC-01-2024-271 v1) 3      SUPPLYNG TOTAL TALENT SAS                     -> BETA SERVICIOS TEMPORALES S A S          
+  748    #2018 (GC-01-2024-300 v2) 4      EMPRESA DE SERVICIOS
+PÚBLICOS DE FUSAGASUGÁ
+Emserfusa E.S.P -NIT 890680053 -> EMSERFUSA ESP                            
+  749    #2025 (GC-02-2024-337) 3      FUNDACIÓN UNIVERSITARIA SAN JOSÉ            -> FUNDACION DE EDUCACION SUPERIOR SAN JOSE 
+  750    #2055 (GC-02-2024-364) 4      SEGURIDAD CONDOR                              -> SEGURIDAD CONDOR                         
+  751    #2080 (GC-02-2024-390) 4      B2B TAX & LEGAL SAS BIC                       -> B2B TAX&LEGAL S.A.S. BIC                 
+  752    #2087 (GC-02-2024-395) 3      ADECCO COLOMBIA - CUATRECASAS                 -> ORGANIZACIÓN SOLARTE & CIA CA           
+  753    #2093 (GC-02-2024-398) 3      CONTROLAR SALUD INTEGRAL                      -> CONTROLAR SALUD INTEGRAL                 
+  754    #2097 (GC-02-2024-406) 4      AGROPECUARIA LA RIVERA GAITAN                 -> AGROPECUARIA LA RIVERA GAITAN SAS EN REORGANIZACIÓN 
+  755    #2117 (GC-02-2024-426) 4      MELOS Y MELOS                                 -> MELOS Y MELOS SAS                        
+  756    #2123 (GC-02-2024-432) 4      ISTHO SAS                                     -> ISTHO SAS                                
+  757    #2126 (GC-02-2024-429) 4      SEGURIDAD ONCOR                               -> SEGURIDAD CONDOR                         
+  758    #2131 (GC-02-2024-435) 3      INSTITUTO HUMBOLDT                            -> INSTITUTO HUMBOLDT                       
+  759    #2152 (GC-02-2024-386 v1) 3      QUALITY WATER SERVICE COLOMBIA                -> QUALITY WATER SERVICE COLOMBIA           
+  760    #2153 (GC-02-2024-456) 4      CONTROLAR SALUD INTEGRAL SAS                  -> CONTROLAR SALUD INTEGRAL                 
+  761    #2163 (GC-02-2024-463) 3      CENTRO COLASEGUROS                            -> CEMTRO COLSEGUROS                        
+  762    #2171 (GC-02-2024-472) 1      PRODUCTOR TR                                  -> DISTRIBUCIONES T ROMERO SAS              
+  763    #2177 (GC-02-2024-477) 4      CODERE ONLINE                                 -> CODERE ONLINE COLOMBIA S.A.S             
+  764    #2178 (GC-02-2024-476) 1      CODERE COLOMBIA S.A                           -> CODERE ONLINE COLOMBIA S.A.S             
+  765    #2179 (GC-02-2024-475) 3      BINGOS CODERE S.A                             -> CODERE ONLINE COLOMBIA S.A.S             
+  766    #2187 (GC-02-2024-488) 4      ATRAPALO COLOMBIA                             -> ATRÁPALO COLOMBIA S.A.S                 
+  767    #2191 (GC-01-2024-309) 1      MARCEGAGLIA                                   -> MARCEGAGLIA CARBON STEEL                 
+  768    #2193 (GC-01-2024-237) 4      HYDRAULIC TECH                                -> MSN LABS                                 
+  769    #2195 (GC-01-2024-029) 3      ERGO & HEALTH                                 -> AB MARINE GROUP                          
+  770    #2209 (GC-02-2024-506) 4      SOLAING                                       -> SOLAING                                  
+  771    #2210 (GC-02-2024-505) 1      CUATRECASAS - ADECCO                          -> ORGANIZACIÓN SOLARTE & CIA CA           
+  772    #2220 (GC-02-2024-511) 4      C.I CARBOCOQUE                                -> COLUMBIA COAL COMPANY                    
+  773    #2241 (GC-01-2025-008) 3      PROCESOS2000                                  -> Procesos 2000 S.A.S.                     
+  774    #2256 (GC-01-2025-014) 4      EFECTO STUDIOS SAS                            -> EFECTO ESTUDIOS SAS                      
+  775    #2266 (GC-01-2025-028) 3      AEROPUERTOS DE ORIENTE                        -> AEROPUERTOS DE ORIENTE S.A.S             
+  776    #2272 (GC-01-2025-031 v1) 3      NEARSOL COLOMBIA                              -> NEARSOL COLOMBIA                         
+  777    #2276 (GC-01-2025-038) 1      RP SERVICES                                   -> RADIOLOGICAL PROTECTION SERVICES SAS     
+  778    #2277 (GC-01-2025-037) 3      HEDY COLOMBIA SAS                             -> HEDY COLOMBIA SAS                        
+  779    #2285 (GC-01-2025-040) 4      POLICIA NACIONAL
+Dirección de Investigación
+Criminal e Interpol -> POLIICIA NACIONAL -MENEV                 
+  780    #2292 (GC-01-2025-045) 1      CULLIGAN                                      -> QUALITY WATER SERVICE COLOMBIA           
+  781    #2294 (GC-01-2025-3054) 4      ANALQUIM                                      -> ANALQUIM LTDA                            
+  782    #2302 (GC-01-2025-060) 3      OPTICENTRO                                    -> OPTICENTRO                               
+  783    #2308 (GC-01-2025-064) 4      FUNDACIÓN DE EDUCACIÓN SUPERIOR SAN JOSE    -> FUNDACION DE EDUCACION SUPERIOR SAN JOSE 
+  784    #2322 (GC-01-2025-075) 1      ECO DESIGN SERVICES                           -> ECO DESIGN SERVICES SAS                  
+  785    #2325 (GC-01-2025-081) 1      SENERGYSOL                                    -> SMART ENERGY SOLUTIONS                   
+  786    #2355 (GC-01-2025-114) 4      POLICIA NACIONAL - UNIDAD DE SALUD QUINIDO    -> POLICIA NACIONAL                         
+  787    #2362 (GC-01-2025-107) 4      GRASSLAND SAS                                 -> GRASSLAND S.A.S                          
+  788    #2364 (GC-01-2025-601) 1      FONDO DE BIENESTAR SOCIAL CONTRALORIA         -> FONDO BIENESTAR CONTRAOLORIA GENERAL     
+  789    #2375 (GC-01-2025-129) 4      INPEC                                         -> INSTITUTO NACIONAL PENITENCIARIO         
+  790    #2378 (GC-01-2025-126) 4      AEQUALES SAS                                  -> AEQUALES                                 
+  791    #2384 (GC-01-2025-133) 4      INTERGRAFICAS                                 -> INTERGRAFICAS                            
+  792    #2416 (GC-01-2025-164) 4      GRAPHTEC SAS                                  -> GRAPHTEC                                 
+  793    #2424 (GC-01-2025-168) 4      LIME                                          -> LIMPIEZA METROPOLITANA SAS ESP           
+  794    #2427 (GC-01-2025-173) 3      APIARIOS EL PINAR                             -> MIELATTO                                 
+  795    #2432 (GC-01-2025-175) 1      HF DOTACIONES                                 -> HF DOTACIONES                            
+  796    #2439 (GC-01-2025-184) 4      UNIVERSIDAD DE CUNDINAMARCA                   -> UNIVERSIDAD DE CUNDINAMARCA              
+  797    #2440 (GC-01-2025-183 v1) 1      ECO DESIGN SERVICES                           -> ECO DESIGN SERVICES SAS                  
+  798    #2442 (GC-01-2025-182) 3      GRUPO SOLUCIONES HORIZONTE                    -> GRUPO SOLUCIONES HORIZONTE               
+  799    #2445 (GC-01-2025-186) 3      CAIMED                                        -> CAIMED                                   
+  800    #2453 (GC-01-2025-191) 4      AMERICAS BPS                                  -> AMERICAS BPS                             
+  801    #2459 (GC-01-2025-200) 3      AEROPUERTOS DE ORIENTE                        -> AEROPUERTOS DE ORIENTE S.A.S             
+  802    #2474 (GC-02-2025-215) 3      UNIMEQ ORL                                    -> UNIMEQ ORL                               
+  803    #2492 (GC-02-2025-227) 4      MARCEGAGLIA CARBON STEEL                      -> MARCEGAGLIA CARBON STEEL                 
+  804    #2494 (GC-02-2025-229) 3      ORIGIN IT                                     -> ORIGIN IT SAS                            
+  805    #2498 (GC-02-2025-231) 3      CENTRO DE GESTIÓN SOSTENIBLE SAS ESP         -> CIUDAD LIMPIA S.A E.S.P                  
+  806    #2505 (GC-01-2025-200 v3) 3      AEROPUERTOS DE ORIENTE                        -> AEROPUERTOS DE ORIENTE S.A.S             
+  807    #2507 (GC-02-2025-238) 1      CONSORCIO CANALES NACIONALES PRIVADOS         -> MEDIOS Y SERVICIOS INTEGRADOS            
+  808    #2510 (GC-02-2025-242) 1      INMOV GLOBAL NETWORK                          -> INMOV SAS                                
+  809    #2512 (GC-02-2025-222 v2) 4      UNIVERSIDAD COLEGIO MAYOR DE CUNDINAMARCA     -> UNIVERSIDAD COLEGIO MAYOR DE CUNDINAMARCA 
+  810    #2513 (GC-02-2025-246) 1      GREEN OAK SAS                                 -> GREEN OAK                                
+  811    #2523 (GC-01-2025-194 v3) 1      GENUINE LAB                                   -> GENUINE LAB                              
+  812    #2531 (GC-01-2025-175 v1) 3      HF DOTACIONES                                 -> HF DOTACIONES                            
+  813    #2548 (GC-02-2025-269) 4      TRAANSPORTES MQ SAS                           -> TRANSPORTES MQ SAS                       
+  814    #2570 (GC-02-2025-296) 4      VORTICE SAS                                   -> VORTICE SAS                              
+  815    #2582 (GC-01-2025-191 v2) 1      AMERICAS BPS                                  -> AMERICAS BPS                             
+  816    #2588 (GC-02-2025-310) 1      ORINOCOL                                      -> ORINOCO MINERIA URBANA                   
+  817    #2594 (GC-02-2025-313) 1      CORPORACIÓN MALO0KA DE CIENCIA TECNOLOGIA E INNOVACIÓN -> CORPORACIÓN MALOKA                      
+  818    #2599 (GC-02-2025-315) 1      STT GROUP                                     -> BETA SERVICIOS TEMPORALES S A S          
+  819    #2602 (GC-02-2025-321) 1      DIPREM COLOMBIA                               -> DIPREM                                   
+  820    #2603 (GC-02-2025-312 v1) 3      SENERGYSOL                                    -> SMART ENERGY SOLUTIONS                   
+  821    #2628 (GC-02-2025-343) 3      TRANSPORTES MQ                                -> TRANSPORTES MQ SAS                       
+  822    #2635 (GC-02-2025-354) 3      ASOCIACION CASAMATA                           -> ASOCIACIÓN CLUB CAMASATA                
+  823    #2639 (GC-02-2025-350) 4      TRACOL SAS                                    -> TRATAMIENTOS Y RELLENOS AMBIENTALES DE COLOMBIA 
+  824    #2642 (GC-02-2025-361) 2      SOLAING                                       -> SOLAING                                  
+  825    #2643 (GC-02-2025-360) 3      ASOCIACIÓN CASAMATA                          -> ASOCIACIÓN CLUB CAMASATA                
+  826    #2646 (GC-02-2025-366) 3      HF DOTACIONES SAS                             -> HF DOTACIONES                            
+  827    #2654 (GC-02-2025-378) 1      PROASCOL                                      -> PROASCOL S.A.                            
+  828    #2659 (GC-02-2025-373) 3      O&P SOLUCIONES AMBIENTALES                    -> O&P SOLUCIONES AMBIENTALES SAS           
+  829    #2673 (GC-02-2025-392 v1) 3      LOS LIBERTADORES FUND UNIVERSITARIA           -> FUNDACIÓN UNIVERSITARIA LOS LIBERTADORES 
+  830    #2675 (GC-02-2025-395) 4      MANUFACTURAS REYMON                           -> MANUFACTURAS REYMON                      
+  831    #2677 (GC-02-2025-393) 2      DIPREM                                        -> DIPREM                                   
+  832    #2679 (GC-01-2026-002) 2      CONTROLAR SALUD INTEGRAL                      -> CONTROLAR SALUD INTEGRAL                 
+  833    #2680 (GC-01-2026-001) 2      FUNDACIÓN UNIVERSITARIA LOS LIBERTADORES     -> FUNDACIÓN UNIVERSITARIA LOS LIBERTADORES 
+  834    #2686 (GC-01-2026-011) 2      POLICIA NACIONAL - METROPOLITANA DE MEDELLIN - MEVAL -> POLIICIA NACIONAL -MENEV                 
+  835    #2698 (GC-01-2026-028) 2      FRIGORIFICO GUADALUPE                         -> FRIGORIFICO GUADALUPE                    
+  836    #2702 (GC-01-2026-032) 2      FACCEL                                        -> FACCEL INGENIERIA ELÉCTRICA             
+  837    #2708 (GC-01-2026-033) 2      DIPREM                                        -> DIPREM                                   
+  838    #2713 (GC-01-2026-042) 2      TISANAS ORQUIDEA                              -> TISANAS ORQUIDEA                         
+  839    #2714 (GC-01-2026-043) 2      HF DOTACIONES SAS                             -> HF DOTACIONES                            
+  840    #2716 (GC-01-2026-045) 2      AEROPUERTOS DE ORIENTE                        -> AEROPUERTOS DE ORIENTE S.A.S             
+  841    #2724 (GC-01-2026-056) 2      AMERICAS BPS                                  -> AMERICAS BPS                             
+  842    #2755 (GC-01-2026-083) 2      VITECO                                        -> BLISTECO SAS                             
+  843    #2763 (GC-01-2026-089) 2      CAIMED SAS                                    -> CAIMED                                   
+  844    #2767 (GC-01-2026-095) 2      KRC INGENIEROS                                -> KRC INGENIEROS                           
+  845    #2773 (GC-01-2026-097) 2      SUPPLYING TOTAL TALENT                        -> BETA SERVICIOS TEMPORALES S A S          
+  846    #2778 (GC-01-2026-100) 2      EKA CORPORACION SAS                           -> EKA CORPORACIÓN                         
+  847    #2781 (GC-01-2026-103) 2      HILVERDA FLORIST                              -> HILVERDA FLORIST COLOMBIA                
+  848    #2783 (GC-01-2026-105 v2) 2      AVAL VALOR COMPARTIDO                         -> AVAL VALOR COMPARTIDO                    
+  849    #2802 (GC-01-2026-123) 2      DIPREM                                        -> DIPREM                                   
+  850    #2808 (GC-01-2026-124) 2      FONDO DE BINESTAR SOCIAL                      -> FONDO BIENESTAR CONTRAOLORIA GENERAL     
+  851    #2809 (GC-01-2026-128) 2      VOLVO GROUP COLOMBIA                          -> VOLVO GROUP COLOMBIA                     
+  852    #2818 (GC-01-2026-137) 2      MMT MANUFACTURA Y MANTENIMIENTOS TECNOLÓGICOS SAS -> MMT SAS                                  
+  853    #2833 (GC-01-2026-094 v1) 2      SUPPLYING TOTAL TALENT                        -> BETA SERVICIOS TEMPORALES S A S          
+
+=== ACCIONES RECHAZADAS ===
+
+  [539] opp_reasign_by_contact    Opp #70: 209 -> PAYNET S.A.S | Batch cotizacion: opp consecutivas son empresas diferentes, no reasignar a misma entidad
+  [540] opp_reasign_by_contact    Opp #71: 210 -> PAYNET S.A.S | Batch cotizacion: opp consecutivas son empresas diferentes, no reasignar a misma entidad
+  [541] opp_reasign_by_contact    Opp #83: 219 -> BRINKS COLOMBIA - DOMESA | Grupo empresarial: Brinks, Domesa, Epago, PyC son empresas diferentes. Cada una queda con su entidad.
+  [546] opp_reasign_by_contact    Opp #153: 274 -> BRINKS COLOMBIA - DOMESA | Grupo empresarial: Brinks, Domesa, Epago, PyC son empresas diferentes. Cada una queda con su entidad.
+  [548] opp_reasign_by_contact    Opp #171: 288 -> BRINKS COLOMBIA - DOMESA | Grupo empresarial: Brinks, Domesa, Epago, PyC son empresas diferentes. Cada una queda con su entidad.
+  [549] opp_reasign_by_contact    Opp #172: 289 -> BRINKS COLOMBIA - DOMESA | Grupo empresarial: Brinks, Domesa, Epago, PyC son empresas diferentes. Cada una queda con su entidad.
+  [576] opp_reasign_by_contact    Opp #482: 550 -> BRINKS COLOMBIA - DOMESA | Grupo empresarial: Brinks, Domesa, Epago, PyC son empresas diferentes. Cada una queda con su entidad.
+  [577] opp_reasign_by_contact    Opp #484: 551 -> BRINKS COLOMBIA - DOMESA | Grupo empresarial: Brinks, Domesa, Epago, PyC son empresas diferentes. Cada una queda con su entidad.
+  [578] opp_reasign_by_contact    Opp #485: 552 -> BRINKS COLOMBIA - DOMESA | Grupo empresarial: Brinks, Domesa, Epago, PyC son empresas diferentes. Cada una queda con su entidad.
+  [650] opp_reasign_by_contact    Opp #1304: 1239 -> BRINKS COLOMBIA - DOMESA | Grupo empresarial: Brinks, Domesa, Epago, PyC son empresas diferentes. Cada una queda con su entidad.
+  [651] opp_reasign_by_contact    Opp #1305: 1240 -> BRINKS COLOMBIA - DOMESA | Grupo empresarial: Brinks, Domesa, Epago, PyC son empresas diferentes. Cada una queda con su entidad.
+  [652] opp_reasign_by_contact    Opp #1306: 1241 -> BRINKS COLOMBIA - DOMESA | Grupo empresarial: Brinks, Domesa, Epago, PyC son empresas diferentes. Cada una queda con su entidad.
+  [653] opp_reasign_by_contact    Opp #1307: 1242 -> BRINKS COLOMBIA - DOMESA | Grupo empresarial: Brinks, Domesa, Epago, PyC son empresas diferentes. Cada una queda con su entidad.
+  [854] entity_infer_dominio      Entity #3: dominio americasbps.com | Rechazado por usuario: no inferir dominio de contactos
+  [855] entity_infer_dominio      Entity #106: dominio polinter.com.co | Rechazado por usuario: no inferir dominio de contactos
+  [870] entity_consolidate        #274 absorbs #550 (BRINKS COLOMBIA) | Grupo Brinks: cada empresa es separada (Domesa, Epago, PyC, Brinks Colombia)
+  [871] entity_consolidate        #274 absorbs #219 (BRINKS COLOMBIA) | Grupo Brinks: cada empresa es separada (Domesa, Epago, PyC, Brinks Colombia)
+  [881] entity_consolidate        #1944 absorbs #257 (INSTITUTO HUMBOLDT) | Reemplazado: consolidar todo a #1110
+  [886] entity_consolidate        #288 absorbs #551 (BRINKS COLOMBIA- PyC) | Grupo Brinks: cada empresa es separada (Domesa, Epago, PyC, Brinks Colombia)
+  [887] entity_consolidate        #289 absorbs #552 (BRINKS COLOMBIA - EPAGO) | Grupo Brinks: cada empresa es separada (Domesa, Epago, PyC, Brinks Colombia)
+  [928] entity_consolidate        #640 absorbs #1303 (INSTITUTO NACIONAL PENITENCIARIO) | Reemplazado: consolidar todo a #1558
+  [929] entity_consolidate        #640 absorbs #1572 (INSTITUTO NACIONAL PENITENCIARIO) | Reemplazado: consolidar todo a #1558
+  [970] entity_consolidate        #1023 absorbs #2065 (POLICIA NACIONAL
+Dirección de Investigación
+Criminal e Interpol) | Reemplazado: unificar todo en #676
+  [1013] entity_consolidate        #1470 absorbs #1582 (PANAMERICANA) | Reemplazado: unificar todo en #1036
+  [1078] entity_consolidate        #2421 absorbs #2140 (INPEC) | Reemplazado: consolidar todo a #1558
