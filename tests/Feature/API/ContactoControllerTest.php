@@ -154,4 +154,22 @@ class ContactoControllerTest extends TestCase
         $response->assertStatus(404)
             ->assertJsonPath('success', false);
     }
+
+    #[Test]
+    public function it_creates_contacto_without_apellidos(): void
+    {
+        $token = $this->authenticate();
+
+        $response = $this->withHeader('Authorization', 'Bearer '.$token)
+            ->postJson('/api/v1/contacto', [
+                'nombres' => 'Juan',
+                'email_contacto' => 'juan.solo.nombre@example.com',
+            ]);
+
+        $response->assertStatus(201)
+            ->assertJsonPath('success', true)
+            ->assertJsonPath('data.nombres', 'Juan')
+            ->assertJsonPath('data.apellidos', null)
+            ->assertJsonPath('data.email_contacto', 'juan.solo.nombre@example.com');
+    }
 }
