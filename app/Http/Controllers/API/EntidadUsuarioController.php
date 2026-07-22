@@ -41,13 +41,17 @@ class EntidadUsuarioController extends Controller
 
         $usuario = Usuario::with('rol')->find($validated['usuario_id']);
 
-        // Only allow assigning users with Admin (rol_id=1) or Ventas (rol_nombre='Ventas') roles
+        // Only allow assigning users with Comercial or SuperAdmin roles.
+        // (The previous allowlist ['Admin', 'Ventas'] referenced roles that
+        // do NOT exist in this project's `roles` table — the real ones are
+        // SuperAdmin, Comercial, Operaciones, Finanzas. Without this fix,
+        // the endpoint rejected every assignment with 403.)
         $rolNombre = $usuario->rol?->nombre;
-        $allowedRoles = ['Admin', 'Ventas'];
+        $allowedRoles = ['Comercial', 'SuperAdmin'];
 
         if (! in_array($rolNombre, $allowedRoles)) {
             return $this->errorResponse(
-                'Solo usuarios con roles Admin o Ventas pueden ser asignados a entidades.',
+                "Solo usuarios con roles Comercial o SuperAdmin pueden ser asignados a entidades (rol recibido: {$rolNombre}).",
                 403
             );
         }
