@@ -26,6 +26,8 @@ Homestead.json
 Homestead.yaml
 Thumbs.db
 *.md
+!/Docs/*.md
+!/README.md
 /docs/*
 
 # Temporary test scripts
@@ -49,4 +51,5 @@ Thumbs.db
 /database/cleanup_dupes.php
 /database/investigate_dupes.php
 /storage/framework/.seeded
+/storage/framework/.migrated
 
