@@ -294,12 +294,15 @@ class OportunidadControllerTest extends TestCase
         $versionResponse = $this->withHeader('Authorization', 'Bearer '.$token)
             ->postJson("/api/v1/oportunidades/{$id}/version");
 
+        // Convention A (CSV/legacy, see CrearVersionOportunidadUseCase):
+        //   root version = 0, first created version = " v1" with version = 1
+        //   the new row IS the latest, so parent_id is null (NOT pointing to root)
         $versionResponse->assertStatus(201)
             ->assertJsonPath('success', true)
-            ->assertJsonPath('data.version', 2)
-            ->assertJsonPath('data.parent_id', $id)
+            ->assertJsonPath('data.version', 1)
+            ->assertJsonPath('data.parent_id', null)
             ->assertJsonPath('data.is_latest', true)
-            ->assertJsonPath('data.codigo', $originalCodigo.'-V2');
+            ->assertJsonPath('data.codigo', $originalCodigo.' v1');
 
         // Verify the original opportunity is now marked is_latest=false and Inactiva
         $original = Oportunidad::find($id);

@@ -21,6 +21,16 @@ class OportunidadRequest extends FormRequest
             'pipeline_id' => 'nullable|integer|exists:pipelines,id',
             'pipeline_etapa_id' => 'nullable|integer|exists:pipeline_etapas,id',
             'fecha' => 'required|date',
+            // codigo is optional on POST (server auto-generates if missing) and
+            // optional on PUT (unique except self when present).
+            'codigo' => [
+                'nullable',
+                'string',
+                'max:100',
+                \Illuminate\Validation\Rule::unique('oportunidad', 'codigo')
+                    ->ignore($oportunidadId)
+                    ->whereNull('deleted_at'),
+            ],
             'fuente_canal' => 'nullable|string|max:100',
             'estado' => 'nullable|string|max:100', // Relaxed state validation to allow custom CRM states
             'observaciones' => 'nullable|string',
