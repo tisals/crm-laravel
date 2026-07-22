@@ -31,8 +31,17 @@ class DestroyOportunidadUseCase
         $baseCodigo = CrearVersionOportunidadUseCase::stripVersionSuffix($opp->codigo);
 
         $deleted = $this->repository->delete($id);
-        if (! $deleted || ! $wasLatest) {
-            return $deleted;
+        if (! $deleted) {
+            return false;
+        }
+
+        // Always clear is_latest on the soft-deleted row
+        Oportunidad::withoutGlobalScopes()
+            ->where('id', $id)
+            ->update(['is_latest' => 0]);
+
+        if (! $wasLatest) {
+            return true;
         }
 
         // Promote the next-highest non-deleted version of the same family
