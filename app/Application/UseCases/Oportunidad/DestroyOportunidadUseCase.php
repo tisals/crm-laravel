@@ -13,12 +13,13 @@ class DestroyOportunidadUseCase
     ) {}
 
     /**
-     * Soft-delete an oportunidad.
+     * Hard-delete an oportunidad.
      *
+     * The row is removed from the database entirely (no soft delete).
      * If the deleted row was the latest version of its family, promote the
-     * next-highest non-deleted version to (is_latest=1, estado='Activa',
+     * next-highest existing version to (is_latest=1, estado='Activa',
      * parent_id=NULL) so the family keeps showing up in the default query.
-     * Otherwise just soft-delete — no promotion needed.
+     * Otherwise just delete — no promotion needed.
      */
     public function execute(int $id): bool
     {
@@ -30,27 +31,22 @@ class DestroyOportunidadUseCase
         $wasLatest = (bool) $opp->is_latest;
         $baseCodigo = CrearVersionOportunidadUseCase::stripVersionSuffix($opp->codigo);
 
-        $deleted = $this->repository->delete($id);
-        if (! $deleted) {
-            return false;
-        }
+        return DB::transaction(function () use ($id, $opp, $wasLatest, $baseCodigo) {
+            // Hard delete the row (force delete bypasses SoftDeletes scope)
+            $deleted = $opp->forceDelete();
+            if (! $deleted) {
+                return false;
+            }
 
-        // Always clear is_latest on the soft-deleted row
-        Oportunidad::withoutGlobalScopes()
-            ->where('id', $id)
-            ->update(['is_latest' => 0]);
+            if (! $wasLatest) {
+                return true;
+            }
 
-        if (! $wasLatest) {
-            return true;
-        }
-
-        // Promote the next-highest non-deleted version of the same family
-        return DB::transaction(function () use ($baseCodigo) {
+            // Promote the next-highest existing version of the same family
             $next = Oportunidad::where(function ($q) use ($baseCodigo) {
                 $q->where('codigo', $baseCodigo)
                     ->orWhere('codigo', 'like', $baseCodigo.' v%');
-            })->whereNull('deleted_at')
-                ->orderByDesc('version')
+            })->orderByDesc('version')
                 ->first();
 
             if (! $next) {
@@ -68,7 +64,6 @@ class DestroyOportunidadUseCase
                 $q->where('codigo', $baseCodigo)
                     ->orWhere('codigo', 'like', $baseCodigo.' v%');
             })->where('id', '!=', $next->id)
-                ->whereNull('deleted_at')
                 ->update(['parent_id' => $next->id]);
 
             return true;

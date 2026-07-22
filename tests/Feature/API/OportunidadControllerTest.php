@@ -166,6 +166,53 @@ class OportunidadControllerTest extends TestCase
 
         $deleteResponse->assertStatus(200)
             ->assertJsonPath('success', true);
+
+        // Verify the row is actually gone (hard delete, not soft delete)
+        $this->assertDatabaseMissing('oportunidad', ['id' => $id]);
+    }
+
+    #[Test]
+    public function deleting_latest_version_promotes_previous(): void
+    {
+        $token = $this->authenticate();
+        $refs = $this->createReferences();
+
+        // Create v0 (root)
+        $response = $this->withHeader('Authorization', 'Bearer '.$token)
+            ->postJson('/api/v1/oportunidades', [
+                'entidad_id' => $refs['entidad']->id,
+                'contacto_id' => $refs['contacto']->id,
+                'fecha' => '2026-05-10',
+                'estado' => 'Borrador',
+            ]);
+        $idV0 = $response->json('data.id');
+
+        // Create v1 (latest)
+        $versionResponse = $this->withHeader('Authorization', 'Bearer '.$token)
+            ->postJson("/api/v1/oportunidades/{$idV0}/version");
+        $idV1 = $versionResponse->json('data.id');
+
+        // Verify v1 is latest
+        $this->assertDatabaseHas('oportunidad', [
+            'id' => $idV1,
+            'is_latest' => 1,
+        ]);
+
+        // Delete v1
+        $this->withHeader('Authorization', 'Bearer '.$token)
+            ->deleteJson('/api/v1/oportunidades/'.$idV1)
+            ->assertStatus(200);
+
+        // v1 should be gone
+        $this->assertDatabaseMissing('oportunidad', ['id' => $idV1]);
+
+        // v0 should now be promoted to latest
+        $this->assertDatabaseHas('oportunidad', [
+            'id' => $idV0,
+            'is_latest' => 1,
+            'parent_id' => null,
+            'estado' => 'Activa',
+        ]);
     }
 
     #[Test]
