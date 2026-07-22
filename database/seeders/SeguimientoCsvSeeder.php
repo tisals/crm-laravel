@@ -23,6 +23,8 @@ class SeguimientoCsvSeeder extends Seeder
 
     private const CHUNK_SIZE = 50;
 
+    private static ?int $defaultUserId = null;
+
     public function run(): void
     {
         $csvFile = $this->csvPath('oportunidades.csv');
@@ -31,6 +33,18 @@ class SeguimientoCsvSeeder extends Seeder
             $this->command->error("CSV not found: {$csvFile}");
 
             return;
+        }
+
+        // Resolve a default user id for autor_id / created_by / updated_by.
+        // The previous hardcoded `1` assumed the first user had id=1, which
+        // is NOT guaranteed when UsuariosTableSeeder runs with updateOrCreate
+        // and AUTO_INCREMENT has already advanced. If no user exists, leave
+        // the fields NULL (they are nullable in the migration).
+        self::$defaultUserId = DB::table('usuarios')->min('id');
+        if (self::$defaultUserId === null) {
+            $this->command->warn('No users found in `usuarios` table. autor_id / created_by / updated_by will be NULL.');
+        } else {
+            $this->command->info("Using user id ".self::$defaultUserId.' as default autor/created_by/updated_by.');
         }
 
         // Load oportunidades map: codigo → {id, contacto_id, entidad_id, fecha}
@@ -158,6 +172,7 @@ class SeguimientoCsvSeeder extends Seeder
     private function buildSeguimiento(object $opp, string $raw, bool $isSecond): array
     {
         $fecha = $this->extractDate($raw, $opp->fecha);
+        $userId = self::$defaultUserId; // resolved once in run(), may be null
 
         return [
             'oportunidad_id' => $opp->id,
@@ -168,10 +183,10 @@ class SeguimientoCsvSeeder extends Seeder
             'hora' => null,
             'fecha_fin' => null,
             'notas' => $raw,
-            'autor_id' => 1,
+            'autor_id' => $userId,
             'estado' => 'Completado',
-            'created_by' => 1,
-            'updated_by' => 1,
+            'created_by' => $userId,
+            'updated_by' => $userId,
         ];
     }
 
