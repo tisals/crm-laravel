@@ -75,7 +75,7 @@ class EntidadUsuarioController extends Controller
     /**
      * DELETE /api/v1/entidad-usuario
      * Remove a user from an entity.
-     * Body: { usuario_id, entidad_id }
+     * Body or Query: { usuario_id, entidad_id }
      */
     public function destroy(Request $request): JsonResponse
     {
@@ -86,9 +86,9 @@ class EntidadUsuarioController extends Controller
 
         $entidad = Entidad::find($validated['entidad_id']);
 
-        // Check if assignment exists
+        // Idempotent: if assignment doesn't exist, treat as success
         if (! $entidad->usuarios()->where('usuario_id', $validated['usuario_id'])->exists()) {
-            return $this->errorResponse('La asignación no existe.', 404);
+            return $this->successResponse(null, 200, 'La asignación no existía (idempotente).');
         }
 
         $entidad->usuarios()->detach($validated['usuario_id']);
