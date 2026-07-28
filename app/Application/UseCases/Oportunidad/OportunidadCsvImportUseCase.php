@@ -613,11 +613,16 @@ class OportunidadCsvImportUseCase
         $producto = $this->matchProduct($row);
         $productoId = $producto?->id ?? $this->fallbackProduct?->id ?? 1;
         $ivaPorcentaje = $producto ? (float) $producto->iva : 0.0;
-        $ivaAmount = $vrUnitario * ($ivaPorcentaje / 100);
 
         $tipoServicio = $this->cleanStr($row['tipo_de_servicio'] ?? '');
         $cantidadStr = $this->cleanStr($row['cantidad'] ?? '');
         $cantidad = $cantidadStr ? max(1, (int) $cantidadStr) : 1;
+
+        // IVA se calcula sobre el SUBTOTAL (vr_unitario × cantidad), no sobre
+        // una sola unidad. Bug histórico: solo multiplicaba por vr_unitario y
+        // el vr_total quedaba con IVA de 1 unidad sumado al subtotal de N unidades.
+        $subtotal = $vrUnitario * $cantidad;
+        $ivaAmount = $subtotal * ($ivaPorcentaje / 100);
 
         return [
             'producto_id' => $productoId,
@@ -626,9 +631,8 @@ class OportunidadCsvImportUseCase
             'medida' => $producto?->medida ?? 'Und',
             'cantidad' => $cantidad,
             'vr_unitario' => $vrUnitario,
-            'iva' => $ivaAmount,
-            // Correct formula: (unit price × quantity) + IVA (per unit)
-            'vr_total' => ($vrUnitario * $cantidad) + $ivaAmount,
+            'iva' => round($ivaAmount, 2),
+            'vr_total' => round($subtotal + $ivaAmount, 2),
             'created_by' => $this->defaultUserId,
         ];
     }
