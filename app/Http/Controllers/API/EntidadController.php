@@ -11,10 +11,12 @@ use App\Http\Controllers\API\Concerns\ApiResponse;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\EntidadRequest;
 use App\Infrastructure\Services\ActividadLogger;
+use App\Models\Entidad;
 use App\Traits\DispatchesWebhooks;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class EntidadController extends Controller
 {
@@ -27,6 +29,49 @@ class EntidadController extends Controller
         private UpdateEntidadUseCase $updateUseCase,
         private DestroyEntidadUseCase $destroyUseCase,
     ) {}
+
+    /**
+     * Comprueba si el usuario autenticado puede acceder a la entidad:
+     * - SuperAdmin y roles no Comercial: siempre permitido.
+     * - Comercial: solo si la entidad está asignada a su usuario en `entidad_usuario`.
+     *
+     * Devuelve null si está permitido, o una JsonResponse 403 si no.
+     */
+    private function ensureCanAccessEntidad(int $entidadId): ?JsonResponse
+    {
+        $user = Auth::user();
+        if (! $user) {
+            return $this->errorResponse('No autenticado.', 401);
+        }
+        // Asegurar que la relación rol esté cargada (lazy-load no siempre
+        // funciona bien al deserializar usuarios desde tokens de Sanctum).
+        if (! $user->relationLoaded('rol')) {
+            $user->load('rol');
+        }
+        $rolNombre = $user->rol?->nombre;
+        if ($rolNombre !== 'Comercial') {
+            return null; // SuperAdmin, Operaciones, Finanzas, etc.
+        }
+
+        // Verificar que la entidad existe
+        if (! Entidad::whereKey($entidadId)->exists()) {
+            return $this->errorResponse('Entidad no encontrada.', 404);
+        }
+
+        $isAssigned = DB::table('entidad_usuario')
+            ->where('entidad_id', $entidadId)
+            ->where('usuario_id', $user->id)
+            ->exists();
+
+        if (! $isAssigned) {
+            return $this->errorResponse(
+                'No tenés permisos para acceder a esta entidad. Solo podés ver las que tenés asignadas.',
+                403
+            );
+        }
+
+        return null;
+    }
 
     public function index(Request $request): JsonResponse
     {
@@ -60,6 +105,10 @@ class EntidadController extends Controller
 
     public function show(int $id): JsonResponse
     {
+        if ($resp = $this->ensureCanAccessEntidad($id)) {
+            return $resp;
+        }
+
         $result = $this->showUseCase->execute($id);
 
         if (! $result) {
@@ -71,6 +120,10 @@ class EntidadController extends Controller
 
     public function update(EntidadRequest $request, int $id): JsonResponse
     {
+        if ($resp = $this->ensureCanAccessEntidad($id)) {
+            return $resp;
+        }
+
         $result = $this->updateUseCase->execute($id, $request->validated());
 
         if (! $result) {
@@ -91,6 +144,10 @@ class EntidadController extends Controller
 
     public function destroy(int $id): JsonResponse
     {
+        if ($resp = $this->ensureCanAccessEntidad($id)) {
+            return $resp;
+        }
+
         $entidad = $this->showUseCase->execute($id);
 
         $result = $this->destroyUseCase->execute($id);

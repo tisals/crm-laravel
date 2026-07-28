@@ -8,6 +8,7 @@ use App\Models\Permiso;
 use App\Models\Rol;
 use App\Models\Usuario;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
@@ -158,5 +159,139 @@ class EntidadControllerTest extends TestCase
 
         $response->assertStatus(404)
             ->assertJsonPath('success', false);
+    }
+
+    /**
+     * Helper: crea un usuario con rol Comercial + token + permisos (igual que prod).
+     */
+    private function authenticateAsComercial(int $userId = 100): array
+    {
+        $rol = Rol::where('nombre', 'Comercial')->first()
+            ?? Rol::create(['nombre' => 'Comercial', 'estado' => 'Activo']);
+
+        // El PermisoSeeder asigna a Comercial todos los permisos de `entidad`.
+        // Replicamos esto en el test para no caer en el silent-block del
+        // RbacMiddleware (que devuelve data:null en vez de 403 para GETs).
+        foreach (['index', 'store', 'show', 'update', 'destroy'] as $action) {
+            Permiso::firstOrCreate([
+                'rol_id' => $rol->id,
+                'vista' => "entidad.{$action}",
+            ]);
+        }
+
+        $usuario = Usuario::create([
+            'id' => $userId,
+            'nombre' => 'Comercial Test',
+            'email' => "comercial{$userId}@test.com",
+            'password_hash' => bcrypt('password123'),
+            'rol_id' => $rol->id,
+            'estado' => 'Activo',
+        ]);
+
+        return [
+            'usuario' => $usuario,
+            'token' => $usuario->createToken('test-token')->plainTextToken,
+        ];
+    }
+
+    #[Test]
+    public function comercial_can_view_entity_they_are_assigned_to(): void
+    {
+        $comercial = $this->authenticateAsComercial();
+        Ciudad::create(['cod_municipio' => '05001', 'nombre' => 'Medellín', 'departamento' => 'Antioquia']);
+
+        $entidad = Entidad::create([
+            'tipo_persona' => 'Juridica',
+            'nombre' => 'Empresa Asignada',
+            'estado' => 'Prospecto',
+        ]);
+        DB::table('entidad_usuario')->insert([
+            'entidad_id' => $entidad->id,
+            'usuario_id' => $comercial['usuario']->id,
+        ]);
+
+        $response = $this->withHeader('Authorization', 'Bearer '.$comercial['token'])
+            ->getJson("/api/v1/entidad/{$entidad->id}");
+
+        $response->assertStatus(200)
+            ->assertJsonPath('success', true)
+            ->assertJsonPath('data.id', $entidad->id);
+    }
+
+    #[Test]
+    public function comercial_cannot_view_entity_they_are_not_assigned_to(): void
+    {
+        $comercial = $this->authenticateAsComercial();
+        $entidad = Entidad::create([
+            'tipo_persona' => 'Juridica',
+            'nombre' => 'Empresa NO Asignada',
+            'estado' => 'Prospecto',
+        ]);
+
+        $response = $this->withHeader('Authorization', 'Bearer '.$comercial['token'])
+            ->getJson("/api/v1/entidad/{$entidad->id}");
+
+        $response->assertStatus(403)
+            ->assertJsonPath('success', false);
+    }
+
+    #[Test]
+    public function comercial_cannot_update_entity_they_are_not_assigned_to(): void
+    {
+        $comercial = $this->authenticateAsComercial();
+        $entidad = Entidad::create([
+            'tipo_persona' => 'Juridica',
+            'nombre' => 'Empresa NO Asignada',
+            'estado' => 'Prospecto',
+        ]);
+
+        $response = $this->withHeader('Authorization', 'Bearer '.$comercial['token'])
+            ->putJson("/api/v1/entidad/{$entidad->id}", [
+                'tipo_persona' => 'Natural',
+                'nombre' => 'Intento de update',
+                'estado' => 'Prospecto',
+            ]);
+
+        $response->assertStatus(403);
+
+        // Verificar que NO se actualizó
+        $this->assertEquals('Empresa NO Asignada', $entidad->fresh()->nombre);
+    }
+
+    #[Test]
+    public function comercial_cannot_delete_entity_they_are_not_assigned_to(): void
+    {
+        $comercial = $this->authenticateAsComercial();
+        $entidad = Entidad::create([
+            'tipo_persona' => 'Juridica',
+            'nombre' => 'Empresa NO Asignada',
+            'estado' => 'Prospecto',
+        ]);
+
+        $response = $this->withHeader('Authorization', 'Bearer '.$comercial['token'])
+            ->deleteJson("/api/v1/entidad/{$entidad->id}");
+
+        $response->assertStatus(403);
+
+        // Verificar que NO se borró
+        $this->assertDatabaseHas('entidad', ['id' => $entidad->id]);
+    }
+
+    #[Test]
+    public function admin_can_still_view_any_entity(): void
+    {
+        // Admin (rol != Comercial) debe seguir viendo todas las entidades
+        $adminToken = $this->authenticate();
+        $entidad = Entidad::create([
+            'tipo_persona' => 'Juridica',
+            'nombre' => 'Cualquier Entidad',
+            'estado' => 'Prospecto',
+        ]);
+
+        $response = $this->withHeader('Authorization', 'Bearer '.$adminToken)
+            ->getJson("/api/v1/entidad/{$entidad->id}");
+
+        $response->assertStatus(200)
+            ->assertJsonPath('data.id', $entidad->id);
     }
 }
