@@ -73,6 +73,11 @@ Route::prefix('v1')->group(function () {
         ->middleware(ValidateApiKeyMiddleware::class)
         ->name('auth.validate-key');
 
+    // Roles list (consumed by SAIlus via Sanctum token; reads roles catalog)
+    Route::get('/auth/roles', [\App\Http\Controllers\API\Auth\RolesListController::class, '__invoke'])
+        ->middleware('throttle:120,1')
+        ->name('auth.roles');
+
     // Brands endpoint (consumido por SAIlus)
     Route::get('/users/{id}/brands', [BrandPermissionController::class, 'index'])
         ->middleware(['auth:sanctum', 'throttle:api'])
