@@ -6,11 +6,12 @@ use Illuminate\Database\Seeder;
 
 class SharedDatabaseSeeder extends Seeder
 {
-    /**
-     * Run the database seeds.
-     */
     public function run(): void
     {
-        // $this->call([]);
+        $this->call([
+            AppsSeeder::class,
+            BrpRolesSeeder::class,
+            UsuarioAppAssignmentsSeeder::class,
+        ]);
     }
 }

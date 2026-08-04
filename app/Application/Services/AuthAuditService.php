@@ -3,20 +3,22 @@
 namespace App\Application\Services;
 
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 
 /**
  * AuthAuditService — fire-and-forget writer for auth_audit_log.
  *
- * NOTE: If the `auth_audit_log` table doesn't exist (e.g. migrations not run),
- * this service silently logs to laravel.log instead of failing the request.
+ * If the auth_audit_log table is missing or the schema is partial
+ * (e.g. older deployments missing `updated_at`), this service silently
+ * logs to laravel.log instead of failing the request.
  */
 class AuthAuditService
 {
     public function log(string $event, ?int $usuarioId, string $ip, ?string $userAgent, ?string $requestId, array $metadata = []): void
     {
-        // Siempre loguear a laravel.log (best-effort)
+        // Always log to laravel.log (best-effort)
         try {
-            \Illuminate\Support\Facades\Log::info("auth_audit: {$event}", [
+            Log::info("auth_audit: {$event}", [
                 'event' => $event,
                 'usuario_id' => $usuarioId,
                 'ip' => $ip,

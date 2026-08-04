@@ -44,7 +44,9 @@ use App\Infrastructure\Persistence\EloquentRolRepository;
 use App\Infrastructure\Persistence\EloquentSeguimientoRepository;
 use App\Infrastructure\Persistence\EloquentServicioRepository;
 use App\Infrastructure\Persistence\EloquentUsuarioRepository;
+use App\Models\Contacto;
 use App\Models\Oportunidad;
+use App\Observers\ContactoObserver;
 use App\Observers\OportunidadObserver;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Support\Facades\RateLimiter;
@@ -85,6 +87,7 @@ class AppServiceProvider extends ServiceProvider
         // Register observers
         \Modules\CRM\Models\Oportunidad::observe(OportunidadObserver::class);
         Oportunidad::observe(OportunidadObserver::class);
+        Contacto::observe(ContactoObserver::class);
 
         // Rate Limiting para API
         // Por defecto: 60 requests/minuto por token/API key
@@ -123,6 +126,24 @@ class AppServiceProvider extends ServiceProvider
                     return response()->json([
                         'success' => false,
                         'error' => 'Demasiados intentos de login. Intenta de nuevo en un minuto.',
+                    ], 429);
+                });
+        });
+
+        // Rate limiter anti-bruteforce por email para token-exchange
+        RateLimiter::for('token-exchange-email', function ($request) {
+            $email = strtolower($request->input('email', ''));
+            if (! $email) {
+                return Limit::none();
+            }
+
+            return Limit::perMinutes(10, 5)
+                ->by($email)
+                ->response(function () {
+                    return response()->json([
+                        'success' => false,
+                        'error' => 'too_many_attempts',
+                        'message' => 'Too many login attempts. Try again later.',
                     ], 429);
                 });
         });

@@ -12,5 +12,21 @@ class Rol extends Model
 
     protected $table = 'roles';
 
-    protected $fillable = ['nombre', 'estado', 'created_by', 'updated_by'];
+    protected $fillable = [
+        'nombre',
+        'slug',
+        'es_super_admin',
+        'estado',
+        'created_by',
+        'updated_by',
+    ];
+
+    protected $casts = [
+        'es_super_admin' => 'boolean',
+    ];
+
+    public function isSuperAdmin(): bool
+    {
+        return (bool) $this->es_super_admin;
+    }
 }
