@@ -28,6 +28,7 @@ class PermisoSeeder extends Seeder
             'etiquetas' => ['index', 'store', 'show', 'update', 'destroy'],
             'entidad' => ['index', 'store', 'show', 'update', 'destroy'],
             'contacto' => ['index', 'store', 'show', 'update', 'destroy', 'acciones'],
+            'personas' => ['index', 'store', 'show', 'update', 'destroy'],
             'oportunidades' => ['index', 'store', 'show', 'update', 'destroy', 'ganar', 'clonar', 'version', 'bulk-move'],
             'seguimientos' => ['index', 'store', 'show', 'update', 'destroy'],
             'maestros' => ['index', 'store', 'show', 'update', 'destroy'],

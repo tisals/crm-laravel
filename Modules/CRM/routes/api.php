@@ -4,6 +4,7 @@ use App\Http\Controllers\API\ContactoAccionController;
 use Illuminate\Support\Facades\Route;
 use Modules\CRM\Http\Controllers\BulkMoveOportunidadesController;
 use Modules\CRM\Http\Controllers\ContactoController;
+use Modules\CRM\Http\Controllers\PersonaController;
 use Modules\CRM\Http\Controllers\PipelineController;
 use Modules\CRM\Http\Controllers\PipelineEtapaController;
 use Modules\CRM\Http\Controllers\SailusWebhookController;
@@ -54,6 +55,13 @@ Route::prefix('v1')->group(function () {
             Route::delete('/contacto/{id}', [ContactoController::class, 'destroy'])->name('contacto.destroy');
             Route::post('/contacto/{id}/reasignar', [ContactoController::class, 'reasignar'])->name('contacto.reasignar');
             Route::post('/contacto/{contactoId}/acciones', [ContactoAccionController::class, 'acciones'])->name('contacto.acciones');
+
+            // Persona CRUD (Party Model — administrative full CRUD)
+            Route::get('/personas', [PersonaController::class, 'index'])->name('personas.index');
+            Route::post('/personas', [PersonaController::class, 'store'])->name('personas.store');
+            Route::get('/personas/{id}', [PersonaController::class, 'show'])->name('personas.show');
+            Route::put('/personas/{id}', [PersonaController::class, 'update'])->name('personas.update');
+            Route::delete('/personas/{id}', [PersonaController::class, 'destroy'])->name('personas.destroy');
         });
     });
 });
