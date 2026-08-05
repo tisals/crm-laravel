@@ -12,7 +12,7 @@ return new class extends Migration
      * Targets:
      * - contacto: list active contacts for an entity (CRMPage, DirectorioPage, ContactosPage)
      * - oportunidad: list opportunities by entity+state (CRMPage kanban)
-     * - seguimiento: list calendar items per user (SeguimientosPage, calendar)
+     * - seguimiento: list by entity + order by fecha (SeguimientosPage, calendar)
      * - persona: list active personas (PersonasPage)
      */
     public function up(): void
@@ -28,8 +28,9 @@ return new class extends Migration
         });
 
         Schema::table('seguimiento', function (Blueprint $table) {
-            // Covers: WHERE usuario_id = ? ORDER BY fecha DESC
-            $table->index(['usuario_id', 'fecha'], 'idx_seguimiento_usuario_fecha');
+            // Covers: WHERE entidad_id IN (...) AND ORDER BY fecha DESC
+            // The user-scope filter goes via entidad_usuario, NOT via autor_id.
+            $table->index(['entidad_id', 'fecha'], 'idx_seguimiento_entidad_fecha');
         });
 
         Schema::table('personas', function (Blueprint $table) {
@@ -49,7 +50,7 @@ return new class extends Migration
         });
 
         Schema::table('seguimiento', function (Blueprint $table) {
-            $table->dropIndex('idx_seguimiento_usuario_fecha');
+            $table->dropIndex('idx_seguimiento_entidad_fecha');
         });
 
         Schema::table('personas', function (Blueprint $table) {

@@ -19,9 +19,13 @@ class LoginUseCase
      * - the response is NOT cached (each token is unique) but the user lookup
      *   result is cached briefly to absorb login bursts
      */
-    private const USER_LOOKUP_TTL = 30; // seconds
+    /**
+     * Public so LogoutUseCase can invalidate the cache on session end.
+     * Keep these in sync with the constants in LoginUseCase.
+     */
+    public const USER_LOOKUP_TTL = 30; // seconds
 
-    private const USER_LOOKUP_PREFIX = 'auth:user_lookup:';
+    public const USER_LOOKUP_PREFIX = 'auth:user_lookup:';
 
     public function execute(LoginRequest $request): LoginResponse
     {
