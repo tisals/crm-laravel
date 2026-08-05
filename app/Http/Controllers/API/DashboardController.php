@@ -2,7 +2,7 @@
 
 namespace App\Http\Controllers\API;
 
-use App\Application\UseCases\Dashboard\GetDashboardUseCase;
+use App\Application\UseCases\Dashboard\GetDashboardSnapshotUseCase;
 use App\Http\Controllers\API\Concerns\ApiResponse;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\JsonResponse;
@@ -13,7 +13,7 @@ class DashboardController extends Controller
     use ApiResponse;
 
     public function __construct(
-        private GetDashboardUseCase $dashboardUseCase,
+        private GetDashboardSnapshotUseCase $dashboardUseCase,
     ) {}
 
     public function index(Request $request): JsonResponse
