@@ -64,6 +64,31 @@ return [
             ]) : [],
         ],
 
+        // Read-only connection for queries that don't need write access.
+        // Used by BaseRepository when a repository sets $readConnection = 'mysql_read'.
+        // Falls back to the master connection when DB_READ_* env vars are not set,
+        // so dev / single-instance setups work without any extra config.
+        'mysql_read' => [
+            'driver' => 'mysql',
+            'url' => env('DB_URL'),
+            'host' => env('DB_READ_HOST', env('DB_HOST', '127.0.0.1')),
+            'port' => env('DB_READ_PORT', env('DB_PORT', 3306)),
+            'database' => env('DB_READ_DATABASE', env('DB_DATABASE', 'tecnoinnsoft_crm')),
+            'username' => env('DB_READ_USERNAME', env('DB_USERNAME', 'root')),
+            'password' => env('DB_READ_PASSWORD', env('DB_PASSWORD', '')),
+            'unix_socket' => env('DB_READ_SOCKET', env('DB_SOCKET', '')),
+            'charset' => env('DB_CHARSET', 'utf8mb4'),
+            'collation' => env('DB_COLLATION', 'utf8mb4_unicode_ci'),
+            'prefix' => '',
+            'prefix_indexes' => true,
+            'strict' => true,
+            'engine' => null,
+            'read_only' => true, // marker for ops/monitoring; Laravel doesn't enforce it
+            'options' => extension_loaded('pdo_mysql') ? array_filter([
+                PDO::MYSQL_ATTR_SSL_CA => env('MYSQL_SSL_CA'),
+            ]) : [],
+        ],
+
         'mariadb' => [
             'driver' => 'mariadb',
             'url' => env('DB_URL'),

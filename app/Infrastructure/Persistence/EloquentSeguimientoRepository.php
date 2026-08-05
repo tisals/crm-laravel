@@ -19,11 +19,21 @@ class EloquentSeguimientoRepository extends BaseRepository implements Seguimient
         return EloquentSeguimiento::class;
     }
 
+    /**
+     * Calendar and seguimientos lists are read-heavy with eager-loaded
+     * relations. Route reads to the replica; writes still go through
+     * the master via BaseRepository::create/update/delete.
+     */
+    protected ?string $readConnection = 'mysql_read';
+
     protected function newQuery()
     {
         $modelClass = $this->getModelClass();
+        $model = $this->readConnection
+            ? (new $modelClass)->setConnection($this->readConnection)
+            : new $modelClass;
 
-        return $modelClass::with(['autor', 'contacto', 'entidad', 'oportunidad']);
+        return $model->newQuery()->with(['autor', 'contacto', 'entidad', 'oportunidad']);
     }
 
     protected function applyFilters($query, array $filters): Builder

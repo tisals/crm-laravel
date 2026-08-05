@@ -17,9 +17,20 @@ class EloquentEntidadRepository extends BaseRepository implements EntidadReposit
         return EloquentEntidad::class;
     }
 
+    /**
+     * The entidad list view is read-heavy (paginated, with counts/relations).
+     * Route reads to the replica; writes still go through the master
+     * via BaseRepository::create/update/delete.
+     */
+    protected ?string $readConnection = 'mysql_read';
+
     protected function newQuery()
     {
-        return EloquentEntidad::query()
+        $model = $this->readConnection
+            ? (new EloquentEntidad)->setConnection($this->readConnection)
+            : new EloquentEntidad;
+
+        return $model->newQuery()
             ->withCount(['contactos', 'oportunidades'])
             ->with(['usuarios', 'ciudad']);
     }

@@ -12,6 +12,12 @@ use Illuminate\Support\Facades\Auth;
 
 class EloquentContactoRepository extends BaseRepository implements ContactoRepositoryInterface
 {
+    /**
+     * Contactos list is read-heavy and is hit on every dashboard page load.
+     * Route reads to the replica.
+     */
+    protected ?string $readConnection = 'mysql_read';
+
     protected function getModelClass(): string
     {
         return EloquentContacto::class;
@@ -33,10 +39,20 @@ class EloquentContactoRepository extends BaseRepository implements ContactoRepos
 
     /**
      * Query that always brings the entidad name for display in frontend lists.
+     * Routes to the read replica only when actually configured (different
+     * host/port than the master). Otherwise uses the master — critical for
+     * tests that use RefreshDatabase transaction isolation.
      */
     protected function newQueryWithEntidad()
     {
-        return EloquentContacto::query()
+        $useReplica = $this->readConnection
+            && $this->isReadReplicaConfigured($this->readConnection);
+
+        $model = $useReplica
+            ? (new EloquentContacto)->setConnection($this->readConnection)
+            : new EloquentContacto;
+
+        return $model->newQuery()
             ->leftJoin('entidad', 'contacto.entidad_id', '=', 'entidad.id')
             ->select('contacto.*', 'entidad.nombre as entidad_nombre');
     }

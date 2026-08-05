@@ -8,12 +8,15 @@ class ListEntidadesByAppUseCase
 {
     /**
      * Returns the entities that have a given app, with pivot metadata.
+     * Routes to the read replica via `mysql_read` connection (falls back
+     * to master when no replica is provisioned).
      *
      * @return array<int, array<string, mixed>>
      */
     public function execute(int $appId): array
     {
-        return DB::table('app_entidad')
+        return DB::connection('mysql_read')
+            ->table('app_entidad')
             ->join('entidad', 'app_entidad.entidad_id', '=', 'entidad.id')
             ->where('app_entidad.app_id', $appId)
             ->whereNull('entidad.deleted_at')
