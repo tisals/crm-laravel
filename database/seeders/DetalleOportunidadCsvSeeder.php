@@ -36,6 +36,23 @@ class DetalleOportunidadCsvSeeder extends Seeder
             ->toArray();
         $this->command->info('  → '.count($oppsByCodigo).' oportunidades loaded.');
 
+        // Preload valid producto IDs (one cheap query, ~few hundred rows).
+        // The CSV uses 'cod' (line code) as the producto_id candidate, but
+        // many of those codes don't exist in the productos table — foreign
+        // key constraint would reject the insert. We fall back to a
+        // 'default' producto (first one in the table) for orphans.
+        $validProductIds = array_map('intval', DB::table('productos')->pluck('id')->all());
+        $defaultProductId = $validProductIds[0] ?? null;
+
+        if ($defaultProductId === null) {
+            $this->command->error(
+                'productos table is empty -- run ProductoSeeder (or the regular seeder chain) '
+                .'first, otherwise detalle_oportunidad inserts will fail on NOT NULL producto_id.'
+            );
+        }
+        $productoIdMap = array_flip($validProductIds); // hash lookup, O(1)
+        $orphanedCods = [];
+
         // Parse CSV and collect rows grouped by codigo
         $this->command->info('Parsing detalle CSV...');
         $detalleGroups = []; // codigo => [rows]
@@ -113,9 +130,18 @@ class DetalleOportunidadCsvSeeder extends Seeder
 
             foreach ($detalleGroups as $codigo => $rows) {
                 foreach ($rows as $r) {
+                    $codInt = (int) $r['cod'];
+                    if (isset($productoIdMap[$codInt])) {
+                        $productoId = $codInt;
+                    } else {
+                        // 'cod' del CSV no mapea a un producto real -> fallback
+                        $productoId = $defaultProductId;
+                        $orphanedCods[$codInt] = ($orphanedCods[$codInt] ?? 0) + 1;
+                    }
+
                     $insertBatch[] = [
                         'oportunidad_id' => $r['oportunidad_id'],
-                        'producto_id' => max(1, (int) $r['cod']),
+                        'producto_id' => $productoId,
                         'concepto' => $r['producto'] ?? $r['concepto'] ?? '',
                         'descripcion' => $r['concepto'] ?? '',
                         'medida' => $r['medida'],
@@ -155,6 +181,16 @@ class DetalleOportunidadCsvSeeder extends Seeder
             ->join('detalle_oportunidad', 'oportunidad.id', '=', 'detalle_oportunidad.oportunidad_id')
             ->distinct('oportunidad.id')
             ->count('oportunidad.id');
+
+        if (! empty($orphanedCods)) {
+            $totalOrphans = array_sum($orphanedCods);
+            $this->command->warn(
+                "  producto_id orphans remapped to default ({$defaultProductId}): {$totalOrphans} rows "
+                .'(' . count($orphanedCods) . ' unique cod values). '
+                .'Run this query to inspect: '.implode(', ', array_keys($orphanedCods))
+            );
+        }
+
         $this->command->info("  Oportunidades total     : {$totalOpps}");
         $this->command->info("  Detalles insertados     : {$totalDetalles}");
         $this->command->info("  Ops con detalle         : {$conDetalle}");
