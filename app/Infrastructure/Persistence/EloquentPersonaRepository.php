@@ -10,6 +10,11 @@ use Illuminate\Pagination\LengthAwarePaginator;
 
 class EloquentPersonaRepository extends BaseRepository implements PersonaRepositoryInterface
 {
+    /**
+     * Personas list is paginated and read-heavy. Route reads to the replica.
+     */
+    protected ?string $readConnection = 'mysql_read';
+
     protected function getModelClass(): string
     {
         return EloquentPersona::class;
