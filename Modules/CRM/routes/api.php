@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\API\ContactoAccionController;
+use App\Http\Controllers\API\MeController;
 use Illuminate\Support\Facades\Route;
 use Modules\CRM\Http\Controllers\AppController;
 use Modules\CRM\Http\Controllers\BulkMoveOportunidadesController;
@@ -25,6 +26,14 @@ Route::prefix('v1')->group(function () {
     Route::post('/license/validate', [SailusWebhookController::class, 'validateLicense'])
         ->middleware('auth:sanctum')
         ->name('license.validate');
+
+    // Self-service endpoints (auth:sanctum, throttle:api). "me/apps" lets
+    // the authenticated user list which apps they have access to
+    // (transitively via entidad_usuario + app_entidad).
+    Route::middleware(['auth:sanctum', 'throttle:api'])->prefix('me')->group(function () {
+        Route::get('/apps', [MeController::class, 'apps'])->name('me.apps');
+        Route::get('/apps/{slug}/permisos', [MeController::class, 'appPermisos'])->name('me.apps.permisos');
+    });
 
     // Protected CRM routes
     Route::middleware(['auth:sanctum', 'throttle-mutations'])->group(function () {
