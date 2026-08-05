@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\API\ContactoAccionController;
 use Illuminate\Support\Facades\Route;
+use Modules\CRM\Http\Controllers\AppController;
 use Modules\CRM\Http\Controllers\BulkMoveOportunidadesController;
 use Modules\CRM\Http\Controllers\ContactoController;
 use Modules\CRM\Http\Controllers\PersonaController;
@@ -62,6 +63,19 @@ Route::prefix('v1')->group(function () {
             Route::get('/personas/{id}', [PersonaController::class, 'show'])->name('personas.show');
             Route::put('/personas/{id}', [PersonaController::class, 'update'])->name('personas.update');
             Route::delete('/personas/{id}', [PersonaController::class, 'destroy'])->name('personas.destroy');
+
+            // Apps catalog CRUD
+            Route::get('/apps', [AppController::class, 'index'])->name('apps.index');
+            Route::post('/apps', [AppController::class, 'store'])->name('apps.store');
+            Route::get('/apps/{id}', [AppController::class, 'show'])->name('apps.show');
+            Route::put('/apps/{id}', [AppController::class, 'update'])->name('apps.update');
+            Route::delete('/apps/{id}', [AppController::class, 'destroy'])->name('apps.destroy');
+            Route::get('/apps/{appId}/entidades', [AppController::class, 'entidadesByApp'])->name('apps.entidades');
+
+            // Apps ↔ Entidad assignments
+            Route::get('/entidad/{entidadId}/apps', [AppController::class, 'appsByEntidad'])->name('entidad.apps.index');
+            Route::post('/entidad/{entidadId}/apps/{appId}', [AppController::class, 'assignAppToEntidad'])->name('entidad.apps.assign');
+            Route::delete('/entidad/{entidadId}/apps/{appId}', [AppController::class, 'removeAppFromEntidad'])->name('entidad.apps.remove');
         });
     });
 });
