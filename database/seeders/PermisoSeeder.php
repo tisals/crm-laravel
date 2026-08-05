@@ -43,6 +43,9 @@ class PermisoSeeder extends Seeder
             'apps' => ['index', 'store', 'show', 'update', 'destroy'],
             'apps.entidades' => ['index'],
             'entidad.apps' => ['index', 'assign', 'remove'],
+            'me' => ['index'],
+            'me.apps' => ['index'],
+            'me.apps.permisos' => ['index'],
         ];
 
         $roles = Rol::whereNotIn('nombre', ['SuperAdmin', 'Admin'])->get();
