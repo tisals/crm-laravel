@@ -16,6 +16,7 @@ use App\Domain\Repositories\MovimientoRepositoryInterface;
 use App\Domain\Repositories\OportunidadRepositoryInterface;
 use App\Domain\Repositories\OrdenServicioRepositoryInterface;
 use App\Domain\Repositories\PermisoRepositoryInterface;
+use App\Domain\Repositories\PersonaRepositoryInterface;
 use App\Domain\Repositories\PipelineRepositoryInterface;
 use App\Domain\Repositories\ProductoRepositoryInterface;
 use App\Domain\Repositories\ProveedorRepositoryInterface;
@@ -37,6 +38,7 @@ use App\Infrastructure\Persistence\EloquentMovimientoRepository;
 use App\Infrastructure\Persistence\EloquentOportunidadRepository;
 use App\Infrastructure\Persistence\EloquentOrdenServicioRepository;
 use App\Infrastructure\Persistence\EloquentPermisoRepository;
+use App\Infrastructure\Persistence\EloquentPersonaRepository;
 use App\Infrastructure\Persistence\EloquentPipelineRepository;
 use App\Infrastructure\Persistence\EloquentProductoRepository;
 use App\Infrastructure\Persistence\EloquentProveedorRepository;
@@ -58,6 +60,7 @@ class AppServiceProvider extends ServiceProvider
     {
         $this->app->bind(RolRepositoryInterface::class, EloquentRolRepository::class);
         $this->app->bind(PermisoRepositoryInterface::class, EloquentPermisoRepository::class);
+        $this->app->bind(PersonaRepositoryInterface::class, EloquentPersonaRepository::class);
         $this->app->bind(UsuarioRepositoryInterface::class, EloquentUsuarioRepository::class);
         $this->app->bind(CiudadRepositoryInterface::class, EloquentCiudadRepository::class);
         $this->app->bind(ProductoRepositoryInterface::class, EloquentProductoRepository::class);
