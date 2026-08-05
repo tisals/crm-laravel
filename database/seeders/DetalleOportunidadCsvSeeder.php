@@ -110,7 +110,7 @@ class DetalleOportunidadCsvSeeder extends Seeder
         $existingCount = DB::table('detalle_oportunidad')->count();
         $this->command->info("  → {$existingCount} existing detalles to replace.");
 
-        DB::transaction(function () use ($detalleGroups) {
+        DB::transaction(function () use ($detalleGroups, $productoIdMap, $defaultProductId, &$orphanedCods) {
             // Gather all oportunidad_ids that will receive new detalles
             $oppIds = array_unique(
                 array_merge(...array_map(fn ($g) => array_column($g, 'oportunidad_id'), array_values($detalleGroups)))
