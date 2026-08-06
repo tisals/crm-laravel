@@ -1,11 +1,34 @@
 # Integración SAIlus ↔ CRM (Multi-app Auth)
 
-**Versión:** 2.0 (reescrita 2026-08-05)
+**Versión:** 3.0 (2026-08-06)
 **Audience:** Equipo SAIlus (Python, gateway) y BRP (FastAPI)
 **Mantenedor:** Equipo CRM (crm-laravel)
-**Estado actual:** sincronizado con `main` al `b246c6f`
+**Estado actual:** sincronizado con `main` al `d35eae7` (PR #13 OpenAPI spec)
 
-> **Nota:** la v1.0 de este doc (publicada 2026-07-30) describía el diseño del branch `feature/multi-app-access-and-fixes`, **que nunca se mergeó** a `main`. Esa versión mencionaba endpoints como `POST /auth/token-exchange`, una tabla `usuario_app` con `rol_id`, y un flow `user → persona → usuario_app → apps` que no existe en producción. **Toda referencia a esa API debe ignorarse.**
+> **Historial:**
+> - v1.0 (2026-07-30): describía el diseño del branch `feature/multi-app-access-and-fixes`, **que nunca se mergeó** a `main`. Mencionaba endpoints como `POST /auth/token-exchange`, tabla `usuario_app` con `rol_id`. **NO USAR COMO REFERENCIA** — está obsoleta.
+> - v2.0 (2026-08-05): primera versión sincronizada con `main` después del merge del sprint 1. Describía los endpoints `/me/apps`, `/me/apps/{slug}/permisos` y `/auth/validate-key`. **Está obsoleta** por la v3.0 (le faltan 5 endpoints nuevos + OpenAPI spec + CI guard).
+> - **v3.0 (ESTA)**: cubre los 13 endpoints actuales (3 auth + 4 me + 6 admin), OpenAPI spec machine-readable en `Docs/openapi/auth.yaml`, CI lint guard contra breaking changes, y los 4 sprints del cambio `multi-app-auth-identity`.
+
+## Cambios vs v2.0
+
+| Cambio | Detalle |
+|--------|---------|
+| +5 endpoints | `GET /me/identity`, `GET /me/permisos`, `GET /usuarios/{id}/identity`, `POST/DELETE /usuarios/{id}/apps/{appId}/permisos`, `POST /usuarios/{id}/apps/{appId}/permisos/{grant,reset-to-role-defaults}` |
+| +OpenAPI spec | `Docs/openapi/auth.yaml` (3.1, 13 endpoints, 11 schemas). Contract machine-readable para integraciones |
+| +CI lint guard | `tools/openapi-lint.sh` corre en cada PR. Falla si hay breaking changes |
+| +Backward compat (AC11) | Todos los responses incluyen `scope_label: 'v1'`. Nuevos campos son siempre opcionales |
+| +Admin identity preview | El admin puede ver el bundle completo de cualquier user (rol defaults + scoped) |
+
+## Sprint log (cambio `multi-app-auth-identity`)
+
+| Sprint | PR | Descripción |
+|--------|-----|-------------|
+| 1 (backend) | crm-laravel #11 | 3 migrations + models + service + use cases + 38 tests |
+| 2 (frontend matrix) | dashboard-crm #5 | UI admin matrix + `PermissionsMatrix` component |
+| 2.5 (identity endpoint) | crm-laravel #12 | `GET /usuarios/{id}/identity` con rol defaults |
+| 2.5b (frontend uses identity) | dashboard-crm `a24c848` | Frontend usa el endpoint identity, muestra defaults del rol |
+| 4 (OpenAPI + CI lint) | crm-laravel #13 | OpenAPI 3.1 spec + bash linter contra breaking changes |
 
 ---
 
@@ -272,6 +295,133 @@ Los siguientes endpoints **mencionados en la v1 de este doc NO EXISTEN en main**
 
 Si tu código apunta a alguno de estos, **falla**. Usá la API documentada en §3.2 y §3.3.
 
+### 3.6 Self-service — Identity bundle (sprint 2.5)
+
+**Estos endpoints son NUEVOS en v3.0** y son la forma recomendada de integración para apps modernas (BRP, Indicadores, HE, EM). Reemplazan el patrón "N+1 calls" del diseño v1.
+
+#### `GET /api/v1/me/identity`
+
+Bundle consolidado del auth user en **una sola llamada HTTP**.
+
+**Headers**: `Authorization: Bearer <token>`
+
+**Response 200**:
+```json
+{
+  "success": true,
+  "data": {
+    "user": {
+      "id": 5,
+      "nombre": "Juan Pérez",
+      "email": "juan@empresa.com",
+      "estado": "Activo",
+      "rol": { "id": 2, "nombre": "Comercial", "es_super_admin": false }
+    },
+    "apps": [
+      {
+        "id": 1, "slug": "brp", "nombre": "BRP Asistencia", "tipo": "external",
+        "auth_type": "sanctum", "activo": true, "entidades_count": 3
+      }
+    ],
+    "scope_label": "v1",
+    "snapshot_at": "2026-08-05T03:30:00Z",
+    "ttl_seconds": 86400
+  }
+}
+```
+
+**Performance**:
+- Cache Redis 5min (key `auth:me:identity:{userId}:v1`) → p95 < 80ms en cache hit
+- Snapshot DB nocturna (job `crm:refresh-user-identity-snapshot` a las 03:30)
+- Fallback graceful si Redis down: query directa al snapshot → p95 < 200ms
+
+#### `GET /api/v1/me/permisos`
+
+Lista plana de permisos efectivos (sin metadata de apps).
+
+**Response 200**:
+```json
+{
+  "success": true,
+  "data": {
+    "permisos": [
+      "contacto.index", "contacto.update", "entidad.show",
+      "brp.create", "brp.read", "indicador.dashboard"
+    ]
+  }
+}
+```
+
+Útil para apps que solo necesitan verificar "puede hacer X" sin la metadata completa.
+
+### 3.7 Admin — Permisos scopados (sprint 1)
+
+**Solo admin (permiso `usuarios.apps.permisos.*`)**. Usados por la UI dashboard para ajustar permisos individuales.
+
+#### `GET /api/v1/usuarios/{userId}/identity`
+
+Bundle completo de un usuario arbitrario (admin preview). **El más útil para tooling de admin**: trae `rol_defaults[]` para que el admin vea qué permisos hereda el usuario del rol.
+
+```json
+{
+  "success": true,
+  "data": {
+    "user": { "id": 5, "nombre": "...", "rol": { "es_super_admin": false } },
+    "rol_defaults": ["contacto.index", "entidad.update", ...],
+    "apps": [
+      {
+        "id": 1, "slug": "brp", "permisos_scoped": ["brp.admin"],
+        "permisos_efectivos": ["brp.admin", "contacto.index", ...]
+      }
+    ],
+    "scope_label": "v1",
+    "computed_at": "2026-08-05T12:00:00Z",
+    "cache_ttl_seconds": 60
+  }
+}
+```
+
+**Cache**: 60s en Redis (key `auth:user:identity:{userId}:{requestingId}:v1`).
+
+#### Endpoints CRUD de permisos scopados
+
+Todos bajo `Bearer + admin`. Idempotentes. Marcan `user_identity_snapshot.is_stale=1` en cada mutación.
+
+| Método | Path | Body | Notas |
+|--------|------|------|-------|
+| GET | `/usuarios/{userId}/apps/{appId}/permisos` | — | Lista permisos scopados actuales |
+| POST | `/usuarios/{userId}/apps/{appId}/permisos` | `{vistas: ["X", "Y"]}` | Sync replace-all |
+| POST | `/usuarios/{userId}/apps/{appId}/permisos/grant` | `{vista: "X"}` | Grant uno (idempotent) |
+| DELETE | `/usuarios/{userId}/apps/{appId}/permisos/{vista}` | — | Revoke uno (idempotent) |
+| POST | `/usuarios/{userId}/apps/{appId}/permisos/reset-to-role-defaults` | — | Borra todos los overrides |
+
+### 3.8 OpenAPI spec (machine-readable)
+
+`Docs/openapi/auth.yaml` contiene el spec OpenAPI 3.1 completo:
+- 13 paths (3 auth + 4 me + 6 admin)
+- 11 component schemas
+- 4 response types (Success, Unauthorized, NotFound, ValidationError, RateLimited)
+- Todos los responses con `scope_label: 'v1'` (forward compat, AC11)
+
+**Para generar un cliente**:
+```bash
+# Python (FastAPI client)
+npx @openapitools/openapi-generator-cli generate \
+  -i Docs/openapi/auth.yaml \
+  -g python-fastapi \
+  -o ./client-python
+
+# TypeScript
+npx @openapitools/openapi-generator-cli generate \
+  -i Docs/openapi/auth.yaml \
+  -g typescript-fetch \
+  -o ./client-ts
+```
+
+**Para validar que tu cliente no va a romper** en el próximo release:
+- Lint el spec localmente: `bash tools/openapi-lint.sh origin/main`
+- En CI: el workflow `ci.yml` corre ese mismo lint en cada PR contra `origin/main`
+
 ---
 
 ## 4. Flujo end-to-end — Login de usuario (ACTUAL)
@@ -512,6 +662,31 @@ echo 'User 5 tiene acceso a: ' . implode(', ', \$apps);
 "
 ```
 
+### Verificar identidad completa de un usuario (admin)
+
+```bash
+# Identity bundle con cache de 60s
+curl -s -H "Authorization: Bearer <admin-token>" \
+  http://localhost:8001/api/v1/usuarios/5/identity | jq .
+
+# Forzar refresh de la snapshot nocturna (individual)
+php artisan tinker --execute="
+\$useCase = app(\App\Application\UseCases\Me\RefreshUserIdentitySnapshotUseCase::class);
+\$useCase->invalidate(5);
+echo 'Snapshot marcada como stale para user 5';
+"
+
+# Forzar refresh completa de TODAS las snapshots
+php artisan crm:refresh-user-identity-snapshot
+
+# Refrescar el cache de un solo endpoint
+php artisan tinker --execute="
+\Cache::forget('auth:me:identity:5:v1');
+\Cache::forget('auth:user:identity:5:1:v1');
+echo 'Cache cleared for user 5';
+"
+```
+
 ### Bajar el cache de `/me/apps` (forzar recompute)
 
 ```bash
@@ -544,7 +719,29 @@ foreach (\DB::table('usuarios')->pluck('id') as \$uid) {
 
 ## 11. Changelog
 
-### v2.0 (2026-08-05) — reescritura completa
+### v3.0 (2026-08-06) — identidad + OpenAPI + CI guard
+
+**Cambios principales**:
+- Agregado §3.6: `GET /me/identity` (bundle consolidado) y `GET /me/permisos` (lista plana)
+- Agregado §3.7: 5 endpoints admin de permisos scopados (`GET /usuarios/{id}/identity` + 4 CRUD sobre `/usuarios/{id}/apps/{appId}/permisos*`)
+- Agregado §3.8: OpenAPI spec + ejemplo de generador de clientes
+- Nueva sección "Cambios vs v2.0" al inicio con sprint log completo
+- Nueva sección "Forward compat (AC11)" con `scope_label` + política de bump v2
+- Runbook expandido: comandos para verificar identidad + forzar refresh de snapshot + limpiar cache
+
+**Sprints completados**:
+- Sprint 1 (backend full stack) — crm-laravel #11
+- Sprint 2 (frontend matrix UI) — dashboard-crm #5
+- Sprint 2.5 (identity endpoint) — crm-laravel #12
+- Sprint 2.5b (frontend uses identity) — dashboard-crm `a24c848`
+- Sprint 4 (OpenAPI spec + CI lint) — crm-laravel #13
+
+**Pendientes**:
+- Sprint 3: BRP integration (externo, fuera de este repo)
+- Sprint 6: load test staging
+- Sprint 7: bump `/api/v2/` cuando haya breaking change real
+
+### v2.0 (2026-08-05) — reescritura completa (OBSOLETA — usar v3.0)
 
 - Reescrito para reflejar el estado REAL de `main` al commit `b246c6f`
 - Eliminada toda referencia al diseño `feature/multi-app-access-and-fixes` (que documentaba el branch unmerged)
@@ -555,8 +752,9 @@ foreach (\DB::table('usuarios')->pluck('id') as \$uid) {
 - Agregado: CQRS Táctico (bcrypt cost, cache, indexes, snapshot, replica)
 - Documentado: bugs fijos (private const, migration schema)
 - Documentado: bugs pendientes (validate-token Sanctum, cache invalidation)
+- **Le faltan**: 5 endpoints nuevos, OpenAPI spec, CI lint guard → usar v3.0
 
-### v1.0 (2026-07-30) — primera versión (NO reflieja la realidad actual)
+### v1.0 (2026-07-30) — primera versión (OBSOLETA — usar v3.0)
 
 - Diseño propuesto, no implementado en `main`
 - Mencionaba `POST /auth/token-exchange`, `usuario_app` table, `persona_id` flow
