@@ -26,12 +26,8 @@ Homestead.json
 Homestead.yaml
 Thumbs.db
 *.md
-!/Docs/*.md
+!/Docs/**
 !/README.md
-/docs/*
-
-# Temporary test scripts
-/check_rbac.php
 /extract_clientes.py
 /test_csv.php
 /test_db.php
