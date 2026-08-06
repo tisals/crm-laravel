@@ -1,0 +1,605 @@
+openapi: 3.1.0
+info:
+  title: crm-laravel Auth & Identity API
+  version: 1.0.0
+  description: |
+    Endpoints de autenticación e identidad del CRM para el HUB-micro-saas
+    (BRP, Indicadores, Horas Extras, Estándares Mínimos).
+
+    **Versioning**: este spec es `/api/v1/`. Breaking changes requieren bump
+    a `/api/v2/`. Nuevos campos son siempre opcionales (forward compat, AC11).
+
+    **Drivers** (ver `Docs/design/ADD-AUTH-001-multi-app-auth.md`):
+    - AC01: login < 1s
+    - AC02: authz scopado por app
+    - AC04: /me/identity < 80ms
+    - AC10: nueva app integra < 4h
+    - AC11: backward compat 6 meses
+
+    **Conventions**:
+    - Auth Bearer: `Authorization: Bearer <token>`
+    - Auth API Key: `X-API-Key: <entidad.dominio>` (m2m)
+    - Rate limit: 60 req/min (configurable via `RATE_LIMITER_API`)
+    - Todas las responses incluyen `success: bool` y `data: T` o `error: string`
+
+servers:
+  - url: http://localhost:8001/api/v1
+    description: Dev local
+  - url: https://crm.tecnoinnsoft.com/api/v1
+    description: Production
+
+tags:
+  - name: Auth
+    description: Login, logout, validate-key
+  - name: Me
+    description: Self-service identity (apps, permisos, identity bundle)
+  - name: Admin
+    description: Admin-only endpoints (identity preview, scoped permisos CRUD)
+
+paths:
+  # ─────────────────────────────────────────────────────────
+  # AUTH
+  # ─────────────────────────────────────────────────────────
+  /auth/login:
+    post:
+      tags: [Auth]
+      summary: Login (Bearer Sanctum)
+      description: |
+        Autentica con email + password. bcrypt cost 10 (SLO < 1s login).
+        El user lookup está cacheado 30s en Redis; logout invalida el cache.
+      security: []
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: '#/components/schemas/LoginRequest'
+            example:
+              email: user@empresa.com
+              password: password123
+      responses:
+        '200':
+          description: Login OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/LoginResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+        '422':
+          $ref: '#/components/responses/ValidationError'
+        '429':
+          $ref: '#/components/responses/RateLimited'
+
+  /auth/logout:
+    post:
+      tags: [Auth]
+      summary: Logout (revoke current Sanctum token)
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: Logout OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SuccessResponse'
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /auth/validate-key:
+    get:
+      tags: [Auth]
+      summary: Validate API Key (X-API-Key, m2m)
+      description: |
+        Valida `X-API-Key` contra `entidad.dominio` y devuelve `{valid, bot_id, name}`.
+        Resultado cacheado 5min en Redis.
+        NO acepta Bearer Sanctum — es endpoint exclusivo para m2m (BRP, SAIlus, WP-plugin).
+      security: []
+      parameters:
+        - name: X-API-Key
+          in: header
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          description: Key válida
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  valid: { type: boolean, enum: [true] }
+                  bot_id: { type: string, example: bot_42 }
+                  name: { type: string, example: Acme S.A. }
+                  permissions:
+                    type: array
+                    items: { type: string }
+        '401':
+          description: Key inválida
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  valid: { type: boolean, enum: [false] }
+                  error: { type: string, example: API key inválida }
+
+  # ─────────────────────────────────────────────────────────
+  # ME (self-service, requiere Bearer)
+  # ─────────────────────────────────────────────────────────
+  /me/apps:
+    get:
+      tags: [Me]
+      summary: Apps transitivas del usuario
+      description: |
+        User → entidad_usuario → entidad → app_entidad (estado=Activo) → apps.
+        Cache Redis 5min.
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  data:
+                    type: object
+                    properties:
+                      apps:
+                        type: array
+                        items: { $ref: '#/components/schemas/MyApp' }
+                      total: { type: integer }
+        '401':
+          $ref: '#/components/responses/Unauthorized'
+
+  /me/apps/{slug}/permisos:
+    get:
+      tags: [Me]
+      summary: Entidades donde el user tiene acceso a una app
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/AppSlugPath'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  data:
+                    type: object
+                    properties:
+                      app: { $ref: '#/components/schemas/MyApp' }
+                      permisos:
+                        type: array
+                        items: { $ref: '#/components/schemas/MyAppPermission' }
+                      total_entidades: { type: integer }
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /me/identity:
+    get:
+      tags: [Me]
+      summary: Identity bundle consolidado (cache snapshot)
+      description: |
+        Devuelve el bundle completo de identidad del auth user.
+        Si la snapshot está stale (>26h) o no existe, recomputa.
+        Cache Redis 5min. Performance target: p95 < 80ms.
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/MeIdentityResponse'
+
+  /me/permisos:
+    get:
+      tags: [Me]
+      summary: Lista plana de permisos efectivos (core + scoped)
+      security:
+        - bearerAuth: []
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  data:
+                    type: object
+                    properties:
+                      permisos:
+                        type: array
+                        items: { type: string, example: contacto.update }
+
+  # ─────────────────────────────────────────────────────────
+  # ADMIN (requiere Bearer + permiso `usuarios.*`)
+  # ─────────────────────────────────────────────────────────
+  /usuarios/{userId}/identity:
+    get:
+      tags: [Admin]
+      summary: Identity bundle de un usuario arbitrario (admin preview)
+      description: |
+        Devuelve user + apps + permisos scopados + permisos del rol del usuario
+        target. Usado por la UI admin matrix para mostrar los defaults del rol.
+        Cache Redis 60s.
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/UserIdPath'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/UserIdentityResponse'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /usuarios/{userId}/apps/{appId}/permisos:
+    get:
+      tags: [Admin]
+      summary: Lista permisos scopados de (user, app)
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/UserIdPath'
+        - $ref: '#/components/parameters/AppIdPath'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  data:
+                    type: object
+                    properties:
+                      permisos:
+                        type: array
+                        items: { type: string }
+                      total: { type: integer }
+    post:
+      tags: [Admin]
+      summary: Sync permisos scopados (replace-all, idempotent)
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/UserIdPath'
+        - $ref: '#/components/parameters/AppIdPath'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [vistas]
+              properties:
+                vistas:
+                  type: array
+                  items: { type: string }
+            example:
+              vistas: [contacto.update, oportunidad.create, seguimiento.delete]
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  data:
+                    type: object
+                    properties:
+                      permisos:
+                        type: array
+                        items: { type: string }
+                      total: { type: integer }
+
+  /usuarios/{userId}/apps/{appId}/permisos/grant:
+    post:
+      tags: [Admin]
+      summary: Grant un permiso (idempotent)
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/UserIdPath'
+        - $ref: '#/components/parameters/AppIdPath'
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [vista]
+              properties:
+                vista: { type: string, example: brp.create }
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessOk'
+
+  /usuarios/{userId}/apps/{appId}/permisos/{vista}:
+    delete:
+      tags: [Admin]
+      summary: Revoke un permiso (idempotent)
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/UserIdPath'
+        - $ref: '#/components/parameters/AppIdPath'
+        - name: vista
+          in: path
+          required: true
+          schema: { type: string }
+      responses:
+        '200':
+          $ref: '#/components/responses/SuccessOk'
+        '404':
+          $ref: '#/components/responses/NotFound'
+
+  /usuarios/{userId}/apps/{appId}/permisos/reset-to-role-defaults:
+    post:
+      tags: [Admin]
+      summary: Reset permisos scopados a defaults del rol (borrar todos los overrides)
+      security:
+        - bearerAuth: []
+      parameters:
+        - $ref: '#/components/parameters/UserIdPath'
+        - $ref: '#/components/parameters/AppIdPath'
+      responses:
+        '200':
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  success: { type: boolean }
+                  data:
+                    type: object
+                    properties:
+                      removed_count: { type: integer }
+
+# ─────────────────────────────────────────────────────────
+# COMPONENTS
+# ─────────────────────────────────────────────────────────
+components:
+  securitySchemes:
+    bearerAuth:
+      type: http
+      scheme: bearer
+      bearerFormat: Sanctum
+      description: 'Sanctum Bearer token (returned by /auth/login)'
+
+  parameters:
+    UserIdPath:
+      name: userId
+      in: path
+      required: true
+      schema: { type: integer, example: 5 }
+    AppIdPath:
+      name: appId
+      in: path
+      required: true
+      schema: { type: integer, example: 1 }
+    AppSlugPath:
+      name: slug
+      in: path
+      required: true
+      schema: { type: string, example: brp }
+
+  responses:
+    SuccessOk:
+      description: Operación exitosa
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/SuccessResponse'
+    Unauthorized:
+      description: Sin autenticación o token inválido
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              success: { type: boolean, enum: [false] }
+              error: { type: string, example: Unauthenticated. }
+    NotFound:
+      description: Recurso no encontrado
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              success: { type: boolean, enum: [false] }
+              error: { type: string, example: Usuario no encontrado. }
+    ValidationError:
+      description: Error de validación
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              message: { type: string }
+              errors:
+                type: object
+                additionalProperties:
+                  type: array
+                  items: { type: string }
+    RateLimited:
+      description: Rate limit exceeded
+      content:
+        application/json:
+          schema:
+            type: object
+            properties:
+              success: { type: boolean, enum: [false] }
+              error: { type: string, example: Too many requests. }
+
+  schemas:
+    SuccessResponse:
+      type: object
+      required: [success]
+      properties:
+        success: { type: boolean, enum: [true] }
+        data: {}
+        message: { type: string }
+
+    LoginRequest:
+      type: object
+      required: [email, password]
+      properties:
+        email:
+          type: string
+          format: email
+          example: user@empresa.com
+        password:
+          type: string
+          format: password
+          minLength: 8
+          example: password123
+
+    LoginResponse:
+      type: object
+      required: [success, data]
+      properties:
+        success: { type: boolean, enum: [true] }
+        data:
+          type: object
+          required: [token, usuario]
+          properties:
+            token: { type: string, example: "1|abc123def456..." }
+            usuario:
+              type: object
+              required: [id, nombre, email, rol_id, estado]
+              properties:
+                id: { type: integer }
+                nombre: { type: string }
+                email: { type: string, format: email }
+                rol_id: { type: integer }
+                estado: { type: string, enum: [Activo, Inactivo] }
+
+    MyApp:
+      type: object
+      required: [id, slug, nombre, tipo, auth_type, activo, entidades_count]
+      properties:
+        id: { type: integer }
+        slug: { type: string, example: crm }
+        nombre: { type: string, example: CRM Tecnoinnsoft }
+        tipo: { type: string, enum: [internal, external, customer] }
+        auth_type: { type: string, enum: [sanctum, api_key] }
+        activo: { type: boolean }
+        entidades_count: { type: integer, example: 3 }
+
+    MyAppPermission:
+      type: object
+      required: [entidad_id, entidad_nombre, estado]
+      properties:
+        entidad_id: { type: integer }
+        entidad_nombre: { type: string }
+        identificacion: { type: string, nullable: true }
+        estado: { type: string, enum: [Activo, Suspendido, Cancelado, Trial] }
+        fecha_contrato: { type: string, format: date, nullable: true }
+        fecha_vencimiento: { type: string, format: date, nullable: true }
+        notas: { type: string, nullable: true }
+
+    MeIdentityResponse:
+      type: object
+      required: [success, data]
+      properties:
+        success: { type: boolean, enum: [true] }
+        data:
+          type: object
+          required: [user, apps, scope_label, snapshot_at]
+          properties:
+            user:
+              type: object
+              required: [id, nombre, email, rol]
+              properties:
+                id: { type: integer }
+                nombre: { type: string }
+                email: { type: string, format: email }
+                estado: { type: string, enum: [Activo, Inactivo] }
+                rol:
+                  type: object
+                  required: [id, nombre, es_super_admin]
+                  properties:
+                    id: { type: integer }
+                    nombre: { type: string }
+                    es_super_admin: { type: boolean }
+            apps:
+              type: array
+              items: { $ref: '#/components/schemas/MyApp' }
+            scope_label:
+              type: string
+              enum: [v1]
+              description: Version marker for forward compat (AC11)
+            snapshot_at:
+              type: string
+              format: date-time
+            ttl_seconds: { type: integer }
+
+    UserIdentityResponse:
+      type: object
+      required: [success, data]
+      properties:
+        success: { type: boolean, enum: [true] }
+        data:
+          type: object
+          required: [user, rol_defaults, apps, scope_label]
+          properties:
+            user:
+              type: object
+              required: [id, nombre, email, estado, rol]
+              properties:
+                id: { type: integer }
+                nombre: { type: string }
+                email: { type: string, format: email }
+                estado: { type: string, enum: [Activo, Inactivo] }
+                rol:
+                  type: object
+                  required: [id, nombre, es_super_admin]
+                  properties:
+                    id: { type: integer }
+                    nombre: { type: string }
+                    es_super_admin: { type: boolean }
+            rol_defaults:
+              type: array
+              description: Vistas que el rol del usuario concede
+              items: { type: string, example: contacto.update }
+            apps:
+              type: array
+              items:
+                allOf:
+                  - $ref: '#/components/schemas/MyApp'
+                  - type: object
+                    properties:
+                      permisos_scoped:
+                        type: array
+                        items: { type: string }
+                      permisos_efectivos:
+                        type: array
+                        items: { type: string }
+            scope_label:
+              type: string
+              enum: [v1]
+            computed_at:
+              type: string
+              format: date-time
+            cache_ttl_seconds: { type: integer }

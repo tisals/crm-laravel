@@ -76,6 +76,24 @@ jobs:
       run: php artisan test --ansi
 
     # --------------------------------------------------
+    # OpenAPI lint (AC10/AC11 from ADD-AUTH-001)
+    # Detects breaking changes in Docs/openapi/auth.yaml
+    # Fails the build if paths removed, required[] entries removed, etc.
+    # --------------------------------------------------
+    - name: Lint OpenAPI auth spec
+      if: github.event_name == 'pull_request'
+      run: |
+        if [ -f tools/openapi-lint.sh ]; then
+          chmod +x tools/openapi-lint.sh
+          if ! bash tools/openapi-lint.sh "origin/main"; then
+            echo "::error::OpenAPI spec has breaking changes. See above. Either bump to v2 or restore the removed fields."
+            exit 1
+          fi
+        else
+          echo "::warning::tools/openapi-lint.sh not found, skipping"
+        fi
+
+    # --------------------------------------------------
     # EasyPanel deploy triggers
     # --------------------------------------------------
     - name: Trigger EasyPanel deploy (Production)
