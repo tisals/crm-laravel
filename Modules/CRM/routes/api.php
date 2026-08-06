@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\API\ContactoAccionController;
 use App\Http\Controllers\API\MeController;
+use App\Http\Controllers\API\UsuarioPermisoController;
 use Illuminate\Support\Facades\Route;
 use Modules\CRM\Http\Controllers\AppController;
 use Modules\CRM\Http\Controllers\BulkMoveOportunidadesController;
@@ -33,6 +34,8 @@ Route::prefix('v1')->group(function () {
     Route::middleware(['auth:sanctum', 'throttle:api'])->prefix('me')->group(function () {
         Route::get('/apps', [MeController::class, 'apps'])->name('me.apps');
         Route::get('/apps/{slug}/permisos', [MeController::class, 'appPermisos'])->name('me.apps.permisos');
+        Route::get('/identity', [MeController::class, 'identity'])->name('me.identity');
+        Route::get('/permisos', [MeController::class, 'permisos'])->name('me.permisos');
     });
 
     // Protected CRM routes
@@ -85,6 +88,15 @@ Route::prefix('v1')->group(function () {
             Route::get('/entidad/{entidadId}/apps', [AppController::class, 'appsByEntidad'])->name('entidad.apps.index');
             Route::post('/entidad/{entidadId}/apps/{appId}', [AppController::class, 'assignAppToEntidad'])->name('entidad.apps.assign');
             Route::delete('/entidad/{entidadId}/apps/{appId}', [AppController::class, 'removeAppFromEntidad'])->name('entidad.apps.remove');
+
+            // Admin: granular per-(user, app) permissions
+            Route::prefix('usuarios/{userId}/apps/{appId}/permisos')->group(function () {
+                Route::get('/', [UsuarioPermisoController::class, 'index'])->name('usuarios.apps.permisos.index');
+                Route::post('/', [UsuarioPermisoController::class, 'sync'])->name('usuarios.apps.permisos.store');
+                Route::post('/grant', [UsuarioPermisoController::class, 'grant'])->name('usuarios.apps.permisos.grant');
+                Route::post('/reset-to-role-defaults', [UsuarioPermisoController::class, 'resetToRoleDefaults'])->name('usuarios.apps.permisos.reset');
+                Route::delete('/{vista}', [UsuarioPermisoController::class, 'destroy'])->name('usuarios.apps.permisos.destroy');
+            });
         });
     });
 });
