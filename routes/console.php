@@ -17,3 +17,14 @@ Schedule::command('crm:refresh-dashboard-snapshot')
     ->withoutOverlapping()
     ->onOneServer()
     ->runInBackground();
+
+// Refresh the user_identity_snapshot (CQRS-Lite read model for /me/identity).
+// The /me/identity endpoint serves from a single row instead of joining
+// 6 tables on every request → sub-80ms p95 cache-hit. Manual trigger:
+// `php artisan crm:refresh-user-identity-snapshot --user=ID`.
+Schedule::command('crm:refresh-user-identity-snapshot')
+    ->dailyAt('03:30')
+    ->timezone('America/Bogota')
+    ->withoutOverlapping()
+    ->onOneServer()
+    ->runInBackground();
