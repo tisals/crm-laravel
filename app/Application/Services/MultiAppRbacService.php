@@ -139,10 +139,12 @@ class MultiAppRbacService
 
         $rolId = (int) $user->rol_id;
 
+        $conn = $this->readConnection();
+
         // 1. Wildcard check (vista='*' on the rol's permisos).
         //    This is the SuperAdmin fast path: roles with a `*`
         //    permiso bypass all vista checks.
-        $hasWildcard = DB::connection('mysql_read')
+        $hasWildcard = $conn
             ->table('permisos')
             ->where('rol_id', $rolId)
             ->where('vista', '*')
@@ -154,7 +156,7 @@ class MultiAppRbacService
         }
 
         // 2. Core (rol-scoped) permission.
-        $hasCore = DB::connection('mysql_read')
+        $hasCore = $conn
             ->table('permisos')
             ->where('rol_id', $rolId)
             ->where('vista', $vista)
@@ -167,7 +169,7 @@ class MultiAppRbacService
 
         // 3. App-scoped override (only when appId is known).
         if ($appId !== null) {
-            $hasScoped = DB::connection('mysql_read')
+            $hasScoped = $conn
                 ->table('usuario_app_permisos')
                 ->where('usuario_id', $userId)
                 ->where('app_id', $appId)
@@ -181,6 +183,36 @@ class MultiAppRbacService
         }
 
         return false;
+    }
+
+    /**
+     * Returns the connection to use for the read queries. Mirrors the
+     * logic in `BaseRepository::isReadReplicaConfigured`: when the
+     * `mysql_read` connection points to the SAME host/port as the master
+     * `mysql` connection (the dev / test / single-instance case), we
+     * fall back to the master so the queries run inside the same
+     * transaction. Otherwise we use the dedicated read replica.
+     *
+     * This matters specifically in tests using `RefreshDatabase`: that
+     * trait wraps each test in a transaction on the default connection.
+     * If `mysql_read` were a separate PDO connection, it would not see
+     * the writes committed in the test transaction, and every assertion
+     * would fail with "permission not found".
+     */
+    private function readConnection(): \Illuminate\Database\Connection
+    {
+        $readName = 'mysql_read';
+        $readConfig = config("database.connections.{$readName}");
+        $masterConfig = config('database.connections.mysql');
+
+        if (! $readConfig || ! $masterConfig) {
+            return DB::connection();
+        }
+
+        $isReplica = ($readConfig['host'] ?? null) !== ($masterConfig['host'] ?? null)
+            || ($readConfig['port'] ?? null) !== ($masterConfig['port'] ?? null);
+
+        return $isReplica ? DB::connection($readName) : DB::connection();
     }
 
     private function cacheKey(int $userId, ?int $appId, string $vista): string

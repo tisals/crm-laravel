@@ -106,7 +106,9 @@ class GetMyIdentityUseCase
      */
     private function computeFromDb(int $userId): ?array
     {
-        $user = DB::connection('mysql_read')
+        $conn = $this->readConnection();
+
+        $user = $conn
             ->table('usuarios')
             ->leftJoin('roles', 'usuarios.rol_id', '=', 'roles.id')
             ->where('usuarios.id', $userId)
@@ -126,7 +128,7 @@ class GetMyIdentityUseCase
         }
 
         // Apps the user has access to (transitively via entidad).
-        $apps = DB::connection('mysql_read')
+        $apps = $conn
             ->table('entidad_usuario')
             ->join('app_entidad', 'entidad_usuario.entidad_id', '=', 'app_entidad.entidad_id')
             ->join('apps', 'app_entidad.app_id', '=', 'apps.id')
@@ -144,8 +146,8 @@ class GetMyIdentityUseCase
             )
             ->orderBy('apps.nombre')
             ->get()
-            ->map(function ($row) use ($userId) {
-                $permisos = DB::connection('mysql_read')
+            ->map(function ($row) use ($userId, $conn) {
+                $permisos = $conn
                     ->table('usuario_app_permisos')
                     ->where('usuario_id', $userId)
                     ->where('app_id', $row->id)
@@ -168,14 +170,14 @@ class GetMyIdentityUseCase
 
         // Deduped union of core rol permissions + all scoped permissions
         // across every app the user is in.
-        $corePermisos = DB::connection('mysql_read')
+        $corePermisos = $conn
             ->table('permisos')
             ->where('rol_id', $user->rol_id)
             ->whereNull('deleted_at')
             ->pluck('vista')
             ->all();
 
-        $scopedPermisos = DB::connection('mysql_read')
+        $scopedPermisos = $conn
             ->table('usuario_app_permisos as uap')
             ->join('app_entidad as ae', 'ae.app_id', '=', 'uap.app_id')
             ->join('entidad_usuario as eu', 'eu.entidad_id', '=', 'ae.entidad_id')
@@ -207,6 +209,29 @@ class GetMyIdentityUseCase
             'scope_label' => 'v1',
             'snapshot_at' => Carbon::now()->toIso8601String(),
         ];
+    }
+
+    /**
+     * Returns the connection to use for the read queries. Mirrors the
+     * logic in `MultiAppRbacService::readConnection`: when `mysql_read`
+     * points to the SAME host/port as the master `mysql` connection
+     * (the dev / test / single-instance case), we fall back to the
+     * master so the queries run inside the same transaction.
+     */
+    private function readConnection(): \Illuminate\Database\Connection
+    {
+        $readName = 'mysql_read';
+        $readConfig = config("database.connections.{$readName}");
+        $masterConfig = config('database.connections.mysql');
+
+        if (! $readConfig || ! $masterConfig) {
+            return DB::connection();
+        }
+
+        $isReplica = ($readConfig['host'] ?? null) !== ($masterConfig['host'] ?? null)
+            || ($readConfig['port'] ?? null) !== ($masterConfig['port'] ?? null);
+
+        return $isReplica ? DB::connection($readName) : DB::connection();
     }
 
     private function persist(int $userId, array $payload): void
