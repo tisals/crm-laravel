@@ -33,6 +33,8 @@ Route::prefix('v1')->group(function () {
     Route::middleware(['auth:sanctum', 'throttle:api'])->prefix('me')->group(function () {
         Route::get('/apps', [MeController::class, 'apps'])->name('me.apps');
         Route::get('/apps/{slug}/permisos', [MeController::class, 'appPermisos'])->name('me.apps.permisos');
+        Route::get('/identity', [MeController::class, 'identity'])->name('me.identity');
+        Route::get('/permisos', [MeController::class, 'permisos'])->name('me.permisos');
     });
 
     // Protected CRM routes
