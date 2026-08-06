@@ -24,6 +24,7 @@ use App\Domain\Repositories\ProveedorRepositoryInterface;
 use App\Domain\Repositories\RolRepositoryInterface;
 use App\Domain\Repositories\SeguimientoRepositoryInterface;
 use App\Domain\Repositories\ServicioRepositoryInterface;
+use App\Domain\Repositories\UsuarioAppPermisoRepositoryInterface;
 use App\Domain\Repositories\UsuarioRepositoryInterface;
 use App\Infrastructure\Persistence\EloquentCiudadRepository;
 use App\Infrastructure\Persistence\EloquentColaboradorRepository;
@@ -47,6 +48,7 @@ use App\Infrastructure\Persistence\EloquentProveedorRepository;
 use App\Infrastructure\Persistence\EloquentRolRepository;
 use App\Infrastructure\Persistence\EloquentSeguimientoRepository;
 use App\Infrastructure\Persistence\EloquentServicioRepository;
+use App\Infrastructure\Persistence\EloquentUsuarioAppPermisoRepository;
 use App\Infrastructure\Persistence\EloquentUsuarioRepository;
 use App\Models\Oportunidad;
 use App\Observers\OportunidadObserver;
@@ -84,6 +86,7 @@ class AppServiceProvider extends ServiceProvider
         $this->app->bind(MaestroRepositoryInterface::class, EloquentMaestroRepository::class);
         $this->app->bind(PipelineRepositoryInterface::class, EloquentPipelineRepository::class);
         $this->app->bind(PipelineEtapaRepositoryInterface::class, EloquentPipelineEtapaRepository::class);
+        $this->app->bind(UsuarioAppPermisoRepositoryInterface::class, EloquentUsuarioAppPermisoRepository::class);
     }
 
     public function boot(): void
