@@ -89,6 +89,9 @@ Route::prefix('v1')->group(function () {
             Route::post('/entidad/{entidadId}/apps/{appId}', [AppController::class, 'assignAppToEntidad'])->name('entidad.apps.assign');
             Route::delete('/entidad/{entidadId}/apps/{appId}', [AppController::class, 'removeAppFromEntidad'])->name('entidad.apps.remove');
 
+            // Admin: identity bundle for arbitrary user (rol defaults + scoped)
+            Route::get('/usuarios/{userId}/identity', [\App\Http\Controllers\API\UsuarioPermisoController::class, 'showIdentity'])->name('usuarios.identity');
+
             // Admin: granular per-(user, app) permissions
             Route::prefix('usuarios/{userId}/apps/{appId}/permisos')->group(function () {
                 Route::get('/', [UsuarioPermisoController::class, 'index'])->name('usuarios.apps.permisos.index');
