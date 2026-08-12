@@ -16,5 +16,5 @@ interface OportunidadRepositoryInterface
 
     public function delete(int $id): bool;
 
-    public function getNextCodigo(): string;
+    public function getNextCodigo(int $year, int $semester): string;
 }

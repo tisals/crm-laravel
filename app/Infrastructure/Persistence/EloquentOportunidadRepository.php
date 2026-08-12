@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Pagination\LengthAwarePaginator;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 
 class EloquentOportunidadRepository extends BaseRepository implements OportunidadRepositoryInterface
 {
@@ -65,25 +66,63 @@ class EloquentOportunidadRepository extends BaseRepository implements Oportunida
         });
     }
 
-    public function getNextCodigo(): string
+    /**
+     * Compute the next sequential opportunity code.
+     *
+     * Format: `GC-{SS}-{YYYY}-{NNN}` where SS is 2-digit semester zero-padded,
+     * YYYY is the calendar year, and NNN is the 3-digit consecutive counter
+     * that ACCUMULATES across both semesters within the same year.
+     *
+     * Spec scenarios pinned:
+     *   - "Counter persists across the semester-1 to semester-2 boundary"
+     *   - "Counter resets on calendar year boundary"
+     *   - "Soft-deleted codes are counted (no slot reuse)"
+     *   - "Atomic counter increment under concurrent inserts" (requires the
+     *     caller to wrap this call inside a DB::transaction; lockForUpdate()
+     *     below only serializes when a transaction is open).
+     */
+    public function getNextCodigo(int $year, int $semester): string
     {
-        $semestre = (int) date('n') <= 6 ? 1 : 2;
-        $year = date('Y');
-        $prefix = "GC-{$semestre}-{$year}-";
-
-        $last = EloquentOportunidad::withTrashed()
-            ->where('codigo', 'like', "{$prefix}%")
-            ->orderBy('codigo', 'desc')
-            ->lockForUpdate()
-            ->first();
-
-        if (! $last) {
-            return $prefix.'001';
+        if ($year < 1970 || $year > 9999) {
+            throw new \InvalidArgumentException("Year must be 1970..9999, got {$year}");
+        }
+        if ($semester !== 1 && $semester !== 2) {
+            throw new \InvalidArgumentException("Semester must be 1 or 2, got {$semester}");
         }
 
-        $lastConsec = (int) substr($last->codigo, strlen($prefix));
+        // Year-only scope so codes from both semesters feed the same MAX.
+        // Trailing `%` is REQUIRED because codigos end in `-NNN`, not `-`.
+        $yearPrefix = "GC-%-{$year}-%";
 
-        return $prefix.str_pad((string) ($lastConsec + 1), 3, '0', STR_PAD_LEFT);
+        // Substring the last 3 chars and cast to unsigned integer so the
+        // MAX is a numeric comparison, not a lexicographic one (which would
+        // rank "999" below "1000" if the format ever expanded).
+        $query = DB::table('oportunidad')
+            ->where('codigo', 'like', $yearPrefix)
+            ->selectRaw('MAX(CAST(SUBSTRING(codigo, -3) AS UNSIGNED)) as max_n');
+
+        // lockForUpdate() requires a transaction — caller responsibility.
+        // (StoreOportunidadUseCase::execute() wraps this call in DB::transaction.)
+        if (DB::transactionLevel() > 0) {
+            $query->lockForUpdate();
+        }
+
+        $maxN = $query->value('max_n');
+
+        $next = (int) ($maxN ?? 0) + 1;
+
+        // Explicit overflow guard — fail loud, NOT a silent sprintf wrap to 1000.
+        // Migration path documented in design.md (Decision 1): switch to a counters
+        // table or expand the format to 4+ digits.
+        if ($next > 999) {
+            throw new \OverflowException(
+                "Opportunity code counter exceeded 999 for year {$year}. ".
+                'Migrate to a counters table or expand the format.'
+            );
+        }
+
+        // Return the canonical code: 2-digit semester (zero-padded) + year + counter.
+        return sprintf('GC-%02d-%d-%03d', $semester, $year, $next);
     }
 
     protected function applyFilters($query, array $filters): Builder
