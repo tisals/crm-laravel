@@ -3,13 +3,18 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: crm-laravel-dev
+    container_name: minerva-backend
     ports:
       - "8001:80"
     environment:
       - APP_ENV=local
       - APP_DEBUG=true
       - DB_CONNECTION=mysql
+      # DEBT: mariadb no está en sailus-shared (es interno de Mercurio).
+      # Workaround dev: CRM está join a mercurio_sailus-dev directa (ver networks
+      # arriba) y resuelve mariadb por hostname. Fix definitivo: pedir a Mercurio
+      # que agregue mariadb a sailus-shared, entonces remover el join a su network
+      # interna y mantener DB_HOST=mariadb:3306.
       - DB_HOST=mariadb
       - DB_PORT=3306
       - DB_DATABASE=tecnoinnsoft_crm
@@ -36,15 +41,23 @@ services:
       - ./Modules:/var/www/html/Modules
       - ./modules_statuses.json:/var/www/html/modules_statuses.json
     networks:
-      - crm-dev
-      - sailus-dev
+      - minerva-dev
+      - sailus-shared
+      # DEBT: mariadb de Mercurio NO está en sailus-shared (es interno de su stack).
+      # Para dev, hacemos join a su network interna directamente. Cuando Mercurio
+      # exponga mariadb en sailus-shared, remover esta línea y volver a DB_HOST=mariadb.
+      - mercurio_sailus-dev
+    extra_hosts:
+      # Resuelve host.docker.internal para acceder a puertos publicados por otros
+      # stacks (Mercurio expone mariadb en host:3307 — ver DEBT en DB_HOST abajo).
+      - "host.docker.internal:host-gateway"
 
   dashboard:
     build:
       context: ../dashboard-crm
       dockerfile: Dockerfile
       target: dev
-    container_name: crm-dashboard-dev
+    container_name: minerva-dashboard
     ports:
       - "5174:5174"
     volumes:
@@ -59,11 +72,14 @@ services:
     environment:
       - VITE_API_BASE_URL=http://localhost:8001/api/v1
     networks:
-      - crm-dev
+      - minerva-dev
 
 networks:
-  crm-dev:
+  minerva-dev:
     driver: bridge
-  sailus-dev:
+  sailus-shared:
     external: true
-    name: sailus_sailus-dev
+  # DEBT: ver comentario en services.crm.networks arriba.
+  mercurio_sailus-dev:
+    external: true
+    name: mercurio_sailus-dev
