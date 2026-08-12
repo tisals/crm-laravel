@@ -10,22 +10,23 @@ services:
       - APP_ENV=local
       - APP_DEBUG=true
       - DB_CONNECTION=mysql
-      # DEBT: mariadb no está en sailus-shared (es interno de Mercurio).
-      # Workaround dev: CRM está join a mercurio_sailus-dev directa (ver networks
-      # arriba) y resuelve mariadb por hostname. Fix definitivo: pedir a Mercurio
-      # que agregue mariadb a sailus-shared, entonces remover el join a su network
-      # interna y mantener DB_HOST=mariadb:3306.
       - DB_HOST=mariadb
       - DB_PORT=3306
-      - DB_DATABASE=tecnoinnsoft_crm
+      # Variant A dual-write (sunset 2027-02-06): CRM usa `minerva` (nuevo),
+      # `tecnoinnsoft_crm` queda intacta como rollback target. Cleanup el 2027-02-06:
+      # DROP DATABASE tecnoinnsoft_crm.
+      - DB_DATABASE=minerva
       - DB_USERNAME=root
       - DB_PASSWORD=sailus_root_dev
-      - CACHE_STORE=redis
-      - SESSION_DRIVER=redis
-      - QUEUE_CONNECTION=redis
-      - REDIS_HOST=redis
-      - REDIS_PORT=6379
-      - REDIS_CLIENT=phpredis
+      # DEBT: Redis de Mercurio NO está aún en sailus-shared (solo mariadb).
+      # Por eso usamos cache/session/queue=database (drivers default del .env.example)
+      # en vez de redis. Cuando Mercurio exponga Redis en sailus-shared, descomentar:
+      #   CACHE_STORE=redis
+      #   SESSION_DRIVER=redis
+      #   QUEUE_CONNECTION=redis
+      #   REDIS_HOST=redis
+      #   REDIS_PORT=6379
+      #   REDIS_CLIENT=phpredis
     volumes:
       - ./app:/var/www/html/app
       - ./config:/var/www/html/config
@@ -43,14 +44,6 @@ services:
     networks:
       - minerva-dev
       - sailus-shared
-      # DEBT: mariadb de Mercurio NO está en sailus-shared (es interno de su stack).
-      # Para dev, hacemos join a su network interna directamente. Cuando Mercurio
-      # exponga mariadb en sailus-shared, remover esta línea y volver a DB_HOST=mariadb.
-      - mercurio_sailus-dev
-    extra_hosts:
-      # Resuelve host.docker.internal para acceder a puertos publicados por otros
-      # stacks (Mercurio expone mariadb en host:3307 — ver DEBT en DB_HOST abajo).
-      - "host.docker.internal:host-gateway"
 
   dashboard:
     build:
@@ -79,7 +72,3 @@ networks:
     driver: bridge
   sailus-shared:
     external: true
-  # DEBT: ver comentario en services.crm.networks arriba.
-  mercurio_sailus-dev:
-    external: true
-    name: mercurio_sailus-dev
