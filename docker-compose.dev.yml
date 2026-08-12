@@ -1,3 +1,10 @@
+# Project name override: forces docker compose resources (containers, networks,
+# volumes) to be prefixed with `minerva_*` instead of being derived from the
+# directory name (`crm-laravel_*`). Without this, the containers show up under
+# `docker compose ls` / `docker ps` labels as belonging to project "crm-laravel"
+# even though they're named `minerva-backend` / `minerva-dashboard`.
+name: minerva
+
 services:
   crm:
     build:
@@ -42,7 +49,7 @@ services:
       - ./Modules:/var/www/html/Modules
       - ./modules_statuses.json:/var/www/html/modules_statuses.json
     networks:
-      - minerva-dev
+      - dev
       - sailus-shared
 
   dashboard:
@@ -65,10 +72,10 @@ services:
     environment:
       - VITE_API_BASE_URL=http://localhost:8001/api/v1
     networks:
-      - minerva-dev
+      - dev
 
 networks:
-  minerva-dev:
+  dev:
     driver: bridge
   sailus-shared:
     external: true
