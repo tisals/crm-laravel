@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\API;
 
+use App\Application\UseCases\Oportunidad\OportunidadCsvImportUseCase;
 use App\Models\Ciudad;
 use App\Models\Contacto;
 use App\Models\Entidad;
@@ -9,8 +10,11 @@ use App\Models\Oportunidad;
 use App\Models\Permiso;
 use App\Models\Rol;
 use App\Models\Usuario;
+use Carbon\Carbon;
 use Database\Seeders\PipelineSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
+use PHPUnit\Framework\Attributes\Group;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
@@ -87,8 +91,8 @@ class OportunidadControllerTest extends TestCase
             ->assertJsonPath('data.entidad_id', $refs['entidad']->id)
             ->assertJsonPath('data.contacto_id', $refs['contacto']->id);
 
-        // Verify codigo format: GC-{semestre}-{año}-{consecutivo} e.g. GC-1-2026-001
-        $this->assertMatchesRegularExpression('/^GC-\d-\d{4}-\d{3}$/', $response->json('data.codigo'));
+        // Verify codigo format: GC-{semestre}-{año}-{consecutivo} e.g. GC-01-2026-001
+        $this->assertMatchesRegularExpression('/^GC-\d{2}-\d{4}-\d{3}$/', $response->json('data.codigo'));
     }
 
     #[Test]
@@ -260,8 +264,8 @@ class OportunidadControllerTest extends TestCase
         $firstCodigo = $first->json('data.codigo');
         $secondCodigo = $second->json('data.codigo');
 
-        $this->assertMatchesRegularExpression('/^GC-\d-\d{4}-\d{3}$/', $firstCodigo);
-        $this->assertMatchesRegularExpression('/^GC-\d-\d{4}-\d{3}$/', $secondCodigo);
+        $this->assertMatchesRegularExpression('/^GC-\d{2}-\d{4}-\d{3}$/', $firstCodigo);
+        $this->assertMatchesRegularExpression('/^GC-\d{2}-\d{4}-\d{3}$/', $secondCodigo);
         $this->assertNotEquals($firstCodigo, $secondCodigo);
     }
 
@@ -355,5 +359,204 @@ class OportunidadControllerTest extends TestCase
         $original = Oportunidad::find($id);
         $this->assertFalse($original->is_latest);
         $this->assertEquals('Inactiva', $original->estado);
+    }
+
+    // --- PR-A1 (#15): Sequential opportunity code generation ---
+
+    /**
+     * Spec scenario "First opportunity of the calendar year".
+     * With empty table and Carbon::setTestNow in semester 1, first POST returns GC-01-2026-001.
+     */
+    #[Test]
+    public function test_generates_sequential_code_within_year(): void
+    {
+        Carbon::setTestNow('2026-02-15'); // February 2026 → semester 1
+        $token = $this->authenticate();
+        $refs = $this->createReferences();
+
+        $response = $this->withHeader('Authorization', 'Bearer '.$token)
+            ->postJson('/api/v1/oportunidades', [
+                'entidad_id' => $refs['entidad']->id,
+                'contacto_id' => $refs['contacto']->id,
+                'fecha' => '2026-02-15',
+                'estado' => 'Borrador',
+            ]);
+
+        $response->assertStatus(201);
+        $this->assertSame('GC-01-2026-001', $response->json('data.codigo'));
+    }
+
+    /**
+     * Spec scenario "Counter persists across the semester-1 to semester-2 boundary".
+     * Last sem-1 code is GC-01-2026-162 → moving to sem-2 must continue at 163, NOT reset to 001.
+     */
+    #[Test]
+    public function test_counter_persists_across_semester_boundary(): void
+    {
+        // NOTE: This test depends on the same-named unit test
+        // (EloquentOportunidadRepositoryGetNextCodigoTest::it_continues_counter_across_semester_boundary)
+        // for the actual counter logic. The HTTP-level test below verifies
+        // the integration path: the controller delegates to the use case
+        // which delegates to the repository. The test seeds the codigo
+        // directly so the HTTP request can observe it via the API.
+        $token = $this->authenticate();
+        $refs = $this->createReferences();
+
+        // Seed: directly insert an oportunidad in semester 1 with codigo ending in 162
+        // (DB-level because we need to bypass the generator for this scenario)
+        $seedCodigo = 'GC-01-2026-162';
+        $pipelineId = DB::table('pipelines')->where('codigo', 'COTIZACION')->value('id');
+        $etapaId = DB::table('pipeline_etapas')
+            ->where('pipeline_id', $pipelineId)
+            ->where('codigo', 'BORRADOR')
+            ->value('id');
+
+        DB::table('oportunidad')->insert([
+            'codigo' => $seedCodigo,
+            'entidad_id' => $refs['entidad']->id,
+            'contacto_id' => $refs['contacto']->id,
+            'fecha' => '2026-06-15',
+            'estado' => 'Activa',
+            'is_latest' => true,
+            'pipeline_id' => $pipelineId,
+            'pipeline_etapa_id' => $etapaId,
+            'created_at' => '2026-06-15 10:00:00',
+            'updated_at' => '2026-06-15 10:00:00',
+        ]);
+
+        // Move clock to semester 2 of the same year
+        Carbon::setTestNow('2026-08-15');
+
+        $response = $this->withHeader('Authorization', 'Bearer '.$token)
+            ->postJson('/api/v1/oportunidades', [
+                'entidad_id' => $refs['entidad']->id,
+                'contacto_id' => $refs['contacto']->id,
+                'fecha' => '2026-08-15',
+                'estado' => 'Borrador',
+            ]);
+
+        $response->assertStatus(201);
+        $this->assertSame('GC-02-2026-163', $response->json('data.codigo'));
+    }
+
+    /**
+     * Spec scenario "Counter resets on calendar year boundary".
+     * Last 2026 code is GC-02-2026-999 → first 2027 code MUST be GC-01-2027-001 (not 1000).
+     */
+    #[Test]
+    public function test_counter_resets_on_year_boundary(): void
+    {
+        $token = $this->authenticate();
+        $refs = $this->createReferences();
+
+        $pipelineId = DB::table('pipelines')->where('codigo', 'COTIZACION')->value('id');
+        $etapaId = DB::table('pipeline_etapas')
+            ->where('pipeline_id', $pipelineId)
+            ->where('codigo', 'BORRADOR')
+            ->value('id');
+
+        DB::table('oportunidad')->insert([
+            'codigo' => 'GC-02-2026-999',
+            'entidad_id' => $refs['entidad']->id,
+            'contacto_id' => $refs['contacto']->id,
+            'fecha' => '2026-12-15',
+            'estado' => 'Activa',
+            'is_latest' => true,
+            'pipeline_id' => $pipelineId,
+            'pipeline_etapa_id' => $etapaId,
+            'created_at' => '2026-12-15 10:00:00',
+            'updated_at' => '2026-12-15 10:00:00',
+        ]);
+
+        Carbon::setTestNow('2027-01-02');
+
+        $response = $this->withHeader('Authorization', 'Bearer '.$token)
+            ->postJson('/api/v1/oportunidades', [
+                'entidad_id' => $refs['entidad']->id,
+                'contacto_id' => $refs['contacto']->id,
+                'fecha' => '2027-01-02',
+                'estado' => 'Borrador',
+            ]);
+
+        $response->assertStatus(201);
+        $this->assertSame('GC-01-2027-001', $response->json('data.codigo'));
+    }
+
+    /**
+     * Spec scenario "Atomic counter increment under concurrent inserts".
+     * Two parallel POSTs dispatched back-to-back MUST get distinct codigos.
+     * Marked #[Group('concurrency')] because real DB serialization is hard to
+     * simulate reliably in SQLite-in-memory; production MySQL/MariaDB is the
+     * environment where this matters.
+     */
+    #[Test]
+    #[Group('concurrency')]
+    public function test_concurrent_code_generation_unique(): void
+    {
+        Carbon::setTestNow('2026-05-10');
+        $token = $this->authenticate();
+        $refs = $this->createReferences();
+
+        $payload = [
+            'entidad_id' => $refs['entidad']->id,
+            'contacto_id' => $refs['contacto']->id,
+            'fecha' => '2026-05-10',
+            'estado' => 'Borrador',
+        ];
+
+        // Fire two POSTs in immediate succession against the same connection.
+        // With DB::transaction + lockForUpdate, the second request blocks until
+        // the first commits and reads the new max — so codigos MUST be distinct.
+        $first = $this->withHeader('Authorization', 'Bearer '.$token)
+            ->postJson('/api/v1/oportunidades', $payload);
+
+        $second = $this->withHeader('Authorization', 'Bearer '.$token)
+            ->postJson('/api/v1/oportunidades', $payload);
+
+        $first->assertStatus(201);
+        $second->assertStatus(201);
+
+        $firstCodigo = $first->json('data.codigo');
+        $secondCodigo = $second->json('data.codigo');
+
+        $this->assertNotSame($firstCodigo, $secondCodigo);
+        $this->assertMatchesRegularExpression('/^GC-\d{2}-\d{4}-\d{3}$/', $firstCodigo);
+        $this->assertMatchesRegularExpression('/^GC-\d{2}-\d{4}-\d{3}$/', $secondCodigo);
+    }
+
+    /**
+     * Spec scenario "CSV import rejects malformed codes".
+     * Rows with codigo like "GC-1-2026-001" (1-digit semester) MUST be rejected
+     * and counted in the import summary's errors bucket, with a structured detail.
+     */
+    #[Test]
+    public function test_csv_import_rejects_malformed_codes(): void
+    {
+        $useCase = new OportunidadCsvImportUseCase;
+
+        $rows = [
+            [
+                'codigo' => 'GC-1-2026-001', // malformed: 1-digit semester
+                'empresa' => 'Test SA',
+                'fecha' => '2026-05-10',
+                'estado' => 'Borrador',
+            ],
+            [
+                'codigo' => 'GC-01-26-001', // malformed: 2-digit year
+                'empresa' => 'Test SA',
+                'fecha' => '2026-05-10',
+                'estado' => 'Borrador',
+            ],
+        ];
+
+        $summary = $useCase->import($rows);
+
+        $this->assertGreaterThanOrEqual(1, $summary['errors'] ?? 0);
+
+        $malformedDetail = collect($summary['details'] ?? [])
+            ->firstWhere('reason', 'malformed');
+
+        $this->assertNotNull($malformedDetail, 'Expected a malformed-code detail entry');
+        $this->assertSame('GC-1-2026-001', $malformedDetail['codigo']);
     }
 }

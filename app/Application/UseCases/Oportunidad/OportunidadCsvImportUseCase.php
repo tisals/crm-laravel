@@ -29,6 +29,7 @@ class OportunidadCsvImportUseCase
 
     /** @var array<string, Producto> [lowercase_name => Producto] */
     private array $productMap = [];
+
     private array $productMapById = [];
 
     /** @var array<string, string> Maestro nombre → estado interno */
@@ -176,6 +177,22 @@ class OportunidadCsvImportUseCase
                     $codigo = $row['codigo'] ?? null;
                     if (! $codigo) {
                         $counters['skipped']++;
+
+                        continue;
+                    }
+
+                    // Spec scenario "CSV import rejects malformed codes":
+                    // Enforce the canonical format GC-{SS}-{YYYY}-{NNN}.
+                    // Reject GC-1-2026-001 (1-digit semester) and GC-01-26-001 (2-digit year).
+                    // Format validated per spec deltas/production-blockers-and-ux-fixes.
+                    if (! preg_match('/^GC-\d{2}-\d{4}-\d{3}$/', $codigo)) {
+                        $counters['errors']++;
+                        $counters['details'][] = [
+                            'row' => $i,
+                            'codigo' => $codigo,
+                            'reason' => 'malformed',
+                            'expected_format' => 'GC-{SS}-{YYYY}-{NNN} e.g. GC-01-2026-001',
+                        ];
 
                         continue;
                     }
