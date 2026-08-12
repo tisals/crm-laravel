@@ -1,6 +1,9 @@
 <?php
 
 use App\Http\Controllers\API\AuthController;
+use App\Http\Controllers\API\Auth\RolesListController;
+use App\Http\Controllers\API\Auth\TokenExchangeController;
+use App\Http\Controllers\API\Auth\ValidateTokenController;
 use App\Http\Controllers\API\BrandPermissionController;
 use App\Http\Controllers\API\CiudadController;
 use App\Http\Controllers\API\ColaboradorController;
@@ -16,6 +19,7 @@ use App\Http\Controllers\API\EntidadUsuarioController;
 use App\Http\Controllers\API\EtiquetaController;
 use App\Http\Controllers\API\LugarEntidadController;
 use App\Http\Controllers\API\MaestroController;
+use App\Http\Controllers\API\MeController;
 use App\Http\Controllers\API\MovimientoController;
 use App\Http\Controllers\API\OportunidadController;
 use App\Http\Controllers\API\OrdenServicioController;
@@ -29,6 +33,7 @@ use App\Http\Controllers\API\SailusWebhookController;
 use App\Http\Controllers\API\SecurityDashboardController;
 use App\Http\Controllers\API\SeguimientoController;
 use App\Http\Controllers\API\ServicioController;
+use App\Http\Controllers\API\UsuarioAppController;
 use App\Http\Controllers\API\UsuarioController;
 use App\Infrastructure\Auth\ValidateApiKeyMiddleware;
 use Illuminate\Support\Facades\Route;
@@ -78,6 +83,23 @@ Route::prefix('v1')->group(function () {
         ->middleware('throttle:120,1')
         ->name('auth.roles');
 
+    // Bearer token validation (uses Authorization: Bearer, NOT X-API-Key).
+    // Public route — the controller self-validates so it can return clean 401.
+    // External consumers (BRP, La Llave) integrate against this endpoint.
+    Route::get('/auth/validate-token', ValidateTokenController::class)
+        ->middleware('throttle:120,1')
+        ->name('auth.validate-token');
+
+    // Token exchange for service-to-service auth (SAIlus → CRM).
+    // Public, but requires X-Internal-Source header. Triple-throttled:
+    //   1. throttle:10,1               → per-IP rate limit
+    //   2. throttle:token-exchange-email → per-email anti-bruteforce
+    //   3. audit.context               → attaches request_id / ip / user_agent
+    // Spec: Docs/integrations/sailus-integration.md §3.1.
+    Route::post('/auth/token-exchange', TokenExchangeController::class)
+        ->middleware(['throttle:10,1', 'throttle:token-exchange-email', 'audit.context'])
+        ->name('auth.token-exchange');
+
     // Brands endpoint (consumido por SAIlus)
     Route::get('/users/{id}/brands', [BrandPermissionController::class, 'index'])
         ->middleware(['auth:sanctum', 'throttle:api'])
@@ -87,6 +109,17 @@ Route::prefix('v1')->group(function () {
     // Rate limiting: mutations (POST/PUT/DELETE) → throttle:api; GETs → sin throttle
     Route::middleware(['auth:sanctum', 'throttle-mutations'])->group(function () {
         Route::post('/auth/logout', [AuthController::class, 'logout'])->name('auth.logout');
+
+        // /me — user profile, apps, and per-app permisos
+        // Permissions endpoint additionally gated by `has-app` middleware,
+        // which reads the slug from the route parameter (`{slug}`).
+        Route::prefix('me')->group(function () {
+            Route::get('/', [MeController::class, 'show'])->name('me.show');
+            Route::get('/apps', [MeController::class, 'apps'])->name('me.apps');
+            Route::get('/apps/{slug}/permisos', [MeController::class, 'appPermissions'])
+                ->middleware('has-app')
+                ->name('me.apps.permisos');
+        });
 
         // Dashboard (sin RBAC — todos los usuarios autenticados)
         Route::get('/dashboard', [DashboardController::class, 'index'])->name('dashboard.index');

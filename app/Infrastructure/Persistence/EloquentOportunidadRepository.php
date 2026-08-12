@@ -67,9 +67,11 @@ class EloquentOportunidadRepository extends BaseRepository implements Oportunida
 
     public function getNextCodigo(): string
     {
-        $semestre = (int) date('n') <= 6 ? 1 : 2;
+        $mes = str_pad(date('n'), 2, '0', STR_PAD_LEFT);
         $year = date('Y');
-        $prefix = "GC-{$semestre}-{$year}-";
+        // Formato: GC-MM-YYYY-NNN (mes + año + consecutivo)
+        // El consecutivo NO se resetea por mes, solo por año
+        $prefix = "GC-{$mes}-{$year}-";
 
         $last = EloquentOportunidad::withTrashed()
             ->where('codigo', 'like', "{$prefix}%")
