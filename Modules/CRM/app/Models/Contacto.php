@@ -3,10 +3,8 @@
 namespace Modules\CRM\Models;
 
 use App\Models\Entidad;
-use App\Models\Persona;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Contacto extends Model
@@ -17,11 +15,8 @@ class Contacto extends Model
 
     protected $fillable = [
         'entidad_id',
-        'persona_id',
         'nombres',
         'apellidos',
-        'identificacion_tipo',
-        'identificacion_numero',
         'area',
         'cargo',
         'tel_contacto',
@@ -45,13 +40,8 @@ class Contacto extends Model
         ];
     }
 
-    public function entidad(): BelongsTo
+    public function entidad()
     {
         return $this->belongsTo(Entidad::class, 'entidad_id');
-    }
-
-    public function persona(): BelongsTo
-    {
-        return $this->belongsTo(Persona::class, 'persona_id');
     }
 }

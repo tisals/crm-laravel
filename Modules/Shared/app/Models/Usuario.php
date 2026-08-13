@@ -2,7 +2,7 @@
 
 namespace Modules\Shared\Models;
 
-use App\Models\App;
+use App\Models\Entidad;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -23,7 +23,6 @@ class Usuario extends Authenticatable
         'password_hash',
         'rol_id',
         'estado',
-        'persona_id',
         'created_by',
         'updated_by',
     ];
@@ -57,30 +56,8 @@ class Usuario extends Authenticatable
 
     public function entidades(): BelongsToMany
     {
+        // Entidad will be in a different module or shared? We can reference it dynamically or via standard namespace
         return $this->belongsToMany(Entidad::class, 'entidad_usuario', 'usuario_id', 'entidad_id')
             ->withTimestamps();
-    }
-
-    public function apps(): BelongsToMany
-    {
-        return $this->belongsToMany(
-            App::class,
-            'usuario_app',
-            'usuario_id',
-            'app_id'
-        )->withPivot('rol_id')->withTimestamps();
-    }
-
-    public function persona(): BelongsTo
-    {
-        return $this->belongsTo(Persona::class, 'persona_id');
-    }
-
-    /**
-     * Convenience: returns true if the user's rol has es_super_admin=true.
-     */
-    public function isSuperAdmin(): bool
-    {
-        return $this->rol?->isSuperAdmin() ?? false;
     }
 }

@@ -9,7 +9,6 @@ class LoginResponse
     public function __construct(
         public string $token,
         public Usuario $usuario,
-        public array $apps = [],
     ) {}
 
     public function toArray(): array
@@ -18,13 +17,11 @@ class LoginResponse
             'token' => $this->token,
             'usuario' => [
                 'id' => $this->usuario->id,
-                'nombres' => $this->usuario->nombre,
-                'apellidos' => '',
+                'nombre' => $this->usuario->nombre,
                 'email' => $this->usuario->email,
                 'rol_id' => $this->usuario->rol_id,
                 'estado' => $this->usuario->estado,
             ],
-            'apps' => $this->apps,
         ];
     }
 }

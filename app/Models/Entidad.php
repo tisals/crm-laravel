@@ -34,16 +34,12 @@ class Entidad extends Model
         'webhook_url',
         'webhook_secret',
         'webhook_enabled',
-        'metadata',
-        'plan',
         'created_by',
         'updated_by',
     ];
 
     protected $casts = [
         'webhook_enabled' => 'boolean',
-        'metadata' => 'array',
-        'plan' => 'array',
     ];
 
     /**

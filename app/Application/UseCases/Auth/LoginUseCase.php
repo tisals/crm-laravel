@@ -4,7 +4,6 @@ namespace App\Application\UseCases\Auth;
 
 use App\Application\DTOs\LoginRequest;
 use App\Application\DTOs\LoginResponse;
-use App\Application\Services\UserAppsResolver;
 use App\Models\Usuario;
 use Exception;
 use Illuminate\Support\Facades\Cache;
@@ -28,10 +27,6 @@ class LoginUseCase
 
     public const USER_LOOKUP_PREFIX = 'auth:user_lookup:';
 
-    public function __construct(
-        private UserAppsResolver $appsResolver,
-    ) {}
-
     public function execute(LoginRequest $request): LoginResponse
     {
         $cacheKey = self::USER_LOOKUP_PREFIX.hash('sha256', strtolower($request->email));
@@ -44,11 +39,8 @@ class LoginUseCase
             throw new Exception('Credenciales inválidas.');
         }
 
-        // Fix-9: account-enumeration mitigation — don't reveal that the user is inactive.
-        // The error message is identical to "credenciales inválidas" so the client
-        // cannot distinguish between "user not found", "wrong password", "inactive".
         if ($usuario->estado !== 'Activo') {
-            throw new Exception('Credenciales inválidas.');
+            throw new Exception('Usuario inactivo.');
         }
 
         if (! password_verify($request->password, $usuario->password_hash)) {
@@ -60,7 +52,6 @@ class LoginUseCase
         return new LoginResponse(
             token: $token,
             usuario: $usuario,
-            apps: $this->appsResolver->resolve($usuario),
         );
     }
 }

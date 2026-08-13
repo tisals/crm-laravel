@@ -4,11 +4,11 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Persona extends Model
 {
-    use HasFactory;
+    use HasFactory, SoftDeletes;
 
     protected $table = 'personas';
 
@@ -19,10 +19,13 @@ class Persona extends Model
         'apellidos',
         'email_principal',
         'telefono_principal',
+        'direccion',
+        'ciudad',
+        'pais',
     ];
 
-    public function usuario(): BelongsTo
+    public function getNombreCompletoAttribute(): string
     {
-        return $this->belongsTo(Usuario::class, 'persona_id');
+        return trim("{$this->nombres} {$this->apellidos}");
     }
 }
