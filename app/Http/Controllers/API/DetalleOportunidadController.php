@@ -2,6 +2,7 @@
 
 namespace App\Http\Controllers\API;
 
+use App\Application\Enums\DeleteOutcome;
 use App\Application\UseCases\DetalleOportunidad\DestroyDetalleOportunidadUseCase;
 use App\Application\UseCases\DetalleOportunidad\IndexDetalleOportunidadUseCase;
 use App\Application\UseCases\DetalleOportunidad\ShowDetalleOportunidadUseCase;
@@ -10,8 +11,10 @@ use App\Application\UseCases\DetalleOportunidad\UpdateDetalleOportunidadUseCase;
 use App\Http\Controllers\API\Concerns\ApiResponse;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\DetalleOportunidadRequest;
+use Illuminate\Database\Eloquent\ModelNotFoundException;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class DetalleOportunidadController extends Controller
 {
@@ -61,7 +64,19 @@ class DetalleOportunidadController extends Controller
 
     public function update(DetalleOportunidadRequest $request, int $id): JsonResponse
     {
-        $result = $this->updateUseCase->execute($id, $request->validated());
+        try {
+            $result = $this->updateUseCase->execute($id, $request->validated());
+        } catch (ModelNotFoundException $e) {
+            return $this->errorResponse('Detalle no encontrado.', 404);
+        } catch (\Throwable $e) {
+            // Surface unhandled errors (do NOT swallow). Global handler converts to 500.
+            Log::error('DetalleOportunidad update failed', [
+                'id' => $id,
+                'exception' => $e::class,
+                'message' => $e->getMessage(),
+            ]);
+            throw $e;
+        }
 
         if (! $result) {
             return $this->errorResponse('Detalle no encontrado.', 404);
@@ -72,12 +87,28 @@ class DetalleOportunidadController extends Controller
 
     public function destroy(int $id): JsonResponse
     {
-        $result = $this->destroyUseCase->execute($id);
-
-        if (! $result) {
-            return $this->errorResponse('Detalle no encontrado.', 404);
+        try {
+            $outcome = $this->destroyUseCase->execute($id);
+        } catch (\Throwable $e) {
+            Log::error('DetalleOportunidad destroy failed', [
+                'id' => $id,
+                'exception' => $e::class,
+                'message' => $e->getMessage(),
+            ]);
+            throw $e;
         }
 
-        return $this->successResponse(null, 200, 'Detalle eliminado exitosamente.');
+        return match ($outcome) {
+            DeleteOutcome::Deleted => $this->successResponse(
+                ['deleted' => true, 'id' => $id],
+                200,
+                'Detalle eliminado exitosamente.'
+            ),
+            DeleteOutcome::NotFound => $this->errorResponse('Detalle no encontrado.', 404),
+            DeleteOutcome::FkBlocked => $this->errorResponse(
+                'No se puede eliminar el detalle: restricción de integridad referencial.',
+                422
+            ),
+        };
     }
 }

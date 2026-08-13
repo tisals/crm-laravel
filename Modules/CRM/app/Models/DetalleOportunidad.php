@@ -20,9 +20,11 @@ class DetalleOportunidad extends Model
         'descripcion',
         'medida',
         'cantidad',
+        'descuento',
         'vr_unitario',
         'iva',
         'vr_total',
+        'notas',
         'created_by',
         'updated_by',
     ];
