@@ -156,9 +156,20 @@ abstract class BaseRepository
     protected function applyFilters($query, array $filters)
     {
         foreach ($filters as $field => $value) {
-            if ($value !== null && $value !== '') {
-                $query->where($field, $value);
+            if ($value === null || $value === '') {
+                continue;
             }
+
+            // Cast boolean-like strings to actual booleans. Frontend axios
+            // serialises booleans as "true"/"false" strings which MySQL
+            // would compare against the column's tinyint as string match
+            // ('true' = 'true' fails because DB stores 0/1). Without this,
+            // ?activo=true returns 0 rows when the column is bool.
+            if (is_string($value) && in_array($value, ['true', 'false', '1', '0', 'on', 'off', 'yes', 'no'], true)) {
+                $value = filter_var($value, FILTER_VALIDATE_BOOLEAN);
+            }
+
+            $query->where($field, $value);
         }
 
         return $query;
