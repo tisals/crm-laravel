@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Middleware\ApiAccessLogger;
+use App\Http\Middleware\AuditContextMiddleware;
 use App\Http\Middleware\ExtractTokenFromQuery;
 use App\Http\Middleware\ThrottleMutations;
 use App\Infrastructure\Auth\RbacMiddleware;
@@ -35,6 +36,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'api-logger' => ApiAccessLogger::class,
             'extract-token' => ExtractTokenFromQuery::class,
             'throttle-mutations' => ThrottleMutations::class,
+            'audit.context' => AuditContextMiddleware::class,
         ]);
 
         // Agregar logger como middleware global para todas las rutas API.

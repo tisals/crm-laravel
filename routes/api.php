@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\API\Auth\TokenExchangeController;
 use App\Http\Controllers\API\AuthController;
 use App\Http\Controllers\API\BrandPermissionController;
 use App\Http\Controllers\API\CiudadController;
@@ -58,6 +59,13 @@ Route::prefix('v1')->group(function () {
     Route::post('/auth/login', [AuthController::class, 'login'])
         ->middleware('throttle:auth')
         ->name('auth.login');
+
+    // Token-exchange (legacy v1 compat — Mercurio integration)
+    // Returns { token, usuario, apps, entidades, expires_at } + OAuth-style aliases
+    // { access_token, user }. New auth multitenant multiapp architecture goes in v2.
+    Route::post('/auth/token-exchange', TokenExchangeController::class)
+        ->middleware(['throttle:10,1', 'audit.context'])
+        ->name('auth.token-exchange');
 
     // Password reset (public, rate limited)
     Route::post('/auth/forgot-password', [AuthController::class, 'forgotPassword'])
