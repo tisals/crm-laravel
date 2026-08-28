@@ -4,6 +4,13 @@ namespace App\Domain\Entities;
 
 class Persona
 {
+    /**
+     * PR-A: `tipoPersona` and `entidadId` added so the domain entity mirrors
+     * the Eloquent model's iter4 fields. Default for tipo_persona is 'Natural'
+     * per REQ-PNCE-005 — the application layer is responsible for setting it
+     * before persistence, but the entity carries the default for in-memory
+     * construction.
+     */
     public function __construct(
         public int $id,
         public ?string $identificacion_tipo = null,
@@ -15,6 +22,8 @@ class Persona
         public ?string $direccion = null,
         public ?string $ciudad = null,
         public ?string $pais = null,
+        public ?string $tipo_persona = 'Natural',
+        public ?int $entidad_id = null,
         public ?string $created_at = null,
         public ?string $updated_at = null,
         public ?string $deleted_at = null,
@@ -33,6 +42,8 @@ class Persona
             direccion: $data['direccion'] ?? null,
             ciudad: $data['ciudad'] ?? null,
             pais: $data['pais'] ?? null,
+            tipo_persona: $data['tipo_persona'] ?? 'Natural',
+            entidad_id: isset($data['entidad_id']) ? (int) $data['entidad_id'] : null,
             created_at: $data['created_at'] ?? null,
             updated_at: $data['updated_at'] ?? null,
             deleted_at: $data['deleted_at'] ?? null,
@@ -52,6 +63,8 @@ class Persona
             'direccion' => $this->direccion,
             'ciudad' => $this->ciudad,
             'pais' => $this->pais,
+            'tipo_persona' => $this->tipo_persona,
+            'entidad_id' => $this->entidad_id,
             'nombre_completo' => trim("{$this->nombres} {$this->apellidos}"),
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
