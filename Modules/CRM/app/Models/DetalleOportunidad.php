@@ -13,6 +13,25 @@ class DetalleOportunidad extends Model
 
     protected $table = 'detalle_oportunidad';
 
+    /**
+     * Documented offer types (REQ-DOP-002).
+     *
+     * Keep in sync with `DetalleOportunidadRequest::rules()` and the OpenAPI
+     * schema. The Form Request enforces this allow-list on the API edge;
+     * the DB column is VARCHAR(50) NULL to accept legacy + new types during
+     * the migration window.
+     */
+    public const TIPOS_OFERTA = [
+        'servicio',
+        'producto',
+        'curso',
+        'oto',
+        'bump',
+        'cross-sell',
+        'down-sell',
+        'otro',
+    ];
+
     protected $fillable = [
         'oportunidad_id',
         'producto_id',
@@ -23,6 +42,7 @@ class DetalleOportunidad extends Model
         'vr_unitario',
         'iva',
         'vr_total',
+        'tipo_oferta',
         'created_by',
         'updated_by',
     ];

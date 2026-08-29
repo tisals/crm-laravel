@@ -19,6 +19,7 @@ class DetalleOportunidadResource extends JsonResource
             'vr_unitario' => $this->vr_unitario,
             'iva' => $this->iva,
             'vr_total' => $this->vr_total,
+            'tipo_oferta' => $this->tipo_oferta,
             'created_by' => $this->created_by,
             'updated_by' => $this->updated_by,
             'created_at' => $this->created_at,

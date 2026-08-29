@@ -5,6 +5,7 @@ namespace App\Application\UseCases\DetalleOportunidad;
 use App\Application\Services\CalculoDetalleService;
 use App\Domain\Repositories\DetalleOportunidadRepositoryInterface;
 use App\Models\Producto;
+use Modules\CRM\Models\DetalleOportunidad;
 
 class StoreDetalleOportunidadUseCase
 {
@@ -30,6 +31,22 @@ class StoreDetalleOportunidadUseCase
         }
         if (empty($data['descripcion'])) {
             $data['descripcion'] = $producto->descripcion ?? $producto->nombre;
+        }
+
+        // REQ-DOP-001: tipo_oferta defaults to 'servicio' if the caller
+        // omits the field (the Form Request treats it as nullable so
+        // validated() does not surface the key). Setting it explicitly
+        // here keeps the Domain Entity in sync with what actually lands
+        // in the DB (the column default would apply on insert, but the
+        // post-insert model wouldn't see it without a refresh).
+        $data['tipo_oferta'] = $data['tipo_oferta'] ?? 'servicio';
+        if (! in_array($data['tipo_oferta'], DetalleOportunidad::TIPOS_OFERTA, true)) {
+            // Defence-in-depth: the Form Request already rejects invalid
+            // values, but if a programmatic caller bypasses the API edge
+            // this protects the DB from out-of-allow-list writes.
+            throw new \InvalidArgumentException(
+                'tipo_oferta must be one of: '.implode(', ', DetalleOportunidad::TIPOS_OFERTA)
+            );
         }
 
         $calculos = $this->calculoService->calculate(
