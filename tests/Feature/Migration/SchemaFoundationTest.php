@@ -212,10 +212,11 @@ class SchemaFoundationTest extends TestCase
             'precondition: bot_fact_type should exist before rollback'
         );
 
-        // Roll back the most recent two migrations. By timestamp ordering
-        // these are: 2026_08_28_000002_create_bot_sessions_table and
-        // 2026_08_28_000003_add_bot_columns_to_seguimiento_table.
-        $this->artisan('migrate:rollback', ['--step' => 2])->assertExitCode(0);
+        // Roll back enough migrations to undo PR-B (migrations 2 + 3).
+        // As of PR-C there are 5 newer migrations (4, 5, 6 from this PR
+        // and the cumulative chain), so we roll back 5 to reach migration
+        // 3 (and the cascade takes 2 with it).
+        $this->artisan('migrate:rollback', ['--step' => 5])->assertExitCode(0);
 
         $this->assertFalse(
             Schema::hasTable('bot_sessions'),

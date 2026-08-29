@@ -14,6 +14,23 @@ class Entidad extends Model
 
     protected $table = 'entidad';
 
+    /**
+     * Documented accepted values for `entidad.estado` (REQ-ENT-001, REQ-ENT-003).
+     *
+     * The column itself is VARCHAR(50) — there is no DB-level ENUM. These
+     * values are the application-level contract. `'Cliente'` is the
+     * canonical SaaS-tenant state (added by crm-laravel-iter4-persona
+     * PR-C, seeded by `2026_08_28_000005_create_entidad_estado_audit_and_seed_cliente.php`).
+     */
+    public const ESTADOS_ACEPTADOS = [
+        'Activo',     // operational
+        'Inactivo',   // paused
+        'Cancelado',  // cancelled (soft-delete semantic)
+        'Cliente',    // SaaS tenant — entity with at least one contracted active app
+        'prospecto',  // legacy lowercased; sales pipeline
+        'cliente',    // legacy lowercased
+    ];
+
     protected $fillable = [
         'tipo_persona',
         'tipo_id',
