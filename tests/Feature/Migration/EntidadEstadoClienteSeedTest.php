@@ -28,6 +28,8 @@ class EntidadEstadoClienteSeedTest extends TestCase
 {
     use RefreshDatabase;
 
+    private const SEED_MIGRATION = '2026_08_28_000005_create_entidad_estado_audit_and_seed_cliente';
+
     /**
      * Helper: seed an `apps` row (the FK target of app_entidad).
      */
@@ -70,6 +72,27 @@ class EntidadEstadoClienteSeedTest extends TestCase
         ], $overrides));
     }
 
+    /**
+     * Helper: re-trigger the seed migration against the current fixture
+     * data.
+     *
+     * RefreshDatabase runs the full migration set ONCE during test class
+     * setUp, BEFORE the test body creates its fixture rows. So a plain
+     * `migrate` call inside the test is a no-op. To exercise the data
+     * side-effect of the seed migration, we remove its row from the
+     * `migrations` table and re-run. We do NOT drop the audit table —
+     * the migration guards `Schema::create` with `hasTable()` so re-run
+     * is a clean no-op for the create step.
+     */
+    private function reRunSeedMigration(): void
+    {
+        DB::table('migrations')
+            ->where('migration', self::SEED_MIGRATION)
+            ->delete();
+
+        $this->artisan('migrate', ['--force' => true])->assertExitCode(0);
+    }
+
     // ── 1c.3 — qualifying entity gets estado='Cliente' + audit row ──
 
     #[Test]
@@ -81,10 +104,8 @@ class EntidadEstadoClienteSeedTest extends TestCase
         // Pre-attach an Activo app_entidad row.
         $this->attachApp($app->id, $entidad->id, 'Activo');
 
-        // Run the seed migration on top of a fresh DB (RefreshDatabase
-        // already ran all up-to-date migrations; re-run the seed migration
-        // by calling it through artisan).
-        $this->artisan('migrate', ['--force' => true])->assertExitCode(0);
+        // Re-run the seed migration against the fixture.
+        $this->reRunSeedMigration();
 
         $reloaded = Entidad::find($entidad->id);
         $this->assertSame(
@@ -116,7 +137,7 @@ class EntidadEstadoClienteSeedTest extends TestCase
 
         $this->attachApp($app->id, $entidad->id, 'Trial');
 
-        $this->artisan('migrate', ['--force' => true])->assertExitCode(0);
+        $this->reRunSeedMigration();
 
         $reloaded = Entidad::find($entidad->id);
         $this->assertSame(
@@ -141,8 +162,8 @@ class EntidadEstadoClienteSeedTest extends TestCase
 
         $this->attachApp($app->id, $entidad->id, 'Activo');
 
-        // First run (already done by RefreshDatabase setUp).
-        $this->artisan('migrate', ['--force' => true])->assertExitCode(0);
+        // First run against the fixture.
+        $this->reRunSeedMigration();
 
         $auditCountAfterFirst = DB::table('entidad_estado_audit')
             ->where('entidad_id', $entidad->id)
@@ -151,7 +172,7 @@ class EntidadEstadoClienteSeedTest extends TestCase
         $this->assertSame(1, $auditCountAfterFirst, 'first run must insert 1 audit row');
 
         // Second run (still a no-op since the row is already Cliente).
-        $this->artisan('migrate', ['--force' => true])->assertExitCode(0);
+        $this->reRunSeedMigration();
 
         $auditCountAfterSecond = DB::table('entidad_estado_audit')
             ->where('entidad_id', $entidad->id)
@@ -176,7 +197,7 @@ class EntidadEstadoClienteSeedTest extends TestCase
         // Entity B: no app_entidad at all — NOT qualifying.
         $entidadOrphan = $this->createEntidad(['estado' => 'Inactivo']);
 
-        $this->artisan('migrate', ['--force' => true])->assertExitCode(0);
+        $this->reRunSeedMigration();
 
         $this->assertSame(
             'Activo',
@@ -209,7 +230,7 @@ class EntidadEstadoClienteSeedTest extends TestCase
 
         $this->attachApp($app->id, $entidad->id, 'Activo');
 
-        $this->artisan('migrate', ['--force' => true])->assertExitCode(0);
+        $this->reRunSeedMigration();
 
         // Sanity: promoted.
         $this->assertSame('Cliente', Entidad::find($entidad->id)->estado);
