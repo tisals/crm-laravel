@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Migration;
 
+use App\Models\App;
 use App\Models\Entidad;
 use App\Models\Persona;
 use Illuminate\Database\QueryException;
@@ -479,7 +480,7 @@ class SchemaFoundationTest extends TestCase
     {
         // REQ-HPBN-004: pre-existing pivot rows survive the migration with
         // perfil = NULL (additive column, no backfill needed).
-        $app = \App\Models\App::create([
+        $app = App::create([
             'slug' => 'pr-c-perfil-'.uniqid(),
             'nombre' => 'PR-C Perfil Test',
             'tipo' => 'customer',
@@ -522,7 +523,7 @@ class SchemaFoundationTest extends TestCase
         // R-5 invariant: the existing UNIQUE(app_id, entidad_id) must NOT
         // be lost when the perfil column is added. A second insert with
         // the same (app_id, entidad_id) MUST throw.
-        $app = \App\Models\App::create([
+        $app = App::create([
             'slug' => 'pr-c-unique-'.uniqid(),
             'nombre' => 'PR-C Unique Test',
             'tipo' => 'customer',
@@ -549,7 +550,7 @@ class SchemaFoundationTest extends TestCase
         DB::table('app_entidad')->insert($payload);
 
         // Second insert with same (app_id, entidad_id) MUST fail.
-        $this->expectException(\Illuminate\Database\QueryException::class);
+        $this->expectException(QueryException::class);
         DB::table('app_entidad')->insert($payload);
     }
 }
