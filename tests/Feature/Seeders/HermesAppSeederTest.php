@@ -29,10 +29,10 @@ class HermesAppSeederTest extends TestCase
     use RefreshDatabase;
 
     private const EXPECTED_PERFILES = [
+        'marketing-sailus',
+        'setter-alejandro',
         'setter-safe-health',
         'setter-tis',
-        'setter-alejandro',
-        'marketing-sailus',
         'sst-support-safe-health',
     ];
 

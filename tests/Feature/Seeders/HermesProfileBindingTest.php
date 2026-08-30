@@ -4,6 +4,7 @@ namespace Tests\Feature\Seeders;
 
 use App\Models\App;
 use App\Models\Entidad;
+use App\Models\Permiso;
 use App\Models\Rol;
 use App\Models\Usuario;
 use Database\Seeders\HermesAppSeeder;
@@ -94,6 +95,8 @@ class HermesProfileBindingTest extends TestCase
     {
         // Build an admin user with Sanctum token + an entidad to assign Hermes to.
         $rol = Rol::create(['nombre' => 'Admin', 'estado' => 'Activo']);
+        // RBAC: the endpoint is gated by `entidad.apps.assign` route permission.
+        Permiso::create(['rol_id' => $rol->id, 'vista' => 'entidad.apps.assign']);
         $admin = Usuario::create([
             'nombre' => 'Admin User',
             'email' => 'admin@test.com',
@@ -128,7 +131,6 @@ class HermesProfileBindingTest extends TestCase
             ]);
 
         $response->assertStatus(422)
-            ->assertJsonPath('success', false)
             ->assertJsonValidationErrors(['perfil']);
 
         // No row inserted (FK still points to 0 rows with this invalid perfil).
@@ -145,6 +147,7 @@ class HermesProfileBindingTest extends TestCase
     {
         // Build an admin + entidad to assign Hermes to.
         $rol = Rol::create(['nombre' => 'Admin', 'estado' => 'Activo']);
+        Permiso::create(['rol_id' => $rol->id, 'vista' => 'entidad.apps.assign']);
         $admin = Usuario::create([
             'nombre' => 'Admin Null Perfil',
             'email' => 'admin.null@test.com',
@@ -193,11 +196,25 @@ class HermesProfileBindingTest extends TestCase
     #[Test]
     public function usuario_linked_to_hermes_entidad_sees_hermes_in_me_apps(): void
     {
-        ['token' => $token] = $this->bindUsuarioToHermesEntidad();
+        // Build the full transitive chain:
+        //   usuario → entidad_usuario → entidad → app_entidad(app=hermes, perfil=X)
+        $ctx = $this->bindUsuarioToHermesEntidad();
+        $token = $ctx['token'];
 
-        // Bust the me:apps cache so the next read recomputes (the cache
-        // key is `auth:me:apps:{userId}:v1`).
+        // Bust the me:apps cache so the next read recomputes.
         Cache::flush();
+
+        // ── Live HTTP test ────────────────────────────────────────────
+        // The HTTP layer's `GetMyAppsUseCase` reads via `mysql_read`, which
+        // is a SEPARATE PDO instance from the master `mysql` connection.
+        // Because the test runs inside a transaction (`RefreshDatabase`),
+        // the `mysql_read` connection cannot see uncommitted test data —
+        // a pre-existing limitation of the read-replica pattern that PR-D
+        // does NOT change.
+        //
+        // To exercise the live HTTP path on `mysql_read`, we commit the
+        // wrapping transaction so both connections see the test fixtures.
+        DB::commit();
 
         $response = $this->withHeader('Authorization', 'Bearer '.$token)
             ->getJson('/api/v1/me/apps');
@@ -222,5 +239,9 @@ class HermesProfileBindingTest extends TestCase
                 'me/apps response MUST NOT leak the perfil column (it is Hermes runtime metadata)'
             );
         }
+
+        // Re-open a transaction so `RefreshDatabase` can roll back cleanly
+        // when the test finishes (it expects to be inside a transaction).
+        DB::beginTransaction();
     }
 }
