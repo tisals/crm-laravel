@@ -194,16 +194,32 @@ class SeguimientoFkSwapTest extends TestCase
             'updated_at' => now(),
         ]);
 
-        // Apply the swap. The pre-check MUST throw and the artisan command
-        // MUST exit non-zero with "FK swap unsafe" in the output.
+        // Apply the swap. The pre-check MUST throw a RuntimeException that
+        // propagates out of the artisan command — Laravel's Migrator does
+        // NOT catch exceptions from migration closures, so `php artisan
+        // migrate` exits with the exception, which is the loud failure
+        // mode the spec wants (REQ-SEG-002).
         //
-        // RED behavior (PR-G missing): no migration runs, exit 0, no error
-        // output — the expectsOutputToContain assertion fires.
-        // GREEN behavior: RuntimeException is caught by Migrator, written
-        // to output, command exits non-zero.
-        $this->artisan('migrate', ['--force' => true])
-            ->expectsOutputToContain('FK swap unsafe')
-            ->assertExitCode(1);
+        // RED behavior (PR-G missing): no migration runs, no exception
+        // thrown, the catch block is not entered, the test fails on the
+        // $this->fail() assertion below.
+        // GREEN behavior: RuntimeException is thrown with the offending
+        // count in the message.
+        try {
+            $this->artisan('migrate', ['--force' => true])->run();
+            $this->fail('Expected RuntimeException with "FK swap unsafe" but migrate completed silently');
+        } catch (\RuntimeException $e) {
+            $this->assertStringContainsString(
+                'FK swap unsafe',
+                $e->getMessage(),
+                'pre-check failure must mention "FK swap unsafe" (REQ-SEG-002)'
+            );
+            $this->assertStringContainsString(
+                '1 seguimiento',
+                $e->getMessage(),
+                'pre-check failure must include the offending count (REQ-SEG-002)'
+            );
+        }
 
         // Schema unchanged (REQ-SEG-002 — transaction rolled back).
         $this->assertTrue(
