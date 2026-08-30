@@ -97,8 +97,15 @@ class PersonaRoleRelationsTest extends TestCase
     {
         $entidad = $this->createEntidad();
 
-        // Seed 3 rows in contacto (which exists from 2026_05_06_000011).
-        // We use raw insert to bypass any future schema assumptions.
+        // Simulate "data exists BEFORE the migration runs" by rolling back
+        // my 3 PR-E migrations (which drops the columns + removes the
+        // migration rows from the `migrations` table). Then insert rows
+        // under the pre-migration schema. Then re-run migrate to add the
+        // columns back. The migrations table state is fully restored at
+        // the end (rollback removed rows → migrate re-adds them), so
+        // subsequent tests in this class see a consistent state.
+        $this->artisan('migrate:rollback', ['--step' => 3])->assertExitCode(0);
+
         $now = now();
         DB::table('contacto')->insert([
             [
@@ -130,21 +137,11 @@ class PersonaRoleRelationsTest extends TestCase
             ],
         ]);
 
-        // Sanity: rows exist before migration simulation.
+        // Sanity: rows exist before migration re-run.
         $this->assertSame(3, DB::table('contacto')->count());
 
-        // RefreshDatabase already applied the new migrations during setUp.
-        // We re-trigger by removing the migration rows and re-running to
-        // exercise the additive behavior (existing rows survive, persona_id
-        // defaults to NULL).
-        DB::table('migrations')
-            ->whereIn('migration', [
-                '2026_08_28_000010_add_persona_id_to_contacto_table',
-                '2026_08_28_000011_add_persona_id_to_colaboradores_table',
-                '2026_08_28_000012_add_persona_id_to_proveedores_table',
-            ])
-            ->delete();
-
+        // Re-apply all pending migrations (re-adds columns + re-registers
+        // the 3 migration rows).
         $this->artisan('migrate', ['--force' => true])->assertExitCode(0);
 
         // All 3 rows survive.
@@ -436,6 +433,12 @@ class PersonaRoleRelationsTest extends TestCase
             DB::table('contacto')->where('nombres', 'After Rollback')->count(),
             'contacto.entidad_id must remain a working FK after rollback'
         );
+
+        // Restore state so subsequent tests in this class see the
+        // post-PR-E schema (RefreshDatabase rolls back data but DDL is
+        // committed, so without this re-apply subsequent relation tests
+        // would find a missing `persona_id` column).
+        $this->artisan('migrate', ['--force' => true])->assertExitCode(0);
     }
 
     // ── 3.7 — relations work on all three models ───────────────────────
