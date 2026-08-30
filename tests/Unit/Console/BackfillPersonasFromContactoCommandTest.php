@@ -4,6 +4,7 @@ namespace Tests\Unit\Console;
 
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Artisan;
+use Illuminate\Support\Facades\DB;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
@@ -104,12 +105,12 @@ class BackfillPersonasFromContactoCommandTest extends TestCase
         // No personas created.
         $this->assertSame(
             0,
-            \Illuminate\Support\Facades\DB::table('personas')->count(),
+            DB::table('personas')->count(),
             'dry-run MUST NOT write to personas table (REQ-PCBF-001)'
         );
         $this->assertSame(
             0,
-            \Illuminate\Support\Facades\DB::table('contacto')->whereNotNull('persona_id')->count(),
+            DB::table('contacto')->whereNotNull('persona_id')->count(),
             'dry-run MUST NOT write to contacto.persona_id (REQ-PCBF-001)'
         );
     }

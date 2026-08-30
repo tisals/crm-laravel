@@ -41,7 +41,7 @@ class BackfillPersonasFromContactoUseCase
 {
     /**
      * @param  array{dry_run?: bool, limit?: int|null}  $options
-     * @return array<string, int|bool>  counter map (see class doc)
+     * @return array<string, int|bool> counter map (see class doc)
      */
     public function execute(array $options = []): array
     {
@@ -96,6 +96,7 @@ class BackfillPersonasFromContactoUseCase
 
             if ($email === '') {
                 $wouldSkipNullEmail++;
+
                 continue;
             }
 
@@ -141,6 +142,7 @@ class BackfillPersonasFromContactoUseCase
                         'code' => 'backfill.skipped.null_email',
                     ]);
                     $skippedNullEmail++;
+
                     continue;
                 }
 
