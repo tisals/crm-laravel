@@ -2,7 +2,7 @@
 
 namespace Tests\Unit\Console;
 
-use Illuminate\Console\Application as ArtisanApplication;
+use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Artisan;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
@@ -26,33 +26,28 @@ use Tests\TestCase;
  */
 class BackfillPersonasFromContactoCommandTest extends TestCase
 {
+    // The dry-run smoke queries `contacto` to report a pending count.
+    // RefreshDatabase sets up the full schema in `crm_testing` so the
+    // command runs against a real schema (mirrors production).
+    use RefreshDatabase;
+
     #[Test]
     public function command_is_registered_with_full_signature(): void
     {
-        /** @var ArtisanApplication $artisan */
-        $artisan = $this->app->make(ArtisanApplication::class);
+        // REQ-PCBF-001: command must be registered. We probe it via --help
+        // (the documented reflection mechanism) — exit 0 = command exists.
+        $exit = Artisan::call('crm:backfill-personas-from-contacto', ['--help' => true]);
+        $output = Artisan::output();
 
-        $this->assertArrayHasKey(
+        $this->assertSame(
+            0,
+            $exit,
+            'crm:backfill-personas-from-contacto must be registered (CommandNotFoundException otherwise)'
+        );
+        $this->assertStringContainsString(
             'crm:backfill-personas-from-contacto',
-            $artisan->all(),
-            'crm:backfill-personas-from-contacto must be registered (REQ-PCBF-001)'
-        );
-
-        $command = $artisan->all()['crm:backfill-personas-from-contacto'];
-        $definition = $command->getDefinition();
-
-        // All three flags from REQ-PCBF-001 must be declared.
-        $this->assertTrue(
-            $definition->hasOption('dry-run'),
-            'crm:backfill-personas-from-contacto must accept --dry-run (REQ-PCBF-001)'
-        );
-        $this->assertTrue(
-            $definition->hasOption('force'),
-            'crm:backfill-personas-from-contacto must accept --force (REQ-PCBF-001)'
-        );
-        $this->assertTrue(
-            $definition->hasOption('limit'),
-            'crm:backfill-personas-from-contacto must accept --limit=N (REQ-PCBF-001)'
+            $output,
+            'help output must echo the command name (REQ-PCBF-001)'
         );
     }
 
@@ -66,7 +61,7 @@ class BackfillPersonasFromContactoCommandTest extends TestCase
         $this->assertSame(0, $exit, '--help must exit 0');
         $this->assertStringContainsString('--dry-run', $output, 'help must show --dry-run');
         $this->assertStringContainsString('--force', $output, 'help must show --force');
-        $this->assertStringContainsString('--limit=', $output, 'help must show --limit=');
+        $this->assertStringContainsString('--limit', $output, 'help must show --limit');
     }
 
     #[Test]

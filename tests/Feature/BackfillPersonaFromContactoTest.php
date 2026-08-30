@@ -146,22 +146,20 @@ class BackfillPersonaFromContactoTest extends TestCase
     #[Test]
     public function five_contactos_sharing_one_email_across_three_entidades_share_one_persona(): void
     {
-        // 3 entidades, 5 contactos, same email "shared@example.test".
-        $entidades = [
-            $this->makeEntidad('E1'),
-            $this->makeEntidad('E2'),
-            $this->makeEntidad('E3'),
+        // 5 entidades, 1 contacto per entidad, same email "shared@example.test".
+        // (Contacto has UNIQUE(entidad_id, email_contacto) so the same email
+        // can exist across entidades but only once per entidad.)
+        $names = [
+            ['Ana', 'A'],
+            ['Beto', 'B'],
+            ['Cira', 'C'],
+            ['Dario', 'D'],
+            ['Eli', 'E'],
         ];
-        $distribution = [
-            [$entidades[0]->id, 'Ana', 'A'],
-            [$entidades[0]->id, 'Beto', 'B'],
-            [$entidades[1]->id, 'Cira', 'C'],
-            [$entidades[2]->id, 'Dario', 'D'],
-            [$entidades[2]->id, 'Eli', 'E'],
-        ];
-        foreach ($distribution as [$entidadId, $name, $letter]) {
+        foreach ($names as [$name, $letter]) {
+            $entidad = $this->makeEntidad("Ent-{$name}");
             Contacto::create([
-                'entidad_id' => $entidadId,
+                'entidad_id' => $entidad->id,
                 'nombres' => $name, 'apellidos' => $letter,
                 'email_contacto' => 'shared@example.test',
                 'estado' => 'Activo', 'score' => 0,
@@ -238,36 +236,26 @@ class BackfillPersonaFromContactoTest extends TestCase
             'summary must include skipped_null_email key (REQ-PCBF-006)'
         );
 
-        // Stable log code is emitted. We assert by exercising Log::shouldReceive
-        // via Log::spy() — assert the warning was emitted with the documented
-        // stable code as the log channel/message key.
-        // REQ-PCBF-004 + design AD-4: stable code `backfill.skipped.null_email`.
-        Log::shouldReceive('warning')
+        // REQ-PCBF-004: stable log code `backfill.skipped.null_email` MUST be
+        // emitted for each NULL-email row. We re-run with Log::spy() active
+        // so the warning call is captured by Mockery and we can assert it.
+        Log::spy();
+
+        $entidad2 = $this->makeEntidad();
+        Contacto::create([
+            'entidad_id' => $entidad2->id,
+            'nombres' => 'Spy', 'apellidos' => 'Me',
+            'email_contacto' => null, 'estado' => 'Activo', 'score' => 0,
+        ]);
+
+        Artisan::call('crm:backfill-personas-from-contacto', ['--force' => true]);
+
+        Log::shouldHaveReceived('warning')
             ->withArgs(function ($message, $context = []) {
                 return is_string($message)
-                    && (str_contains($message, 'backfill.skipped.null_email')
-                        || ($context['code'] ?? null) === 'backfill.skipped.null_email');
+                    && str_contains($message, 'backfill.skipped.null_email');
             })
             ->atLeast()->once();
-        // Re-trigger with Log spy active to capture the warning emission.
-        $this->app->forgetInstance(\Illuminate\Log\LogManager::class);
-        $this->app->forgetInstance('log');
-        \Illuminate\Support\Facades\Log::swap(new \Illuminate\Log\LogManager($this->app));
-        \Illuminate\Support\Facades\Log::shouldReceive('warning')->andReturnUsing(function ($message) {
-            return $message;
-        });
-        \Illuminate\Support\Facades\Log::shouldReceive('error')->andReturnUsing(function ($message) {
-            return $message;
-        });
-        \Illuminate\Support\Facades\Log::shouldReceive('info')->andReturnUsing(function ($message) {
-            return $message;
-        });
-        \Illuminate\Support\Facades\Log::shouldReceive('debug')->andReturnUsing(function ($message) {
-            return $message;
-        });
-        // The previous run already exercised the log; the spy assertion above
-        // is a smoke. The structural coverage (skipped_null_email in summary)
-        // is the hard assertion.
     }
 
     // ── 4.7 — per-row error isolation ──────────────────────────────────
