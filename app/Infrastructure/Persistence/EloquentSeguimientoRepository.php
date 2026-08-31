@@ -28,12 +28,21 @@ class EloquentSeguimientoRepository extends BaseRepository implements Seguimient
 
     protected function newQuery()
     {
-        $modelClass = $this->getModelClass();
-        $model = $this->readConnection
-            ? (new $modelClass)->setConnection($this->readConnection)
-            : new $modelClass;
+        // PR-H: defer to BaseRepository::newQuery() so the
+        // isReadReplicaConfigured() guard runs. The previous override
+        // forced mysql_read even when the replica pointed at the same
+        // host/port as the master (dev / single-instance / tests),
+        // which broke test isolation: tests using RefreshDatabase wrap
+        // writes in a transaction on the default connection, and a
+        // separate mysql_read connection cannot see uncommitted rows.
+        // The base class falls back to the default connection when the
+        // replica is not actually configured, which fixes this.
+        $query = parent::newQuery();
 
-        return $model->newQuery()->with(['autor', 'contacto', 'entidad', 'oportunidad']);
+        // PR-H (Phase 5b - REQ-SEG-004): swap `contacto` for `persona`
+        // in the eager-load set. The `contacto()` relation was removed
+        // from the Eloquent model in PR-H; loading it here would throw.
+        return $query->with(['autor', 'persona', 'entidad', 'oportunidad']);
     }
 
     protected function applyFilters($query, array $filters): Builder
@@ -57,7 +66,10 @@ class EloquentSeguimientoRepository extends BaseRepository implements Seguimient
                 'fecha_desde' => $query->whereDate('fecha', '>=', $value),
                 'fecha_hasta' => $query->whereDate('fecha', '<=', $value),
                 'oportunidad_id' => $query->where('oportunidad_id', $value),
-                'contacto_id' => $query->where('contacto_id', $value),
+                // PR-H: replace `contacto_id` filter with `persona_id`.
+                // The legacy filter key is rejected here so callers
+                // update their integration.
+                'persona_id' => $query->where('persona_id', $value),
                 'entidad_id' => $query->where('entidad_id', $value),
                 'tipo' => $query->where('tipo', $value),
                 'estado' => $query->where('estado', $value),
@@ -78,7 +90,9 @@ class EloquentSeguimientoRepository extends BaseRepository implements Seguimient
             $query->where(function ($q) use ($search) {
                 $q->where('notas', 'like', "%{$search}%")
                     ->orWhereHas('oportunidad', fn ($sq) => $sq->where('codigo', 'like', "%{$search}%"))
-                    ->orWhereHas('contacto', function ($sq) use ($search) {
+                    ->orWhereHas('persona', function ($sq) use ($search) {
+                        // PR-H: search by persona nombres/apellidos
+                        // instead of the (gone) contacto relation.
                         $sq->where('nombres', 'like', "%{$search}%")
                             ->orWhere('apellidos', 'like', "%{$search}%");
                     })
@@ -112,7 +126,7 @@ class EloquentSeguimientoRepository extends BaseRepository implements Seguimient
 
     /**
      * Apply entity-scope filtering based on user role.
-     * Comercial → only entities mapped to user. Admin/SuperAdmin → no filter.
+     * Comercial -> only entities mapped to user. Admin/SuperAdmin -> no filter.
      */
     private function scopeByUser(Builder $query, int $userId): void
     {

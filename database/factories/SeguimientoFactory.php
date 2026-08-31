@@ -14,7 +14,11 @@ class SeguimientoFactory extends Factory
     {
         return [
             'oportunidad_id' => null,
-            'contacto_id' => null,
+            // PR-H (Phase 5b - REQ-SEG-004): emit `persona_id` instead
+            // of the (gone) `contacto_id`. The factory never assigned
+            // a value here (it was `null` by default), so this is a
+            // name swap, not a behaviour change.
+            'persona_id' => null,
             'entidad_id' => Entidad::factory(),
             'tipo' => fake()->randomElement(['Llamada', 'Correo', 'Reunion', 'Nota', 'Otro']),
             'fecha' => fake()->date(),

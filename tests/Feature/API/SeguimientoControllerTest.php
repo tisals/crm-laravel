@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\API;
 
+use App\Domain\Repositories\SeguimientoRepositoryInterface;
 use App\Models\Ciudad;
 use App\Models\Contacto;
 use App\Models\Entidad;
@@ -429,8 +430,19 @@ class SeguimientoControllerTest extends TestCase
                 'estado' => 'Pendiente',
             ]);
         $createResponse->assertStatus(201);
+        // Debug: capture the full response so we can diagnose the show 404.
         $id = $createResponse->json('data.id');
-        $this->assertNotNull($id, 'POST must return a non-null seguimiento id');
+        if ($id === null) {
+            $this->fail('POST returned no data.id. Full response: '.json_encode($createResponse->json()));
+        }
+
+        // Diagnostic: confirm the row exists in the DB before we GET it.
+        $row = Seguimiento::find($id);
+        $this->assertNotNull($row, "seguimiento #{$id} must exist in the DB after POST. Created IDs: ".
+            Seguimiento::pluck('id')->implode(','));
+        $viaRepo = app(SeguimientoRepositoryInterface::class)->findById($id);
+        $this->assertNotNull($viaRepo, 'repository.findById must return the row (got null). id='.$id.
+            ' DB id type='.gettype(Seguimiento::query()->value('id')).' DB count='.Seguimiento::count());
 
         $response = $this->withHeader('Authorization', 'Bearer '.$token)
             ->getJson('/api/v1/seguimientos/'.$id);

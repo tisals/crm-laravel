@@ -12,7 +12,8 @@ use Illuminate\Support\Facades\DB;
  * Rules:
  * - tipo defaults to "Llamada"
  * - fecha extracted from seguimiento text (first line); fallback: oportunidad.fecha + 7 days
- * - linked to oportunidad by codigo, resolves contacto_id + entidad_id from that oportunidad
+ * - linked to oportunidad by codigo, resolves persona_id + entidad_id from that oportunidad
+ *   (via contacto.persona_id mapping per PR-E)
  * - estado defaults to "Completado"
  *
  * Run: php artisan db:seed --class=SeguimientoCsvSeeder
@@ -24,6 +25,16 @@ class SeguimientoCsvSeeder extends Seeder
     private const CHUNK_SIZE = 50;
 
     private static ?int $defaultUserId = null;
+
+    /**
+     * Cache of contacto_id -> persona_id resolved from the contacto
+     * table after the PR-E additive migration. Used to translate the
+     * oportunidad.contacto_id into seguimiento.persona_id (the
+     * post-PR-G canonical axis).
+     *
+     * @var array<int, int|null>
+     */
+    private array $contactoToPersona = [];
 
     public function run(): void
     {
@@ -44,21 +55,35 @@ class SeguimientoCsvSeeder extends Seeder
         if (self::$defaultUserId === null) {
             $this->command->warn('No users found in `usuarios` table. autor_id / created_by / updated_by will be NULL.');
         } else {
-            $this->command->info("Using user id ".self::$defaultUserId.' as default autor/created_by/updated_by.');
+            $this->command->info('Using user id '.self::$defaultUserId.' as default autor/created_by/updated_by.');
         }
 
-        // Load oportunidades map: codigo → {id, contacto_id, entidad_id, fecha}
+        // PR-H: build the contacto -> persona cache so each seguimiento
+        // row is stamped with the post-PR-G canonical FK
+        // (seguimiento.persona_id). The contacto table carries the
+        // additive persona_id column from PR-E, and the backfill
+        // command (PR-F) populated it for non-NULL emails.
+        $this->command->info('Building contacto -> persona cache...');
+        $this->contactoToPersona = DB::table('contacto')
+            ->select('id', 'persona_id')
+            ->get()
+            ->mapWithKeys(fn ($c) => [(int) $c->id => $c->persona_id !== null ? (int) $c->persona_id : null])
+            ->all();
+        $this->command->info('  -> '.count($this->contactoToPersona).' contacto rows cached.');
+
+        // Load oportunidades map: codigo -> {id, contacto_id, entidad_id, fecha}
         $this->command->info('Loading oportunidades...');
         $opps = DB::table('oportunidad')
             ->select('id', 'codigo', 'contacto_id', 'entidad_id', 'fecha')
             ->get()
             ->keyBy(fn ($o) => trim($o->codigo));
-        $this->command->info('  → '.$opps->count().' oportunidades loaded.');
+        $this->command->info('  -> '.$opps->count().' oportunidades loaded.');
 
         // Parse CSV and collect seguimiento records
         $this->command->info('Parsing CSV for seguimiento data...');
         $seguimientos = [];
         $skippedCodigos = [];
+        $skippedNoPersona = 0;
         $totalCsvRows = 0;
         $totalSeguimiento1 = 0;
         $totalSeguimiento2 = 0;
@@ -78,15 +103,26 @@ class SeguimientoCsvSeeder extends Seeder
                 continue;
             }
 
+            // PR-H: resolve persona_id from the oportunidad's contacto_id
+            // (via contacto.persona_id). If the contacto has no persona_id
+            // (e.g., backfill was incomplete), the seguimiento row is
+            // skipped to avoid orphaning a reference.
+            $personaId = $this->resolvePersonaId((int) $opp->contacto_id);
+            if ($personaId === null) {
+                $skippedNoPersona++;
+
+                continue;
+            }
+
             $raw1 = $row['seguimiento'] ?? null;
             $raw2 = $row['seguimiento_2'] ?? null;
 
             if ($raw1) {
-                $seguimientos[] = $this->buildSeguimiento($opp, $raw1, false);
+                $seguimientos[] = $this->buildSeguimiento($opp, $personaId, $raw1);
                 $totalSeguimiento1++;
             }
             if ($raw2) {
-                $seguimientos[] = $this->buildSeguimiento($opp, $raw2, true);
+                $seguimientos[] = $this->buildSeguimiento($opp, $personaId, $raw2);
                 $totalSeguimiento2++;
             }
         }
@@ -94,10 +130,11 @@ class SeguimientoCsvSeeder extends Seeder
         $this->command->info("  CSV rows scanned: {$totalCsvRows}");
         $this->command->info("  Seguimientos from col 1: {$totalSeguimiento1}");
         $this->command->info("  Seguimientos from col 2: {$totalSeguimiento2}");
+        $this->command->info('  Skipped (no persona_id on contacto): '.$skippedNoPersona);
         $this->command->info('  Total to insert: '.count($seguimientos));
 
         if (! empty($skippedCodigos)) {
-            $this->command->warn('  → '.count($skippedCodigos).' codigos NOT found in oportunidades table (skipped).');
+            $this->command->warn('  -> '.count($skippedCodigos).' codigos NOT found in oportunidades table (skipped).');
         }
 
         if (empty($seguimientos)) {
@@ -112,7 +149,7 @@ class SeguimientoCsvSeeder extends Seeder
             ->whereIn('oportunidad_id', $oppIds)
             ->count();
         $this->command->info('Deleting existing seguimientos for affected ops...');
-        $this->command->info("  → {$existingCount} existing rows.");
+        $this->command->info("  -> {$existingCount} existing rows.");
 
         DB::transaction(function () use ($oppIds, $seguimientos) {
             // Batch delete
@@ -145,7 +182,7 @@ class SeguimientoCsvSeeder extends Seeder
                 $inserted += count($insertBatch);
             }
 
-            $this->command->info("  → {$inserted} seguimientos inserted.");
+            $this->command->info("  -> {$inserted} seguimientos inserted.");
         });
 
         // Report
@@ -167,16 +204,27 @@ class SeguimientoCsvSeeder extends Seeder
     }
 
     /**
+     * Resolve persona_id from a contacto_id via the cached map.
+     * Returns null if the contacto has no persona_id (backfill incomplete).
+     */
+    private function resolvePersonaId(int $contactoId): ?int
+    {
+        return $this->contactoToPersona[$contactoId] ?? null;
+    }
+
+    /**
      * Build a seguimiento row array from the raw CSV seguimiento text.
      */
-    private function buildSeguimiento(object $opp, string $raw, bool $isSecond): array
+    private function buildSeguimiento(object $opp, int $personaId, string $raw): array
     {
         $fecha = $this->extractDate($raw, $opp->fecha);
         $userId = self::$defaultUserId; // resolved once in run(), may be null
 
         return [
             'oportunidad_id' => $opp->id,
-            'contacto_id' => $opp->contacto_id,
+            // PR-H: stamp the post-PR-G canonical FK
+            // (seguimiento.persona_id, FK -> personas.id).
+            'persona_id' => $personaId,
             'entidad_id' => $opp->entidad_id,
             'tipo' => 'Llamada',
             'fecha' => $fecha,
