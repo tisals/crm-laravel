@@ -8,10 +8,19 @@ use App\Domain\Repositories\PersonaRepositoryInterface;
 use Illuminate\Support\Facades\DB;
 
 /**
- * PR-J — StorePersonaUseCase dispatches `PersonaChanged(action='created')`
- * after the DB write commits (REQ-PSWH-001, AD-8, R-3).
+ * PR-J + PR-K — StorePersonaUseCase handles the R-iter4.R08 inversion
+ * (Natural → entidad) and dispatches `PersonaChanged(action='created')`
+ * after the DB write commits (REQ-PSWH-001, REQ-PNCE-001..005, AD-8, R-3).
  *
- * Why the dispatch sits OUTSIDE the `DB::transaction` callback (not via
+ * ## R-iter4.R08 inversion (PR-K)
+ *
+ * When the caller POSTs a `Persona Natural` without an `entidad_id`, the
+ * use case first inserts a fresh `entidad` row (with the persona's name,
+ * identification, and address), then inserts the persona pointing at the
+ * new `entidad.id`. The two writes run inside a single `DB::transaction`
+ * — if EITHER fails, both roll back. There is no orphan-entidad state.
+ *
+ * The dispatch sits OUTSIDE the `DB::transaction` callback (not via
  * `DB::afterCommit()`): the controller path is not nested inside another
  * transaction, so dispatching right after the closure returns gives the
  * same post-commit semantics without the `RefreshDatabase` interaction
@@ -20,11 +29,27 @@ use Illuminate\Support\Facades\DB;
  * boundary (post-transaction, pre-return) keeps tests deterministic and
  * matches the spec's "after the DB commit succeeds" wording.
  *
- * The repository is invoked through `DB::transaction(...)` so the create
- * and any future side-effects (e.g. PR-K's `Natural → entidad` inversion)
- * happen atomically. If the transaction rolls back, the event is NOT
- * fired — there is no half-state where Mercurio sees a write that
- * crm-laravel actually rejected.
+ * ## Why ONE event, not TWO
+ *
+ * The receiver (Mercurio's CQRS mirror) keys reconciliation on
+ * `(persona_id, occurred_at)`. If we emitted one event for the entidad
+ * and one for the persona, Mercurio would have to dedupe two unrelated
+ * streams. The spec (REQ-PNCE-006 + REQ-PSWH-001) calls for exactly one
+ * event per write — so the dispatch happens AFTER the inversion succeeds
+ * and AFTER the persona insert commits, with the final (post-inversion)
+ * snapshot.
+ *
+ * ## Why `DB::table('entidad')->insertGetId()` (not the repository)
+ *
+ * The inversion creates an `entidad` as a side-effect of creating a
+ * persona. There's no resource/observer layer for it — Mercurio doesn't
+ * mirror entidades — so bypassing the `EloquentEntidadRepository` keeps
+ * the side-effect atomic with the persona write (same connection, same
+ * transaction) and avoids that repository's list-view eager loads
+ * (`withCount(['contactos','oportunidades'])`, `with(['usuarios','ciudad'])`).
+ * Those eager loads are correct for the index endpoint but pointless for
+ * an internal side-effect. A bare `insertGetId` is the smallest possible
+ * write that still respects the FK / ENUM / default constraints.
  */
 class StorePersonaUseCase
 {
@@ -34,7 +59,11 @@ class StorePersonaUseCase
 
     public function execute(array $data): mixed
     {
-        $persona = DB::transaction(fn () => $this->repository->create($data));
+        $persona = DB::transaction(function () use ($data) {
+            $payload = $this->maybeCreateImpliedEntity($data);
+
+            return $this->repository->create($payload);
+        });
 
         // Post-commit dispatch: the create succeeded, the row is visible.
         // The listener (PersonasSnapshotEmitter) is a no-op on failure —
@@ -47,6 +76,105 @@ class StorePersonaUseCase
         ));
 
         return $persona;
+    }
+
+    /**
+     * R-iter4.R08 inversion branch. Returns the payload that the persona
+     * repository should receive — either unchanged (juridica / explicit
+     * entidad_id) or with a freshly-created `entidad_id` merged in.
+     *
+     * @param  array<string, mixed>  $data
+     * @return array<string, mixed>
+     */
+    private function maybeCreateImpliedEntity(array $data): array
+    {
+        $tipo = isset($data['tipo_persona']) ? strtolower((string) $data['tipo_persona']) : 'natural';
+        $hasEntidadId = ! empty($data['entidad_id']);
+
+        // Inversion ONLY fires for `natural` personas when the caller did
+        // not supply an `entidad_id`. Juridica personas and explicit
+        // `entidad_id` callers fall through with the payload unchanged —
+        // backward compatibility (R-8, REQ-PNCE-002, REQ-PNCE-003).
+        if ($tipo !== 'natural' || $hasEntidadId) {
+            return $this->canonicalizeTipoPersona($data);
+        }
+
+        $entidadId = $this->createEntidadForNaturalPersona($data);
+
+        $data['entidad_id'] = $entidadId;
+
+        return $this->canonicalizeTipoPersona($data);
+    }
+
+    /**
+     * Insert the inversion `entidad` row and return the new id. Runs inside
+     * the use case's outer `DB::transaction`, so a failure on the persona
+     * step that follows rolls back this insert too.
+     *
+     * Column-by-column mapping (REQ-PNCE-001):
+     *   - tipo_persona   ← 'Natural' (canonical ENUM form)
+     *   - tipo_id        ← persona.identificacion_tipo (e.g. 'CC')
+     *   - identificacion ← persona.identificacion_numero (NULL allowed —
+     *                       the column is nullable AND unique, multiple
+     *                       NULLs are fine in MySQL/MariaDB semantics)
+     *   - nombre         ← trim(persona.nombres.' '.persona.apellidos),
+     *                       falling back to just `nombres` when apellidos
+     *                       is null (juridica personas don't have surnames)
+     *   - nombre_comercial, ciudad_cod, dominio, email_contacto ← NULL
+     *   - direccion      ← persona.direccion (when provided)
+     *   - estado         ← 'Activo'
+     *
+     * @param  array<string, mixed>  $persona
+     */
+    private function createEntidadForNaturalPersona(array $persona): int
+    {
+        $nombres = (string) ($persona['nombres'] ?? '');
+        $apellidos = $persona['apellidos'] ?? null;
+        $nombreCompleto = trim(
+            $apellidos !== null && $apellidos !== ''
+                ? "{$nombres} {$apellidos}"
+                : $nombres
+        );
+
+        $entidadId = DB::table('entidad')->insertGetId([
+            'tipo_persona' => 'Natural',
+            'tipo_id' => $persona['identificacion_tipo'] ?? null,
+            'identificacion' => $persona['identificacion_numero'] ?? null,
+            'nombre' => $nombreCompleto,
+            'nombre_comercial' => null,
+            'direccion' => $persona['direccion'] ?? null,
+            'ciudad_cod' => null,
+            'dominio' => null,
+            'estado' => 'Activo',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        return (int) $entidadId;
+    }
+
+    /**
+     * Map the lowercase 'natural' / 'juridica' validator output to the
+     * canonical ENUM form ('Natural' / 'Juridica') so the persona row
+     * survives the `personas.tipo_persona` enum check. Default is
+     * 'Natural' per REQ-PNCE-005.
+     *
+     * @param  array<string, mixed>  $data
+     * @return array<string, mixed>
+     */
+    private function canonicalizeTipoPersona(array $data): array
+    {
+        $tipo = $data['tipo_persona'] ?? null;
+
+        if ($tipo === null || $tipo === '') {
+            $data['tipo_persona'] = 'Natural';
+
+            return $data;
+        }
+
+        $data['tipo_persona'] = ucfirst((string) $tipo);
+
+        return $data;
     }
 
     /**

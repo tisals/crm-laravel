@@ -13,12 +13,17 @@ use Illuminate\Validation\Rule;
  *  - POST is full-create (all-or-nothing required fields + uniqueness check)
  *  - PATCH is partial (every rule `sometimes`, no uniqueness on this layer)
  *
- * Validation specifics (REQ-PRAPI-001, REQ-PRAPI-002, OI-5):
+ * Validation specifics (REQ-PRAPI-001, REQ-PRAPI-002, REQ-PNCE-001..005, OI-5):
  *  - `nombres` required (Natural persons must carry a name)
  *  - `apellidos` nullable (Juridica personas have no surname)
  *  - `email_principal` optional, well-formed, app-level unique per `entidad_id`
- *  - `tipo_persona` enum ['Natural','Juridica'] defaults to 'Natural'
- *  - `entidad_id` required when `tipo_persona === 'Juridica'`
+ *  - `tipo_persona` accepts case-insensitive `'natural'` / `'juridica'`; the
+ *    DB column is ENUM('Natural','Juridica') so the canonical form is the
+ *    stored value (RQ-6). When the client omits it, defaults to `'natural'`
+ *    so the R-iter4.R08 inversion kicks in (REQ-PNCE-005).
+ *  - `entidad_id` required when `tipo_persona === 'juridica'` (case-insensitive).
+ *    For natural personas, `entidad_id` is OPTIONAL — the use case will
+ *    auto-create one via the R-iter4.R08 inversion (REQ-PNCE-001).
  *  - `identificacion_tipo` limited to the RQ-7 enum whitelist
  */
 class PersonaStoreRequest extends FormRequest
@@ -28,9 +33,36 @@ class PersonaStoreRequest extends FormRequest
         return true;
     }
 
+    /**
+     * PR-K: lower-case the `tipo_persona` BEFORE the validation rules run so
+     * the validator sees `'natural'` / `'juridica'` regardless of how the
+     * client capitalised it. The downstream use case then reads
+     * `validated()['tipo_persona']` and applies the canonical mapping
+     * (`ucfirst`) before persisting into the ENUM column.
+     *
+     * Without this normalization the validator would have to whitelist every
+     * case variant (`['Natural','Juridica','natural','juridica',...]`), which
+     * is brittle and obscures the actual contract (the spec calls for
+     * case-insensitive input, canonical storage).
+     */
+    protected function prepareForValidation(): void
+    {
+        $tipo = $this->input('tipo_persona');
+
+        if ($tipo !== null && $tipo !== '') {
+            $this->merge([
+                'tipo_persona' => strtolower((string) $tipo),
+            ]);
+        }
+    }
+
     public function rules(): array
     {
-        $tipoPersona = $this->input('tipo_persona', 'Natural');
+        // After `prepareForValidation()`, `tipo_persona` is already lowercase
+        // when present. The validator only needs to whitelist the lowercase
+        // canonical forms; missing input means the use case defaults to
+        // 'natural' (REQ-PNCE-005).
+        $tipoPersona = $this->input('tipo_persona', 'natural');
         $entidadId = $this->input('entidad_id');
 
         return [
@@ -74,19 +106,23 @@ class PersonaStoreRequest extends FormRequest
             'ciudad' => 'nullable|string|max:100',
             'pais' => 'nullable|string|max:100',
 
-            // PR-A: tipo_persona defaults to 'Natural' on the model, but
-            // we enforce the enum here so a typo doesn't reach the DB.
-            'tipo_persona' => ['nullable', Rule::in(['Natural', 'Juridica'])],
+            // PR-K (REQ-PNCE-005): the validator accepts ONLY lowercase
+            // forms because `prepareForValidation()` already normalized the
+            // input. The use case is responsible for the canonical ENUM
+            // mapping before INSERT.
+            'tipo_persona' => [
+                'nullable',
+                Rule::in(['natural', 'juridica']),
+            ],
 
-            // PR-A: entidad_id is optional for Natural personas
-            // (involution happens upstream in a later PR per AD-8 / R-08).
-            // Juridica personas MUST belong to an entity (else the entity
-            // itself wouldn't exist as Juridica).
+            // PR-K: `entidad_id` is REQUIRED for juridica personas (the
+            // inversion doesn't apply to companies) and OPTIONAL for
+            // natural personas (the use case will auto-create one).
             'entidad_id' => [
                 'nullable',
                 'integer',
                 'exists:entidad,id',
-                Rule::requiredIf(fn () => $tipoPersona === 'Juridica'),
+                Rule::requiredIf(fn () => $tipoPersona === 'juridica'),
             ],
         ];
     }
