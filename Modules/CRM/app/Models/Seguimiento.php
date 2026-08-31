@@ -34,12 +34,19 @@ class Seguimiento extends Model
         'estado',
         'created_by',
         'updated_by',
+        // PR-B (Phase 1b): bot-fact columns ÔÇö REQ-ISCF-002. Stamped by
+        // Mercury / Hermes bots. contacto_id ÔåÆ persona_id swap is PR-H
+        // (do not touch here).
+        'bot_fact_type',
+        'bot_confidence',
+        'bot_source_profile',
     ];
 
     protected $casts = [
         'fecha' => 'date',
         'fecha_fin' => 'datetime',
         'hora' => 'string',
+        'bot_confidence' => 'decimal:3',
     ];
 
     /**
@@ -59,7 +66,7 @@ class Seguimiento extends Model
         return SeguimientoFactory::new();
     }
 
-    // ── Accesors (appends) ──────────────────────────────────
+    // ÔöÇÔöÇ Accesors (appends) ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
 
     public function getEntidadNombreAttribute(): ?string
     {
@@ -85,7 +92,7 @@ class Seguimiento extends Model
         return $a->nombre;
     }
 
-    // ── Relationships ───────────────────────────────────────
+    // ÔöÇÔöÇ Relationships ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇ
 
     public function oportunidad(): BelongsTo
     {
