@@ -4,7 +4,9 @@ namespace Tests\Unit\Modules\CRM\Models;
 
 use App\Models\Entidad;
 use App\Models\Oportunidad;
+use App\Models\Rol;
 use App\Models\Seguimiento as LegacyAlias;
+use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Modules\CRM\Models\Seguimiento as CanonicalSeguimiento;
 use Modules\Shared\Models\Usuario;
@@ -24,11 +26,11 @@ class SeguimientoTest extends TestCase
     {
         // RefreshDatabase creates a clean schema but does NOT seed roles.
         // Ensure a rol exists so the FK on usuarios.rol_id is satisfied.
-        \App\Models\Rol::firstOrCreate(
+        Rol::firstOrCreate(
             ['nombre' => 'Admin'],
             ['estado' => 'Activo']
         );
-        $rolId = \App\Models\Rol::where('nombre', 'Admin')->value('id');
+        $rolId = Rol::where('nombre', 'Admin')->value('id');
 
         return Usuario::create([
             'nombre' => 'Test User',
@@ -62,11 +64,16 @@ class SeguimientoTest extends TestCase
     #[Test]
     public function fillable_includes_all_required_fields(): void
     {
+        // PR-H (Phase 5b - REQ-SEG-004): `seguimiento.contacto_id` was
+        // dropped by PR-G migration; the fillable now exposes
+        // `persona_id` instead. PR-B (Phase 1b) added the bot-fact
+        // columns (REQ-ISCF-002).
         $expected = [
-            'oportunidad_id', 'contacto_id', 'entidad_id',
+            'oportunidad_id', 'persona_id', 'entidad_id',
             'tipo', 'fecha', 'hora', 'fecha_fin',
             'notas', 'autor_id',
             'estado', 'created_by', 'updated_by',
+            'bot_fact_type', 'bot_confidence', 'bot_source_profile',
         ];
         $instance = new CanonicalSeguimiento;
         $this->assertSame($expected, $instance->getFillable());
@@ -127,6 +134,6 @@ class SeguimientoTest extends TestCase
     public function soft_deletes_are_enabled(): void
     {
         $instance = new CanonicalSeguimiento;
-        $this->assertContains(\Illuminate\Database\Eloquent\SoftDeletes::class, class_uses_recursive($instance));
+        $this->assertContains(SoftDeletes::class, class_uses_recursive($instance));
     }
 }
