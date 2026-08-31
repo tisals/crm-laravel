@@ -12,7 +12,7 @@ class DatabaseSeeder extends Seeder
             RoleSeeder::class,
             PermisoSeeder::class,
             CiudadSeeder::class,
-            AppsCatalogSeeder::class,           // Catálogo de apps (crm, sailus, marketing, wp-plugin, la-llave, brp)
+            AppsCatalogSeeder::class,           // Catálogo de apps (minerva, mercurio, fama, wp-plugin, concordia, janus, numeria, tempus, vesta, labor, sailus)
             RealDataSeeder::class,         // Datos CSV primero (crea entidades id=1,2 como Prospecto/Cliente)
             BrandPermissionsSeeder::class, // DESPUÉS: sobreescribe id=1 y id=2 como Propia (marca propia)
             PipelineSeeder::class,              // Pipelines y etapas predefinidas
@@ -20,11 +20,11 @@ class DatabaseSeeder extends Seeder
             MergeDuplicateEntitiesSeeder::class, // FUSIONA duplicados generados durante OportunidadCsvSeeder
         ]);
 
-        // PR-D — Hermes profile binding (REQ-HPBN-002, REQ-HPBN-003).
+        // PR-D — SAIlus Agent profile binding (REQ-HPBN-002, REQ-HPBN-003, formerly Hermes).
         // Opt-in via config flag so production migrations remain lean.
-        // Local/dev workflows can flip HERMES_AUTO_SEED=true.
-        if (config('hermes.auto_seed') === true) {
-            $this->call(HermesAppSeeder::class);
+        // Local/dev workflows can flip SAILUS_AUTO_SEED=true.
+        if (config('sailus.auto_seed') === true) {
+            $this->call(SailusAgentSeeder::class);
         }
     }
 }

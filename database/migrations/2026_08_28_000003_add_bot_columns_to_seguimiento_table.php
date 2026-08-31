@@ -7,7 +7,7 @@ use Illuminate\Support\Facades\Schema;
 /**
  * PR-B (Phase 1b): extend the `seguimiento` table with bot-fact columns.
  *
- * REQ-ISCF-002 ÔÇö when a Mercury / Hermes bot creates a seguimiento row, it
+ * REQ-ISCF-002 — when a Mercury / SAIlus Agent bot creates a seguimiento row, it
  * stamps the fact type, confidence score, and source profile. Operators
  * can then filter "show me all bot-generated follow-ups with confidence
  * > 0.8".

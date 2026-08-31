@@ -102,7 +102,7 @@ class SchemaFoundationTest extends TestCase
     {
         $payload = [
             'session_key' => 'duplicate-uuid-12345',
-            'brand_slug' => 'hermes',
+            'brand_slug' => 'sailus',
             'profile_slug' => 'setter-safe-health',
             'started_at' => now(),
             'created_at' => now(),
@@ -123,7 +123,7 @@ class SchemaFoundationTest extends TestCase
     {
         DB::table('bot_sessions')->insert([
             'session_key' => 'uuid-default-estado',
-            'brand_slug' => 'hermes',
+            'brand_slug' => 'sailus',
             'profile_slug' => 'setter-safe-health',
             'started_at' => now(),
             'created_at' => now(),
@@ -146,7 +146,7 @@ class SchemaFoundationTest extends TestCase
 
         $session = BotSession::create([
             'session_key' => 'uuid-metadata-roundtrip',
-            'brand_slug' => 'hermes',
+            'brand_slug' => 'sailus',
             'profile_slug' => 'marketing-sailus',
             'metadata' => $meta,
             'started_at' => now(),
@@ -252,7 +252,7 @@ class SchemaFoundationTest extends TestCase
         $session = BotSession::create([
             'session_key' => 'uuid-rel-entidad',
             'entidad_id' => $entidad->id,
-            'brand_slug' => 'hermes',
+            'brand_slug' => 'sailus',
             'profile_slug' => 'setter-tis',
             'started_at' => now(),
         ]);
@@ -276,7 +276,7 @@ class SchemaFoundationTest extends TestCase
         $session = BotSession::create([
             'session_key' => 'uuid-rel-persona',
             'persona_id' => $persona->id,
-            'brand_slug' => 'hermes',
+            'brand_slug' => 'sailus',
             'profile_slug' => 'marketing-sailus',
             'started_at' => now(),
         ]);
@@ -311,7 +311,7 @@ class SchemaFoundationTest extends TestCase
         $session = BotSession::create([
             'session_key' => 'uuid-rel-oportunidad',
             'oportunidad_id' => $oportunidad->id,
-            'brand_slug' => 'hermes',
+            'brand_slug' => 'sailus',
             'profile_slug' => 'sst-support-safe-health',
             'started_at' => now(),
         ]);
@@ -338,7 +338,7 @@ class SchemaFoundationTest extends TestCase
         $session = BotSession::create([
             'session_key' => 'uuid-null-delete',
             'entidad_id' => $entidad->id,
-            'brand_slug' => 'hermes',
+            'brand_slug' => 'sailus',
             'profile_slug' => 'setter-safe-health',
             'started_at' => now(),
         ]);
@@ -363,7 +363,7 @@ class SchemaFoundationTest extends TestCase
     {
         $session = BotSession::create([
             'session_key' => 'uuid-soft-delete',
-            'brand_slug' => 'hermes',
+            'brand_slug' => 'sailus',
             'profile_slug' => 'marketing-sailus',
             'started_at' => now(),
         ]);
@@ -423,7 +423,7 @@ class SchemaFoundationTest extends TestCase
     {
         $session = BotSession::create([
             'session_key' => 'uuid-ended-null',
-            'brand_slug' => 'hermes',
+            'brand_slug' => 'sailus',
             'profile_slug' => 'setter-tis',
             'started_at' => now(),
             // ended_at omitted ÔÇö must be NULL
@@ -437,7 +437,7 @@ class SchemaFoundationTest extends TestCase
         $end = now()->addHour();
         $session2 = BotSession::create([
             'session_key' => 'uuid-ended-set',
-            'brand_slug' => 'hermes',
+            'brand_slug' => 'sailus',
             'profile_slug' => 'setter-tis',
             'started_at' => now(),
             'ended_at' => $end,

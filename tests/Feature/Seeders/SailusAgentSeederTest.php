@@ -3,17 +3,19 @@
 namespace Tests\Feature\Seeders;
 
 use App\Models\App;
-use Database\Seeders\HermesAppSeeder;
+use Database\Seeders\SailusAgentSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\DB;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
 /**
- * PR-D (Phase 2): HermesAppSeeder (REQ-HPBN-002, REQ-HPBN-003, REQ-HPBN-004).
+ * PR-D (Phase 2): SailusAgentSeeder (REQ-HPBN-002, REQ-HPBN-003, REQ-HPBN-004).
+ * (Renamed from HermesAppSeeder on 2026-08-28 — see `config/sailus.php`
+ * header for the brand rename history.)
  *
  * The seeder creates:
- *   - exactly 1 `apps` row with slug='hermes', tipo='customer', auth_type='sanctum', activo=true
+ *   - exactly 1 `apps` row with slug='sailus', tipo='internal', auth_type='sanctum', activo=true
  *   - exactly 5 `app_entidad` rows with perfil in the 5 canonical slugs:
  *     setter-safe-health, setter-tis, setter-alejandro, marketing-sailus, sst-support-safe-health
  *
@@ -24,7 +26,7 @@ use Tests\TestCase;
  * assertions, no mocks. RED tasks 2.1-2.4 fail before any production code.
  * GREEN task 2.7 makes them pass.
  */
-class HermesAppSeederTest extends TestCase
+class SailusAgentSeederTest extends TestCase
 {
     use RefreshDatabase;
 
@@ -37,48 +39,48 @@ class HermesAppSeederTest extends TestCase
     ];
 
     /**
-     * Helper: seed the hermes app via the production seeder class.
+     * Helper: seed the SAIlus Agent app via the production seeder class.
      */
-    private function runHermesSeeder(): void
+    private function runSailusSeeder(): void
     {
-        $this->artisan('db:seed', ['--class' => HermesAppSeeder::class])
+        $this->artisan('db:seed', ['--class' => SailusAgentSeeder::class])
             ->assertExitCode(0);
     }
 
-    // ── 2.1 — exactly 1 apps row with canonical hermes attributes ─────
+    // ── 2.1 — exactly 1 apps row with canonical SAIlus Agent attributes ─
 
     #[Test]
-    public function seeder_creates_exactly_one_hermes_apps_row(): void
+    public function seeder_creates_exactly_one_sailus_apps_row(): void
     {
-        $this->runHermesSeeder();
+        $this->runSailusSeeder();
 
-        $count = DB::table('apps')->where('slug', 'hermes')->count();
+        $count = DB::table('apps')->where('slug', 'sailus')->count();
 
         $this->assertSame(
             1,
             $count,
-            'Seeder MUST create exactly 1 apps row with slug=hermes'
+            'Seeder MUST create exactly 1 apps row with slug=sailus'
         );
 
-        $row = DB::table('apps')->where('slug', 'hermes')->first();
+        $row = DB::table('apps')->where('slug', 'sailus')->first();
 
         $this->assertSame(
-            'customer',
+            'internal',
             $row->tipo,
-            'hermes apps row MUST have tipo=customer'
+            'sailus apps row MUST have tipo=internal'
         );
         $this->assertSame(
             'sanctum',
             $row->auth_type,
-            'hermes apps row MUST have auth_type=sanctum'
+            'sailus apps row MUST have auth_type=sanctum'
         );
         $this->assertTrue(
             (bool) $row->activo,
-            'hermes apps row MUST have activo=true'
+            'sailus apps row MUST have activo=true'
         );
         $this->assertNotEmpty(
             $row->nombre,
-            'hermes apps row MUST have a non-empty nombre'
+            'sailus apps row MUST have a non-empty nombre'
         );
     }
 
@@ -87,13 +89,13 @@ class HermesAppSeederTest extends TestCase
     #[Test]
     public function seeder_creates_five_app_entidad_profile_rows(): void
     {
-        $this->runHermesSeeder();
+        $this->runSailusSeeder();
 
-        $hermesId = DB::table('apps')->where('slug', 'hermes')->value('id');
-        $this->assertNotNull($hermesId, 'Hermes apps row must exist');
+        $sailusId = DB::table('apps')->where('slug', 'sailus')->value('id');
+        $this->assertNotNull($sailusId, 'SAIlus Agent apps row must exist');
 
         $perfiles = DB::table('app_entidad')
-            ->where('app_id', $hermesId)
+            ->where('app_id', $sailusId)
             ->whereNotNull('perfil')
             ->pluck('perfil')
             ->sort()
@@ -103,24 +105,24 @@ class HermesAppSeederTest extends TestCase
         $this->assertSame(
             self::EXPECTED_PERFILES,
             $perfiles,
-            'The 5 perfil slugs MUST exactly match the canonical Hermes profiles'
+            'The 5 perfil slugs MUST exactly match the canonical SAIlus Agent profiles'
         );
 
         // Every row points to a non-null entidad (canonical brand entity) and is active.
         $rows = DB::table('app_entidad')
-            ->where('app_id', $hermesId)
+            ->where('app_id', $sailusId)
             ->whereNotNull('perfil')
             ->get();
 
         foreach ($rows as $row) {
             $this->assertNotNull(
                 $row->entidad_id,
-                "Hermes profile row ({$row->perfil}) MUST link to an entidad_id"
+                "SAIlus Agent profile row ({$row->perfil}) MUST link to an entidad_id"
             );
             $this->assertSame(
                 'Activo',
                 $row->estado,
-                "Hermes profile row ({$row->perfil}) MUST be in estado=Activo"
+                "SAIlus Agent profile row ({$row->perfil}) MUST be in estado=Activo"
             );
         }
     }
@@ -130,19 +132,19 @@ class HermesAppSeederTest extends TestCase
     #[Test]
     public function seeder_is_idempotent_running_twice_keeps_counts_stable(): void
     {
-        $this->runHermesSeeder();
-        $this->runHermesSeeder();
+        $this->runSailusSeeder();
+        $this->runSailusSeeder();
 
-        $hermesId = DB::table('apps')->where('slug', 'hermes')->value('id');
+        $sailusId = DB::table('apps')->where('slug', 'sailus')->value('id');
 
         $this->assertSame(
             1,
-            DB::table('apps')->where('slug', 'hermes')->count(),
+            DB::table('apps')->where('slug', 'sailus')->count(),
             'Idempotency: 2nd run MUST NOT duplicate the apps row'
         );
 
         $profileCount = DB::table('app_entidad')
-            ->where('app_id', $hermesId)
+            ->where('app_id', $sailusId)
             ->whereNotNull('perfil')
             ->count();
 
@@ -154,7 +156,7 @@ class HermesAppSeederTest extends TestCase
 
         // Perfil set unchanged.
         $perfiles = DB::table('app_entidad')
-            ->where('app_id', $hermesId)
+            ->where('app_id', $sailusId)
             ->whereNotNull('perfil')
             ->pluck('perfil')
             ->sort()
@@ -169,12 +171,12 @@ class HermesAppSeederTest extends TestCase
     #[Test]
     public function pre_existing_app_entidad_rows_for_other_apps_are_untouched(): void
     {
-        // Create a CRM app and an unrelated entidad; attach via app_entidad
-        // with perfil=NULL. This is the pre-existing pivot that the Hermes
+        // Create a Minerva app and an unrelated entidad; attach via app_entidad
+        // with perfil=NULL. This is the pre-existing pivot that the SAIlus Agent
         // seeder MUST NOT touch (REQ-HPBN-004).
-        $crm = App::create([
-            'slug' => 'crm',
-            'nombre' => 'CRM',
+        $minerva = App::create([
+            'slug' => 'minerva',
+            'nombre' => 'Minerva',
             'tipo' => 'internal',
             'auth_type' => 'sanctum',
             'activo' => true,
@@ -189,9 +191,9 @@ class HermesAppSeederTest extends TestCase
             'updated_at' => now(),
         ]);
 
-        // Pre-existing pivot row: crm → unrelated entidad with perfil=NULL.
+        // Pre-existing pivot row: minerva → unrelated entidad with perfil=NULL.
         DB::table('app_entidad')->insert([
-            'app_id' => $crm->id,
+            'app_id' => $minerva->id,
             'entidad_id' => $unrelatedEntidadId,
             'estado' => 'Activo',
             'fecha_contrato' => now()->toDateString(),
@@ -199,30 +201,30 @@ class HermesAppSeederTest extends TestCase
             'updated_at' => now(),
         ]);
 
-        $this->runHermesSeeder();
+        $this->runSailusSeeder();
 
-        // The pre-existing CRM pivot row stays intact.
-        $crmRow = DB::table('app_entidad')
-            ->where('app_id', $crm->id)
+        // The pre-existing Minerva pivot row stays intact.
+        $minervaRow = DB::table('app_entidad')
+            ->where('app_id', $minerva->id)
             ->where('entidad_id', $unrelatedEntidadId)
             ->first();
 
-        $this->assertNotNull($crmRow, 'Pre-existing CRM pivot row must remain after Hermes seed');
+        $this->assertNotNull($minervaRow, 'Pre-existing Minerva pivot row must remain after SAIlus Agent seed');
         $this->assertNull(
-            $crmRow->perfil,
-            'Pre-existing app_entidad row MUST keep perfil=NULL after Hermes seed (REQ-HPBN-004)'
+            $minervaRow->perfil,
+            'Pre-existing app_entidad row MUST keep perfil=NULL after SAIlus Agent seed (REQ-HPBN-004)'
         );
-        $this->assertSame('Activo', $crmRow->estado);
-        $this->assertSame($unrelatedEntidadId, (int) $crmRow->entidad_id);
+        $this->assertSame('Activo', $minervaRow->estado);
+        $this->assertSame($unrelatedEntidadId, (int) $minervaRow->entidad_id);
 
-        // And the Hermes app did NOT touch the CRM app_id.
+        // And the SAIlus Agent app did NOT touch the Minerva app_id.
         $this->assertSame(
             0,
             DB::table('app_entidad')
-                ->where('app_id', $crm->id)
+                ->where('app_id', $minerva->id)
                 ->whereNotNull('perfil')
                 ->count(),
-            'No Hermes perfil rows must leak into the CRM app_entidad set'
+            'No SAIlus Agent perfil rows must leak into the Minerva app_entidad set'
         );
     }
 }

@@ -15,16 +15,19 @@ class AppsCatalogSeeder extends Seeder
     public function run(): void
     {
         $apps = [
-            ['slug' => 'crm', 'nombre' => 'CRM Tecnoinnsoft', 'tipo' => 'internal', 'auth_type' => 'sanctum', 'descripcion' => 'CRM principal del ecosistema Tecnoinnsoft.'],
-            ['slug' => 'sailus', 'nombre' => 'SAIlus Gateway', 'tipo' => 'internal', 'auth_type' => 'sanctum', 'descripcion' => 'Gateway de integraciones y bots.'],
-            // Mercurio = rename de SAIlus (Variant A dual-write, sunset 2027-02-06).
-            // Mantenemos ambas filas hasta entonces para que el X-Internal-Source
+            ['slug' => 'minerva', 'nombre' => 'Minerva', 'tipo' => 'internal', 'auth_type' => 'sanctum', 'descripcion' => 'CRM-ERP fuente de verdad principal del ecosistema Tecnoinnsoft.'],
             // allow-list (futuro TokenExchangeController) acepte ambos valores.
             ['slug' => 'mercurio', 'nombre' => 'Mercurio Gateway', 'tipo' => 'internal', 'auth_type' => 'sanctum', 'descripcion' => 'Gateway de integraciones y bots (rename SAIlus→Mercurio, dual-write hasta 2027-02-06).'],
-            ['slug' => 'marketing', 'nombre' => 'Marketing Manager', 'tipo' => 'internal', 'auth_type' => 'sanctum', 'descripcion' => 'Gestión de campañas y embudos.'],
+            ['slug' => 'fama', 'nombre' => 'Marketing Manager', 'tipo' => 'internal', 'auth_type' => 'sanctum', 'descripcion' => 'Gestión de campañas y embudos de marketing.'],
             ['slug' => 'wp-plugin', 'nombre' => 'Plugin WordPress', 'tipo' => 'external', 'auth_type' => 'sanctum', 'descripcion' => 'Plugin WP para sitios públicos.'],
-            ['slug' => 'la-llave', 'nombre' => 'La Llave Documental', 'tipo' => 'external', 'auth_type' => 'sanctum', 'descripcion' => 'Gestión documental.'],
-            ['slug' => 'brp', 'nombre' => 'BRP Asistencia', 'tipo' => 'external', 'auth_type' => 'sanctum', 'descripcion' => 'Asistencia psicosocial (Banco de Bogotá).'],
+            ['slug' => 'concordia', 'nombre' => 'Concordia', 'tipo' => 'external', 'auth_type' => 'sanctum', 'descripcion' => 'Gestión de hábitos saludables.'],
+            ['slug' => 'janus', 'nombre' => 'Janus', 'tipo' => 'external', 'auth_type' => 'sanctum', 'descripcion' => 'Puerta de entrada a los microservicios internos de Tecnoinnsoft.'],
+            ['slug' => 'numeria', 'nombre' => 'Numeria', 'tipo' => 'internal', 'auth_type' => 'sanctum', 'descripcion' => 'Módulo de control de indicadores de Gestión en SST'],
+            ['slug' => 'Tempus', 'nombre' => 'Tempus', 'tipo' => 'external', 'auth_type' => 'sanctum', 'descripcion' => 'Control de personal y Horas Extras'],
+            ['slug' => 'Vesta', 'nombre' => 'Vesta', 'tipo' => 'external', 'auth_type' => 'sanctum', 'descripcion' => 'Asistencia BRP'],
+            ['slug' => 'labor', 'nombre' => 'Labor', 'tipo' => 'external', 'auth_type' => 'sanctum', 'descripcion' => 'Acciones de mejora de la productividad y bienestar de los colaboradores'],
+            ['slug' => 'sailus', 'nombre' => 'SAIlus-agent', 'tipo' => 'internal', 'auth_type' => 'sanctum', 'descripcion' => 'HERMES-AGENT para la gestión con IA de tareas de marketing, soporte SST y Setter comercial.'],
+            
         ];
 
         foreach ($apps as $data) {

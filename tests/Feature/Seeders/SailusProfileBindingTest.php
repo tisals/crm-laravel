@@ -7,7 +7,7 @@ use App\Models\Entidad;
 use App\Models\Permiso;
 use App\Models\Rol;
 use App\Models\Usuario;
-use Database\Seeders\HermesAppSeeder;
+use Database\Seeders\SailusAgentSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\DB;
@@ -15,7 +15,9 @@ use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
 /**
- * PR-D (Phase 2): HermesProfileBinding (REQ-HPBN-005, REQ-PRBN-006).
+ * PR-D (Phase 2): SailusProfileBinding (REQ-HPBN-005, REQ-PRBN-006).
+ * (Renamed from HermesProfileBinding on 2026-08-28 — see
+ * `config/sailus.php` header for the brand rename history.)
  *
  * Two contracts are asserted together in this file because both depend on
  * the same production code path (the `perfil` allow-list on `app_entidad`):
@@ -24,15 +26,15 @@ use Tests\TestCase;
  *     rejected by the validation layer when an admin POSTs to assign an
  *     app to an entidad with `perfil` set. `perfil=null` is accepted.
  *
- *   - REQ-PRBN-006 — a usuario linked via `entidad_usuario` to a Hermes-
- *     bound entidad MUST see `hermes` in `GET /api/v1/me/apps`. The
+ *   - REQ-PRBN-006 — a usuario linked via `entidad_usuario` to a SAIlus
+ *     Agent-bound entidad MUST see `sailus` in `GET /api/v1/me/apps`. The
  *     `perfil` column is metadata only; it does NOT gate user access.
  *
  * Strict TDD: these are pure feature tests that exercise real HTTP
  * requests and real DB state. No mocks. RED task 2.5 fails before the
  * validation hook + transitive access are wired.
  */
-class HermesProfileBindingTest extends TestCase
+class SailusProfileBindingTest extends TestCase
 {
     use RefreshDatabase;
 
@@ -40,32 +42,32 @@ class HermesProfileBindingTest extends TestCase
      * Helper: create the user + entidad + transitive link fixtures that
      * power the /me/apps scenario. Returns the sanctum token.
      *
-     * @return array{token: string, user: Usuario, entidad: Entidad, hermes: App}
+     * @return array{token: string, user: Usuario, entidad: Entidad, sailus: App}
      */
-    private function bindUsuarioToHermesEntidad(): array
+    private function bindUsuarioToSailusEntidad(): array
     {
-        // Seed Hermes via the production seeder (perfil-bound entidad row is created).
-        $this->artisan('db:seed', ['--class' => HermesAppSeeder::class])
+        // Seed SAIlus Agent via the production seeder (perfil-bound entidad row is created).
+        $this->artisan('db:seed', ['--class' => SailusAgentSeeder::class])
             ->assertExitCode(0);
 
-        // Build a user with a Rol, link to entidad, link entidad to hermes
-        // app_entidad (with a perfil). The seeder already linked the hermes
+        // Build a user with a Rol, link to entidad, link entidad to sailus
+        // app_entidad (with a perfil). The seeder already linked the sailus
         // app_entidad row to its brand entidad; we need to add an extra
         // entidad_usuario link to that entidad to test transitive access.
         $rol = Rol::create(['nombre' => 'Comercial', 'estado' => 'Activo']);
 
         $user = Usuario::create([
-            'nombre' => 'Hermes User',
-            'email' => 'hermes.user@test.com',
+            'nombre' => 'SAIlus Agent User',
+            'email' => 'sailus.user@test.com',
             'password_hash' => bcrypt('password123'),
             'rol_id' => $rol->id,
             'estado' => 'Activo',
         ]);
 
-        // Fetch the brand entidad that the seeder linked to the setter-safe-health profile.
-        $hermesApp = App::where('slug', 'hermes')->first();
+        // Fetch the brand entity that the seeder linked to the setter-safe-health profile.
+        $sailusApp = App::where('slug', 'sailus')->first();
         $brandEntidadId = DB::table('app_entidad')
-            ->where('app_id', $hermesApp->id)
+            ->where('app_id', $sailusApp->id)
             ->where('perfil', 'setter-safe-health')
             ->value('entidad_id');
 
@@ -84,7 +86,7 @@ class HermesProfileBindingTest extends TestCase
             'token' => $token,
             'user' => $user,
             'entidad' => $entidad,
-            'hermes' => $hermesApp,
+            'sailus' => $sailusApp,
         ];
     }
 
@@ -93,7 +95,7 @@ class HermesProfileBindingTest extends TestCase
     #[Test]
     public function invalid_perfil_value_is_rejected_by_validation_layer(): void
     {
-        // Build an admin user with Sanctum token + an entidad to assign Hermes to.
+        // Build an admin user with Sanctum token + an entidad to assign SAIlus Agent to.
         $rol = Rol::create(['nombre' => 'Admin', 'estado' => 'Activo']);
         // RBAC: the endpoint is gated by `entidad.apps.assign` route permission.
         Permiso::create(['rol_id' => $rol->id, 'vista' => 'entidad.apps.assign']);
@@ -111,21 +113,21 @@ class HermesProfileBindingTest extends TestCase
             'estado' => 'Activo',
         ]);
 
-        // Seed the hermes apps row so the FK exists.
+        // Seed the SAIlus Agent apps row so the FK exists.
         App::create([
-            'slug' => 'hermes',
-            'nombre' => 'Hermes Agent Platform',
-            'tipo' => 'customer',
+            'slug' => 'sailus',
+            'nombre' => 'SAIlus Agent Platform',
+            'tipo' => 'internal',
             'auth_type' => 'sanctum',
             'activo' => true,
         ]);
-        $hermesId = App::where('slug', 'hermes')->value('id');
+        $sailusId = App::where('slug', 'sailus')->value('id');
 
         $token = $admin->createToken('test-token')->plainTextToken;
 
         // POST with invalid perfil 'setter-bogus' — must be rejected with 422.
         $response = $this->withHeader('Authorization', 'Bearer '.$token)
-            ->postJson("/api/v1/entidad/{$entidad->id}/apps/{$hermesId}", [
+            ->postJson("/api/v1/entidad/{$entidad->id}/apps/{$sailusId}", [
                 'perfil' => 'setter-bogus',
                 'estado' => 'Activo',
             ]);
@@ -135,7 +137,7 @@ class HermesProfileBindingTest extends TestCase
 
         // No row inserted (FK still points to 0 rows with this invalid perfil).
         $bogusRows = DB::table('app_entidad')
-            ->where('app_id', $hermesId)
+            ->where('app_id', $sailusId)
             ->where('perfil', 'setter-bogus')
             ->count();
 
@@ -145,7 +147,7 @@ class HermesProfileBindingTest extends TestCase
     #[Test]
     public function null_perfil_is_accepted(): void
     {
-        // Build an admin + entidad to assign Hermes to.
+        // Build an admin + entidad to assign SAIlus Agent to.
         $rol = Rol::create(['nombre' => 'Admin', 'estado' => 'Activo']);
         Permiso::create(['rol_id' => $rol->id, 'vista' => 'entidad.apps.assign']);
         $admin = Usuario::create([
@@ -163,26 +165,26 @@ class HermesProfileBindingTest extends TestCase
         ]);
 
         App::create([
-            'slug' => 'hermes',
-            'nombre' => 'Hermes Agent Platform',
-            'tipo' => 'customer',
+            'slug' => 'sailus',
+            'nombre' => 'SAIlus Agent Platform',
+            'tipo' => 'internal',
             'auth_type' => 'sanctum',
             'activo' => true,
         ]);
-        $hermesId = App::where('slug', 'hermes')->value('id');
+        $sailusId = App::where('slug', 'sailus')->value('id');
 
         $token = $admin->createToken('test-token')->plainTextToken;
 
         // POST without perfil — must succeed (perfil=null accepted).
         $response = $this->withHeader('Authorization', 'Bearer '.$token)
-            ->postJson("/api/v1/entidad/{$entidad->id}/apps/{$hermesId}", [
+            ->postJson("/api/v1/entidad/{$entidad->id}/apps/{$sailusId}", [
                 'estado' => 'Activo',
             ]);
 
         $response->assertStatus(200);
 
         $row = DB::table('app_entidad')
-            ->where('app_id', $hermesId)
+            ->where('app_id', $sailusId)
             ->where('entidad_id', $entidad->id)
             ->first();
 
@@ -191,14 +193,14 @@ class HermesProfileBindingTest extends TestCase
         $this->assertSame('Activo', $row->estado);
     }
 
-    // ── 2.5b — transitive user access returns hermes in /me/apps (REQ-PRBN-006) ──
+    // ── 2.5b — transitive user access returns sailus in /me/apps (REQ-PRBN-006) ──
 
     #[Test]
-    public function usuario_linked_to_hermes_entidad_sees_hermes_in_me_apps(): void
+    public function usuario_linked_to_sailus_entidad_sees_sailus_in_me_apps(): void
     {
         // Build the full transitive chain:
-        //   usuario → entidad_usuario → entidad → app_entidad(app=hermes, perfil=X)
-        $ctx = $this->bindUsuarioToHermesEntidad();
+        //   usuario → entidad_usuario → entidad → app_entidad(app=sailus, perfil=X)
+        $ctx = $this->bindUsuarioToSailusEntidad();
         $token = $ctx['token'];
 
         // Bust the me:apps cache so the next read recomputes.
@@ -225,18 +227,18 @@ class HermesProfileBindingTest extends TestCase
         $slugs = collect($response->json('data.apps'))->pluck('slug')->all();
 
         $this->assertContains(
-            'hermes',
+            'sailus',
             $slugs,
-            'GET /api/v1/me/apps MUST include hermes for a usuario linked via entidad_usuario to a Hermes-bound entidad (REQ-PRBN-006)'
+            'GET /api/v1/me/apps MUST include sailus for a usuario linked via entidad_usuario to a SAIlus Agent-bound entidad (REQ-PRBN-006)'
         );
 
         // perfil is metadata; the me/apps response MUST NOT include it
-        // (perfil is for Hermes runtime, not crm-laravel RBAC).
+        // (perfil is for SAIlus Agent runtime, not crm-laravel RBAC).
         foreach ($response->json('data.apps') as $entry) {
             $this->assertArrayNotHasKey(
                 'perfil',
                 $entry,
-                'me/apps response MUST NOT leak the perfil column (it is Hermes runtime metadata)'
+                'me/apps response MUST NOT leak the perfil column (it is SAIlus Agent runtime metadata)'
             );
         }
 
