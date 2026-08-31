@@ -8,13 +8,12 @@ use App\Http\Controllers\API\Concerns\ApiResponse;
 use App\Http\Controllers\Controller;
 use App\Models\Seguimiento;
 use App\Notifications\FollowUpNotification;
-use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Notification;
-use Modules\CRM\Models\Seguimiento as CanonicalSeguimiento;
+use Modules\CRM\Models\Contacto;
 
 class ContactoAccionController extends Controller
 {
@@ -26,10 +25,15 @@ class ContactoAccionController extends Controller
     ) {}
 
     /**
-     * POST /api/v1/contactos/{contactoId}/acciones
+     * POST /api/v1/contacto/{contactoId}/acciones
      *
      * Registra una acción de seguimiento (llamada, correo, reunión, nota)
      * y opcionalmente programa un próximo seguimiento con fecha/hora.
+     *
+     * PR-H (Phase 5b - REQ-SEG-004): the seguimiento is now stamped
+     * with `persona_id` (resolved from `contacto.persona_id` per the
+     * PR-E additive migration + PR-F backfill). The legacy
+     * `contacto_id` column on `seguimiento` was dropped by PR-G.
      */
     public function acciones(int $contactoId, Request $request): JsonResponse
     {
@@ -47,6 +51,16 @@ class ContactoAccionController extends Controller
             'hora.date_format' => 'La hora debe tener formato HH:MM.',
         ]);
 
+        // PR-H: resolve persona_id from the contacto row. The contacto
+        // must have persona_id populated (backfill invariant, verified
+        // by PR-F). If it does not, we fall back to leaving persona_id
+        // NULL on the seguimiento (the FK is nullable + nullOnDelete).
+        $contacto = Contacto::find($contactoId);
+        if (! $contacto) {
+            return $this->errorResponse('Contacto no encontrado.', 404);
+        }
+        $personaId = $contacto->persona_id !== null ? (int) $contacto->persona_id : null;
+
         $tipo = $request->input('tipo');
         $notas = $request->input('notas');
         $oportunidadId = $request->input('oportunidad_id');
@@ -56,13 +70,15 @@ class ContactoAccionController extends Controller
         $ahora = now()->toDateString();
 
         return DB::transaction(function () use (
-            $contactoId, $tipo, $notas, $oportunidadId, $entidadId,
+            $personaId, $tipo, $notas, $oportunidadId, $entidadId,
             $fechaProximo, $horaProximo, $ahora,
         ) {
             $creados = [];
 
             $actual = $this->storeSeguimientoUseCase->execute([
-                'contacto_id' => $contactoId,
+                // PR-H: stamp persona_id (post-PR-G canonical FK)
+                // instead of the legacy contacto_id.
+                'persona_id' => $personaId,
                 'oportunidad_id' => $oportunidadId,
                 'entidad_id' => $entidadId,
                 'tipo' => $tipo,
@@ -76,7 +92,7 @@ class ContactoAccionController extends Controller
 
             if ($fechaProximo) {
                 $proximo = $this->storeSeguimientoUseCase->execute([
-                    'contacto_id' => $contactoId,
+                    'persona_id' => $personaId,
                     'oportunidad_id' => $oportunidadId,
                     'entidad_id' => $entidadId,
                     'tipo' => $tipo,
@@ -115,6 +131,7 @@ class ContactoAccionController extends Controller
 
         if ($recipients->isEmpty()) {
             Log::warning("FollowUpNotification for seguimiento {$seguimiento->id}: no recipients found (no comercial mapped, no admins)");
+
             return;
         }
 

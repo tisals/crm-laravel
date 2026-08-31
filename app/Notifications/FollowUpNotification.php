@@ -37,7 +37,11 @@ class FollowUpNotification extends Notification implements ShouldQueue
     {
         return [
             'seguimiento_id' => $this->seguimiento->id,
-            'contacto_id' => $this->seguimiento->contacto_id,
+            // PR-H (Phase 5b - REQ-SEG-004): swap `contacto_id` for
+            // `persona_id` in the notification payload. The legacy
+            // field would now read `null` (column gone) and break any
+            // consumer that listened for it.
+            'persona_id' => $this->seguimiento->persona_id,
             'oportunidad_id' => $this->seguimiento->oportunidad_id,
             'tipo' => $this->seguimiento->tipo,
             'fecha' => $this->seguimiento->fecha,

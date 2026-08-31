@@ -138,9 +138,15 @@ class CotizacionController extends Controller
             ? $validated['mensaje']
             : "Cotización {$oportunidad->codigo} enviada a {$contacto->email_contacto}";
 
+        // PR-H (Phase 5b - REQ-SEG-004): stamp `persona_id` instead of
+        // the (gone) `contacto_id`. The persona_id is resolved from the
+        // contacto's additive persona_id column (PR-E migration +
+        // PR-F backfill). If the contacto has no persona_id, the
+        // seguimiento is still created with persona_id = NULL (the FK
+        // is nullable + nullOnDelete).
         $seguimiento = Seguimiento::create([
             'oportunidad_id' => $oportunidad->id,
-            'contacto_id' => $contacto->id,
+            'persona_id' => $contacto->persona_id,
             'entidad_id' => $oportunidad->entidad_id,
             'tipo' => 'Correo',
             'fecha' => now()->toDateString(),

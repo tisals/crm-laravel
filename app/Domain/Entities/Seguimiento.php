@@ -7,7 +7,11 @@ class Seguimiento
     public function __construct(
         public int $id,
         public ?int $oportunidad_id,
-        public ?int $contacto_id,
+        // PR-H (Phase 5b - REQ-SEG-004): swap `contacto_id` for
+        // `persona_id` to match the DB schema swap (PR-G) and the
+        // Eloquent model (Modules\CRM\Models\Seguimiento::$fillable).
+        // The column was dropped in 2026_08_28_000099 migration.
+        public ?int $persona_id,
         public ?int $entidad_id,
         public string $tipo,
         public string $fecha,
@@ -27,7 +31,7 @@ class Seguimiento
         return new self(
             id: $data['id'],
             oportunidad_id: $data['oportunidad_id'] ?? null,
-            contacto_id: $data['contacto_id'] ?? null,
+            persona_id: $data['persona_id'] ?? null,
             entidad_id: $data['entidad_id'] ?? null,
             tipo: $data['tipo'],
             fecha: $data['fecha'],
@@ -48,7 +52,7 @@ class Seguimiento
         return [
             'id' => $this->id,
             'oportunidad_id' => $this->oportunidad_id,
-            'contacto_id' => $this->contacto_id,
+            'persona_id' => $this->persona_id,
             'entidad_id' => $this->entidad_id,
             'tipo' => $this->tipo,
             'fecha' => $this->fecha,

@@ -36,8 +36,11 @@ class SeguimientoController extends Controller
     public function index(Request $request): JsonResponse
     {
         $perPage = min($request->input('per_page', 15), 100);
+        // PR-H (Phase 5b - REQ-SEG-004): replace `contacto_id` filter
+        // with `persona_id`. The legacy filter key is silently dropped
+        // here so callers must migrate to the new key.
         $filters = $request->only([
-            'oportunidad_id', 'contacto_id', 'entidad_id',
+            'oportunidad_id', 'persona_id', 'entidad_id',
             'tipo', 'estado',
         ]);
 
@@ -171,7 +174,9 @@ class SeguimientoController extends Controller
      */
     public function exportIcs(int $id): Response
     {
-        $seguimiento = Seguimiento::with(['contacto', 'oportunidad', 'autor'])
+        // PR-H: eager-load `persona` (the post-PR-G canonical relation)
+        // instead of the (gone) `contacto` relation.
+        $seguimiento = Seguimiento::with(['persona', 'oportunidad', 'autor'])
             ->find($id);
 
         if (! $seguimiento) {
@@ -195,7 +200,7 @@ class SeguimientoController extends Controller
     /**
      * GET /api/v1/seguimientos/calendar.ics
      * Exporta TODOS los seguimientos Pendientes como un archivo .ics mensual.
-     * Params: mes (YYYY-MM), contacto_id (opcional), entidad_id (opcional)
+     * Params: mes (YYYY-MM), persona_id (opcional), entidad_id (opcional)
      */
     public function exportCalendarIcs(Request $request): Response
     {
@@ -204,14 +209,15 @@ class SeguimientoController extends Controller
         $startOfMonth = Carbon::createFromDate($year, $month, 1)->startOfMonth();
         $endOfMonth = $startOfMonth->copy()->endOfMonth()->endOfDay();
 
-        $query = Seguimiento::with(['contacto', 'oportunidad', 'autor'])
+        $query = Seguimiento::with(['persona', 'oportunidad', 'autor'])
             ->where('estado', 'Pendiente')
             ->whereBetween('fecha', [$startOfMonth->toDateString(), $endOfMonth->toDateString()]);
 
         if ($request->filled('entidad_id')) {
             $query->where('entidad_id', $request->input('entidad_id'));
-        } elseif ($request->filled('contacto_id')) {
-            $query->where('contacto_id', $request->input('contacto_id'));
+        } elseif ($request->filled('persona_id')) {
+            // PR-H: replace `contacto_id` filter with `persona_id`.
+            $query->where('persona_id', $request->input('persona_id'));
         }
 
         $seguimientos = $query->orderBy('fecha')->orderBy('hora')->get();
@@ -272,8 +278,12 @@ class SeguimientoController extends Controller
 
         $description = $seg->notas ?? '';
 
-        if ($seg->contacto) {
-            $description .= "\nContacto: {$seg->contacto->nombres} {$seg->contacto->apellidos}";
+        if ($seg->persona) {
+            // PR-H: derive the human name from the persona (post-PR-G
+            // canonical identity axis). The label is still "Contacto"
+            // for backward compatibility with calendar clients that
+            // already subscribed to this ICS feed.
+            $description .= "\nContacto: {$seg->persona->nombres} {$seg->persona->apellidos}";
         }
         if ($seg->autor) {
             $description .= "\nAsignado por: {$seg->autor->nombre}";

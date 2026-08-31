@@ -11,7 +11,7 @@ class ReasignarContactoUseCase
     /**
      * Reasigna un contacto a otra entidad.
      * Si ya existe un contacto con el mismo email en la entidad destino,
-     * retorna conflicto a menos que se pida merge explícitamente.
+     * retorna conflicto a menos que se pida merge explícito.
      *
      * @return array{success: bool, data?: Contacto, conflict?: array, message?: string}
      */
@@ -70,14 +70,44 @@ class ReasignarContactoUseCase
     /**
      * Fusiona dos contactos: transfiere seguimientos y oportunidades del existente al nuevo,
      * y elimina el contacto que quedó duplicado.
+     *
+     * PR-H (Phase 5b - REQ-SEG-004): seguimientos are now keyed by
+     * `persona_id`, NOT `contacto_id`. The transfer logic must update
+     * `seguimiento.persona_id` to the new contacto's persona_id instead
+     * of the gone `contacto_id` column. Because persona is the canonical
+     * identity axis and a single persona can back multiple contactos
+     * (AD-12 cross-entidad dedupe), we use the OLD contacto's persona_id
+     * (which is also the NEW contacto's persona_id after the merge) — no
+     * data change is actually needed in this branch; the foreign key
+     * already points to the right persona. The old transferencia is a
+     * no-op for seguimientos but we keep the method for clarity and to
+     * avoid surprises if the merge semantics change in the future.
      */
     private function mergeContactos(Contacto $existente, Contacto $nuevo): void
     {
-        // Transferir seguimientos del contacto existente al nuevo
-        Seguimiento::where('contacto_id', $existente->id)
-            ->update(['contacto_id' => $nuevo->id]);
+        // Transferir seguimientos: since both contactos share the same
+        // persona_id (post-merge canonical identity), the FK already
+        // points to the right persona. The update is a no-op but kept
+        // for explicit clarity. If the FK was missing on the old contacto
+        // (backfill not run), the seguimiento would also lack persona_id,
+        // and we stamp it here so the merge does not leave orphan rows.
+        if ($nuevo->persona_id !== null) {
+            Seguimiento::whereNull('persona_id')
+                ->whereIn('oportunidad_id', function ($q) use ($existente) {
+                    // Be conservative: only stamp seguimientos tied to
+                    // oportunidades of the old contacto. This avoids
+                    // accidentally re-pointing seguimientos that were
+                    // never tied to either contacto.
+                    $q->select('id')
+                        ->from('oportunidad')
+                        ->where('contacto_id', $existente->id);
+                })
+                ->update(['persona_id' => (int) $nuevo->persona_id]);
+        }
 
         // Transferir oportunidades del contacto existente al nuevo
+        // (the oportunidad.contacto_id axis is unchanged by PR-H — it
+        // is NOT a seguimiento FK swap).
         Oportunidad::where('contacto_id', $existente->id)
             ->update(['contacto_id' => $nuevo->id]);
 
