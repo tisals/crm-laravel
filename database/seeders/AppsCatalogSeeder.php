@@ -46,6 +46,10 @@ class AppsCatalogSeeder extends Seeder
             [
                 'slug' => 'mercurio',
                 'legacy_slug' => 'sailus',
+                // The legacy `sailus` slug was reused for SAIlus Agent in 2026-08-28.
+                // Only treat an existing `sailus` row as legacy if its nombre is still
+                // 'SAIlus Gateway'; a 'SAIlus-agent' row is the new entity, NOT legacy.
+                'legacy_match_nombre' => 'SAIlus Gateway',
                 'nombre' => 'Mercurio Gateway',
                 'tipo' => 'internal',
                 'auth_type' => 'sanctum',
@@ -148,14 +152,33 @@ class AppsCatalogSeeder extends Seeder
             }
 
             if ($legacyExists && $newExists) {
-                // Dual-write collision (e.g. legacy `sailus` Gateway coexisting
-                // with new `mercurio` Gateway, OR legacy `sailus` Gateway
-                // colliding with new `sailus` SAIlus Agent). Manual merge
-                // required — the seeder intentionally skips to avoid
-                // destroying FK-bearing rows.
+                // Both rows exist. Check `legacy_match_nombre` to distinguish
+                // a true legacy row (its nombre is the OLD name) from a slug
+                // collision (the legacy slug was reused for a different app,
+                // e.g. `sailus` legacy Gateway vs `sailus` new SAIlus Agent).
+                $legacyRow = App::where('slug', $legacySlug)->first();
+                $matchNombre = $data['legacy_match_nombre'] ?? null;
+
+                if ($matchNombre && $legacyRow->nombre === $matchNombre) {
+                    // True legacy — safe to rename in place.
+                    App::where('slug', $legacySlug)->update([
+                        'slug' => $newSlug,
+                        'nombre' => $data['nombre'],
+                        'tipo' => $data['tipo'],
+                        'auth_type' => $data['auth_type'],
+                        'descripcion' => $data['descripcion'],
+                        'activo' => true,
+                    ]);
+
+                    continue;
+                }
+
+                // Slug collision (not a true dual-write). The legacy slug was
+                // reused for a different app. Manual merge required — the
+                // seeder intentionally skips to avoid destroying FK-bearing rows.
                 $this->command?->warn(
-                    "AppsCatalogSeeder: legacy slug '{$legacySlug}' AND new slug '{$newSlug}' both exist. "
-                    .'Manual merge required — seeder skipped both.'
+                    "AppsCatalogSeeder: legacy slug '{$legacySlug}' exists with non-legacy name "
+                    ."('{$legacyRow->nombre}') — likely a slug reuse collision. Manual merge required."
                 );
 
                 continue;
@@ -164,9 +187,9 @@ class AppsCatalogSeeder extends Seeder
 
         // ── Phase 2: standard upsert for all entries ───────────────────────
         foreach ($apps as $data) {
-            // Strip the seeder-only `legacy_slug` hint so it doesn't leak
-            // into the UPDATE SET clause (apps table has no such column).
-            unset($data['legacy_slug']);
+            // Strip seeder-only hints so they don't leak into INSERT/UPDATE
+            // columns (apps table has neither column).
+            unset($data['legacy_slug'], $data['legacy_match_nombre']);
 
             App::updateOrCreate(
                 ['slug' => $data['slug']],
