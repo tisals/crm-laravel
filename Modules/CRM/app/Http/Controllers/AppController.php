@@ -15,8 +15,10 @@ use App\Http\Controllers\API\Concerns\ApiResponse;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\AppRequest;
 use App\Http\Resources\AppResource;
+use App\Models\AppEntidad;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Validation\Rule;
 
 class AppController extends Controller
 {
@@ -135,6 +137,19 @@ class AppController extends Controller
             'fecha_vencimiento' => 'nullable|date',
             'estado' => 'nullable|in:Activo,Suspendido,Cancelado,Trial',
             'notas' => 'nullable|string|max:1000',
+            // REQ-HPBN-005 — `perfil` (Hermes profile binding) is a closed
+            // allow-list. Null is the "no profile" sentinel and is accepted;
+            // anything else MUST be one of the 5 canonical Hermes profiles.
+            // The allow-list lives on `App\Models\AppEntidad::PERFILES_ACEPTADOS`
+            // (single source of truth, also enforced by HermesAppSeeder).
+            'perfil' => [
+                'nullable',
+                'string',
+                'max:100',
+                Rule::in(AppEntidad::PERFILES_ACEPTADOS),
+            ],
+        ], [
+            'perfil.in' => 'Perfil no válido. Valores aceptados: '.implode(', ', AppEntidad::PERFILES_ACEPTADOS).'.',
         ]);
 
         $pivotId = $this->assignUseCase->execute(

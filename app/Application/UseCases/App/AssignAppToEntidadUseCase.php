@@ -37,6 +37,14 @@ class AssignAppToEntidadUseCase
             'estado' => 'Activo',
             'notas' => null,
             'created_by' => null,
+            // REQ-HPBN-005 — `perfil` is the Hermes profile binding metadata.
+            // The Form Request validation enforces `Rule::in(AppEntidad::PERFILES_ACEPTADOS)`
+            // before the metadata reaches the use case, so anything passing
+            // through here is either null or one of the 5 canonical slugs.
+            // Default null = "no profile" (the historical behavior for
+            // non-Hermes apps; legacy CRM/Sailus/Mercurio assignments are
+            // untouched, REQ-HPBN-004).
+            'perfil' => null,
         ];
 
         $data = array_merge($defaults, array_intersect_key($metadata, $defaults));

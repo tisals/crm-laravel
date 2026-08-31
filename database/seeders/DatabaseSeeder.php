@@ -19,5 +19,12 @@ class DatabaseSeeder extends Seeder
             DodCapSeeder::class,                // Trunca a máx 10 ops y 10 contactos por entidad
             MergeDuplicateEntitiesSeeder::class, // FUSIONA duplicados generados durante OportunidadCsvSeeder
         ]);
+
+        // PR-D — Hermes profile binding (REQ-HPBN-002, REQ-HPBN-003).
+        // Opt-in via config flag so production migrations remain lean.
+        // Local/dev workflows can flip HERMES_AUTO_SEED=true.
+        if (config('hermes.auto_seed') === true) {
+            $this->call(HermesAppSeeder::class);
+        }
     }
 }
