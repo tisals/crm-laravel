@@ -69,11 +69,14 @@ Route::prefix('v1')->group(function () {
             Route::post('/contacto/{id}/reasignar', [ContactoController::class, 'reasignar'])->name('contacto.reasignar');
             Route::post('/contacto/{contactoId}/acciones', [ContactoAccionController::class, 'acciones'])->name('contacto.acciones');
 
-            // Persona CRUD (Party Model — administrative full CRUD)
+            // Persona CRUD (Party Model — administrative full CRUD).
+            // PR-I 6a.11: update is `PATCH`, not `PUT`, per REQ-PRAPI-004
+            // (partial updates). The `personas.update` route name is
+            // preserved so existing URL helpers don't break.
             Route::get('/personas', [PersonaController::class, 'index'])->name('personas.index');
             Route::post('/personas', [PersonaController::class, 'store'])->name('personas.store');
             Route::get('/personas/{id}', [PersonaController::class, 'show'])->name('personas.show');
-            Route::put('/personas/{id}', [PersonaController::class, 'update'])->name('personas.update');
+            Route::patch('/personas/{id}', [PersonaController::class, 'update'])->name('personas.update');
             Route::delete('/personas/{id}', [PersonaController::class, 'destroy'])->name('personas.destroy');
 
             // Apps catalog CRUD
@@ -90,7 +93,7 @@ Route::prefix('v1')->group(function () {
             Route::delete('/entidad/{entidadId}/apps/{appId}', [AppController::class, 'removeAppFromEntidad'])->name('entidad.apps.remove');
 
             // Admin: identity bundle for arbitrary user (rol defaults + scoped)
-            Route::get('/usuarios/{userId}/identity', [\App\Http\Controllers\API\UsuarioPermisoController::class, 'showIdentity'])->name('usuarios.identity');
+            Route::get('/usuarios/{userId}/identity', [UsuarioPermisoController::class, 'showIdentity'])->name('usuarios.identity');
 
             // Admin: granular per-(user, app) permissions
             Route::prefix('usuarios/{userId}/apps/{appId}/permisos')->group(function () {

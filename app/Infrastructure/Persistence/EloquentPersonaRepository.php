@@ -15,6 +15,22 @@ class EloquentPersonaRepository extends BaseRepository implements PersonaReposit
      */
     protected ?string $readConnection = 'mysql_read';
 
+    /**
+     * OI-6 (PR-I 6a.14): defer to `BaseRepository::newQuery()` so the
+     * `isReadReplicaConfigured()` guard runs.
+     *
+     * PR-H discovered the same bug in `EloquentSeguimientoRepository`:
+     * if `mysql_read` is not actually configured (dev / single-instance /
+     * tests), the previous override forced a separate PDO connection that
+     * could not see rows written inside a `RefreshDatabase` transaction.
+     * The base class falls back to the default connection when the replica
+     * points at the same host/port — fixing test isolation.
+     */
+    protected function newQuery()
+    {
+        return parent::newQuery();
+    }
+
     protected function getModelClass(): string
     {
         return EloquentPersona::class;
