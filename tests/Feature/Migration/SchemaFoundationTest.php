@@ -2,6 +2,7 @@
 
 namespace Tests\Feature\Migration;
 
+use App\Models\App;
 use App\Models\Entidad;
 use App\Models\Persona;
 use Illuminate\Database\QueryException;
@@ -212,10 +213,11 @@ class SchemaFoundationTest extends TestCase
             'precondition: bot_fact_type should exist before rollback'
         );
 
-        // Roll back the most recent two migrations. By timestamp ordering
-        // these are: 2026_08_28_000002_create_bot_sessions_table and
-        // 2026_08_28_000003_add_bot_columns_to_seguimiento_table.
-        $this->artisan('migrate:rollback', ['--step' => 2])->assertExitCode(0);
+        // Roll back enough migrations to undo PR-B (migrations 2 + 3).
+        // As of PR-C there are 5 newer migrations (4, 5, 6 from this PR
+        // and the cumulative chain), so we roll back 5 to reach migration
+        // 3 (and the cascade takes 2 with it).
+        $this->artisan('migrate:rollback', ['--step' => 5])->assertExitCode(0);
 
         $this->assertFalse(
             Schema::hasTable('bot_sessions'),
@@ -445,5 +447,110 @@ class SchemaFoundationTest extends TestCase
             $session2->fresh()->ended_at,
             'ended_at must persist when set'
         );
+    }
+
+    // ÔöÇÔöÇ 1c.6 ÔÇö app_entidad.perfil column added (REQ-HPBN-001, REQ-HPBN-004) ÔöÇÔöÇ
+
+    #[Test]
+    public function app_entidad_has_perfil_column(): void
+    {
+        // REQ-HPBN-001: perfil VARCHAR(100) NULL on app_entidad.
+        $this->assertTrue(
+            Schema::hasColumn('app_entidad', 'perfil'),
+            'app_entidad.perfil column must exist (REQ-HPBN-001)'
+        );
+    }
+
+    #[Test]
+    public function app_entidad_perfil_is_indexed(): void
+    {
+        $indexes = Schema::getIndexes('app_entidad');
+
+        $names = array_map(fn ($i) => $i['name'], $indexes);
+
+        $this->assertContains(
+            'idx_app_entidad_perfil',
+            $names,
+            'idx_app_entidad_perfil index must exist on app_entidad.perfil'
+        );
+    }
+
+    #[Test]
+    public function existing_app_entidad_rows_keep_perfil_null(): void
+    {
+        // REQ-HPBN-004: pre-existing pivot rows survive the migration with
+        // perfil = NULL (additive column, no backfill needed).
+        $app = App::create([
+            'slug' => 'pr-c-perfil-'.uniqid(),
+            'nombre' => 'PR-C Perfil Test',
+            'tipo' => 'customer',
+            'auth_type' => 'sanctum',
+            'activo' => true,
+        ]);
+
+        $entidad = Entidad::create([
+            'tipo_persona' => 'Juridica',
+            'nombre' => 'PR-C Perfil Entidad',
+            'identificacion' => 'PR-C-PERFIL-'.uniqid(),
+            'estado' => 'Activo',
+        ]);
+
+        DB::table('app_entidad')->insert([
+            'app_id' => $app->id,
+            'entidad_id' => $entidad->id,
+            'estado' => 'Activo',
+            'fecha_contrato' => now()->toDateString(),
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+
+        // After migration: existing row has perfil = NULL (no backfill).
+        $row = DB::table('app_entidad')
+            ->where('app_id', $app->id)
+            ->where('entidad_id', $entidad->id)
+            ->first();
+
+        $this->assertNotNull($row, 'pre-existing app_entidad row must survive migration');
+        $this->assertNull(
+            $row->perfil,
+            'pre-existing app_entidad.perfil must remain NULL after migration (REQ-HPBN-004)'
+        );
+    }
+
+    #[Test]
+    public function app_entidad_unique_app_id_entidad_id_intact_after_migration(): void
+    {
+        // R-5 invariant: the existing UNIQUE(app_id, entidad_id) must NOT
+        // be lost when the perfil column is added. A second insert with
+        // the same (app_id, entidad_id) MUST throw.
+        $app = App::create([
+            'slug' => 'pr-c-unique-'.uniqid(),
+            'nombre' => 'PR-C Unique Test',
+            'tipo' => 'customer',
+            'auth_type' => 'sanctum',
+            'activo' => true,
+        ]);
+
+        $entidad = Entidad::create([
+            'tipo_persona' => 'Juridica',
+            'nombre' => 'PR-C Unique Entidad',
+            'identificacion' => 'PR-C-UNIQUE-'.uniqid(),
+            'estado' => 'Activo',
+        ]);
+
+        $payload = [
+            'app_id' => $app->id,
+            'entidad_id' => $entidad->id,
+            'estado' => 'Activo',
+            'fecha_contrato' => now()->toDateString(),
+            'created_at' => now(),
+            'updated_at' => now(),
+        ];
+
+        DB::table('app_entidad')->insert($payload);
+
+        // Second insert with same (app_id, entidad_id) MUST fail.
+        $this->expectException(QueryException::class);
+        DB::table('app_entidad')->insert($payload);
     }
 }
