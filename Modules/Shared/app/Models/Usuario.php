@@ -3,11 +3,13 @@
 namespace Modules\Shared\Models;
 
 use App\Models\Entidad;
+use App\Models\Persona;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Foundation\Auth\User as Authenticatable;
+use Illuminate\Support\Facades\DB;
 use Laravel\Sanctum\HasApiTokens;
 
 class Usuario extends Authenticatable
@@ -22,6 +24,7 @@ class Usuario extends Authenticatable
         'password_hash',
         'rol_id',
         'estado',
+        'persona_id',
         'created_by',
         'updated_by',
     ];
@@ -35,6 +38,52 @@ class Usuario extends Authenticatable
         return [
             'password_hash' => 'hashed',
         ];
+    }
+
+    /**
+     * Auto-create a backing persona row when the caller doesn't supply
+     * `persona_id` (per migration 000003 the column is NOT NULL).
+     *
+     * Per `tenant-data-model-correction` (commit fe99f70): "un usuario
+     * siempre sera antes un colaborador de una entidad, o propia o de
+     * cliente o de Proveedor." — every auth-credential row represents a
+     * natural person, so we backfill the persona from `usuarios.email`.
+     *
+     * Skipped when:
+     *   - `persona_id` is already set (caller-supplied)
+     *   - the model is being updated (not created)
+     *   - `email` is missing (test fixture with no email)
+     *   - we're inside a DB::transaction that will backfill externally
+     *     (the bulk-import seeders prefer explicit IDs)
+     */
+    protected static function booted(): void
+    {
+        static::creating(function (Usuario $usuario) {
+            if ($usuario->persona_id !== null) {
+                return;
+            }
+
+            if (empty($usuario->email)) {
+                return;
+            }
+
+            // Match an existing persona first (idempotent, mirrors the
+            // backfill in migration 000003).
+            $personaId = DB::table('personas')
+                ->where('email_principal', $usuario->email)
+                ->value('id');
+
+            if (! $personaId) {
+                $personaId = DB::table('personas')->insertGetId([
+                    'nombres' => $usuario->nombre ?: $usuario->email,
+                    'email_principal' => $usuario->email,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+            }
+
+            $usuario->persona_id = $personaId;
+        });
     }
 
     public function getAuthPassword(): string
@@ -51,6 +100,11 @@ class Usuario extends Authenticatable
     public function rol(): BelongsTo
     {
         return $this->belongsTo(Rol::class, 'rol_id');
+    }
+
+    public function persona(): BelongsTo
+    {
+        return $this->belongsTo(Persona::class, 'persona_id');
     }
 
     /**

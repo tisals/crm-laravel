@@ -54,8 +54,39 @@ return new class extends Migration
         ");
 
         // Step 2 — drop contacto.entidad_id index + column (idempotent).
+        // The column participates in the FK `contacto_entidad_id_foreign`
+        // (declared in 2026_05_06_000011_create_contacto_table.php) and
+        // the unique key `contacto_entidad_id_email_contacto_unique`.
+        // Both must be removed BEFORE the column itself can be dropped.
         DB::statement('DROP INDEX IF EXISTS idx_contacto_entidad_active ON contacto');
+        $this->dropForeignKeyIfExists('contacto', 'entidad_id');
+        $this->dropUniqueKeyIfExists('contacto', 'contacto_entidad_id_email_contacto_unique');
         DB::statement('ALTER TABLE contacto DROP COLUMN IF EXISTS entidad_id');
+    }
+
+    private function dropForeignKeyIfExists(string $table, string $column): void
+    {
+        $fkName = "{$table}_{$column}_foreign";
+        $exists = DB::select(
+            'SELECT 1 FROM information_schema.KEY_COLUMN_USAGE
+             WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ? AND CONSTRAINT_NAME = ? LIMIT 1',
+            [$table, $fkName]
+        );
+        if (! empty($exists)) {
+            DB::statement("ALTER TABLE `{$table}` DROP FOREIGN KEY `{$fkName}`");
+        }
+    }
+
+    private function dropUniqueKeyIfExists(string $table, string $keyName): void
+    {
+        $exists = DB::select(
+            'SELECT 1 FROM information_schema.STATISTICS
+             WHERE TABLE_SCHEMA = DATABASE() AND TABLE_NAME = ? AND INDEX_NAME = ? LIMIT 1',
+            [$table, $keyName]
+        );
+        if (! empty($exists)) {
+            DB::statement("ALTER TABLE `{$table}` DROP INDEX `{$keyName}`");
+        }
     }
 
     public function down(): void
