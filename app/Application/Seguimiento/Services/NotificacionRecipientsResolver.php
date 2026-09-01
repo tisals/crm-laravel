@@ -11,8 +11,8 @@ use Modules\CRM\Models\Seguimiento;
  * Resolves the recipients for a FollowUpNotification.
  *
  * Priority order:
- *   1. Comercials mapped to the seguimiento's entidad via `entidad_usuario`
- *      (status=Activo, rol=Comercial).
+ *   1. Comercials mapped to the seguimiento's entidad via `entidad_persona`
+ *      joined through `usuarios.persona_id` (status=Activo, rol=Comercial).
  *   2. Fallback: all Admin and SuperAdmin users (status=Activo).
  *
  * Returns an empty collection if neither group has any recipient.
@@ -33,9 +33,9 @@ class NotificacionRecipientsResolver
         if ($comercialRolId && $seguimiento->entidad_id) {
             $comerciales = Usuario::where('rol_id', $comercialRolId)
                 ->where('estado', 'Activo')
-                ->whereIn('id', function ($q) use ($seguimiento) {
-                    $q->select('usuario_id')
-                        ->from('entidad_usuario')
+                ->whereIn('persona_id', function ($q) use ($seguimiento) {
+                    $q->select('persona_id')
+                        ->from('entidad_persona')
                         ->where('entidad_id', $seguimiento->entidad_id);
                 })
                 ->get();

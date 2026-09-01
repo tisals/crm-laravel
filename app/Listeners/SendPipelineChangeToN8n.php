@@ -23,7 +23,8 @@ class SendPipelineChangeToN8n implements ShouldQueue
         $oportunidad = Oportunidad::with(['contacto', 'entidad.usuarios', 'pipeline', 'pipelineEtapa'])
             ->find($event->oportunidadId);
 
-        // Comercial asignado comes from entidad_usuario pivot
+        // Comercial asignado comes from entidad_persona pivot (renamed in
+        // commit fe99f70; resolved via usuarios.persona_id FK).
         $comercial = $oportunidad?->entidad?->usuarios?->first();
 
         $payload = [

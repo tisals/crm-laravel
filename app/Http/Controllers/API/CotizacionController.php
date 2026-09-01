@@ -178,7 +178,8 @@ class CotizacionController extends Controller
     private function buildPdfData(Oportunidad $oportunidad): array
     {
         $oportunidad->loadMissing('creador');
-        // Load entidad with its assigned users (comercial via entidad_usuario pivot)
+        // Load entidad with its assigned users (comercial via entidad_persona pivot
+        // joined through usuarios.persona_id FK added in migration 000003).
         $oportunidad->loadMissing('entidad.usuarios');
         $detalles = $oportunidad->detalles->map(fn ($d) => [
             'producto' => $d->producto?->nombre ?? '—',

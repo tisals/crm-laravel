@@ -60,7 +60,8 @@ class SeguimientoController extends Controller
      * GET /api/v1/seguimientos/mios
      *
      * Shortcut for the current user's seguimientos. Scoped by role:
-     * - Comercial → only entities mapped via entidad_usuario
+     * - Comercial → only entities mapped via entidad_persona (resolved
+     *   through usuarios.persona_id, NOT NULL after migration 000003)
      * - Admin/SuperAdmin → all
      */
     public function misSeguimientos(Request $request): JsonResponse

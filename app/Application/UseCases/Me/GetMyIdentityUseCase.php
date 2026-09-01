@@ -128,11 +128,14 @@ class GetMyIdentityUseCase
         }
 
         // Apps the user has access to (transitively via entidad).
+        // Per commit fe99f70: pivot is `entidad_persona` (keyed on persona_id);
+        // join via the NOT NULL `usuarios.persona_id` FK added in migration 000003.
         $apps = $conn
-            ->table('entidad_usuario')
-            ->join('app_entidad', 'entidad_usuario.entidad_id', '=', 'app_entidad.entidad_id')
+            ->table('entidad_persona')
+            ->join('usuarios', 'usuarios.persona_id', '=', 'entidad_persona.persona_id')
+            ->join('app_entidad', 'entidad_persona.entidad_id', '=', 'app_entidad.entidad_id')
             ->join('apps', 'app_entidad.app_id', '=', 'apps.id')
-            ->where('entidad_usuario.usuario_id', $userId)
+            ->where('usuarios.id', $userId)
             ->where('app_entidad.estado', 'Activo')
             ->whereNull('apps.deleted_at')
             ->groupBy('apps.id', 'apps.slug', 'apps.nombre', 'apps.tipo', 'apps.auth_type')
@@ -142,7 +145,7 @@ class GetMyIdentityUseCase
                 'apps.nombre',
                 'apps.tipo',
                 'apps.auth_type',
-                DB::raw('COUNT(DISTINCT entidad_usuario.entidad_id) as entidades_count')
+                DB::raw('COUNT(DISTINCT entidad_persona.entidad_id) as entidades_count')
             )
             ->orderBy('apps.nombre')
             ->get()
@@ -180,8 +183,9 @@ class GetMyIdentityUseCase
         $scopedPermisos = $conn
             ->table('usuario_app_permisos as uap')
             ->join('app_entidad as ae', 'ae.app_id', '=', 'uap.app_id')
-            ->join('entidad_usuario as eu', 'eu.entidad_id', '=', 'ae.entidad_id')
-            ->where('eu.usuario_id', $userId)
+            ->join('entidad_persona as ep', 'ep.entidad_id', '=', 'ae.entidad_id')
+            ->join('usuarios as u', 'u.persona_id', '=', 'ep.persona_id')
+            ->where('u.id', $userId)
             ->where('ae.estado', 'Activo')
             ->whereNull('uap.deleted_at')
             ->distinct()

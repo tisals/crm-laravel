@@ -83,12 +83,15 @@ class GetDashboardUseCase
                 ->whereYear('created_at', now()->year);
         }
 
-        // Filter leads (contactos) by commercial if specified
+        // Filter leads (contactos) by commercial if specified.
+        // Per commit fe99f70: pivot is `entidad_persona` (keyed on persona_id);
+        // the link user → entidad now resolves via `usuarios.persona_id`.
         if ($comercialId) {
             $leadsQuery->whereIn('entidad_id', function ($q) use ($comercialId) {
-                $q->select('entidad_id')
-                    ->from('entidad_usuario')
-                    ->where('usuario_id', $comercialId);
+                $q->select('ep.entidad_id')
+                    ->from('entidad_persona as ep')
+                    ->join('usuarios as u', 'u.persona_id', '=', 'ep.persona_id')
+                    ->where('u.id', $comercialId);
             });
         }
 
@@ -151,9 +154,10 @@ class GetDashboardUseCase
             $this->applyDateFilter($q, $fechaInicio, $fechaFin, 'entidad.created_at');
             if ($comercialId) {
                 $q->whereIn('id', function ($sq) use ($comercialId) {
-                    $sq->select('entidad_id')
-                        ->from('entidad_usuario')
-                        ->where('usuario_id', $comercialId);
+                    $sq->select('ep.entidad_id')
+                        ->from('entidad_persona as ep')
+                        ->join('usuarios as u', 'u.persona_id', '=', 'ep.persona_id')
+                        ->where('u.id', $comercialId);
                 });
             }
             $entidadesPorMes[$this->mesNombre($m)] = (int) $q->count();
@@ -288,6 +292,8 @@ class GetDashboardUseCase
 
     private function getComercialesVentas(?int $comercialId, ?string $fechaInicio, ?string $fechaFin): array
     {
+        // Per commit fe99f70: pivot is `entidad_persona` (keyed on persona_id);
+        // join from usuarios via the NOT NULL `usuarios.persona_id` FK.
         $query = DB::table('usuarios')
             ->select(
                 'usuarios.id',
@@ -295,8 +301,8 @@ class GetDashboardUseCase
                 DB::raw('COUNT(DISTINCT oportunidad.id) as oportunidades_count'),
                 DB::raw('SUM(detalle_oportunidad.vr_total) as total_ventas')
             )
-            ->join('entidad_usuario', 'usuarios.id', '=', 'entidad_usuario.usuario_id')
-            ->join('entidad', 'entidad.id', '=', 'entidad_usuario.entidad_id')
+            ->join('entidad_persona', 'usuarios.persona_id', '=', 'entidad_persona.persona_id')
+            ->join('entidad', 'entidad.id', '=', 'entidad_persona.entidad_id')
             ->join('oportunidad', 'oportunidad.entidad_id', '=', 'entidad.id')
             ->join('pipeline_etapas', 'oportunidad.pipeline_etapa_id', '=', 'pipeline_etapas.id')
             ->join('detalle_oportunidad', 'detalle_oportunidad.oportunidad_id', '=', 'oportunidad.id')
@@ -378,9 +384,10 @@ class GetDashboardUseCase
 
         if ($comercialId) {
             $query->whereIn('entidad_id', function ($q) use ($comercialId) {
-                $q->select('entidad_id')
-                    ->from('entidad_usuario')
-                    ->where('usuario_id', $comercialId);
+                $q->select('ep.entidad_id')
+                    ->from('entidad_persona as ep')
+                    ->join('usuarios as u', 'u.persona_id', '=', 'ep.persona_id')
+                    ->where('u.id', $comercialId);
             });
         }
 
@@ -414,8 +421,11 @@ class GetDashboardUseCase
     }
 
     /**
-     * Apply the commercial filter (entidad_usuario) to a query.
-     * Adds: WHERE entidad_id IN (SELECT entidad_id FROM entidad_usuario WHERE usuario_id = ?)
+     * Apply the commercial filter (entidad_persona) to a query.
+     * Adds: WHERE oportunidad.entidad_id IN
+     *   (SELECT ep.entidad_id FROM entidad_persona ep
+     *    JOIN usuarios u ON u.persona_id = ep.persona_id
+     *    WHERE u.id = ?)
      */
     private function applyCommercialFilter($query, ?int $comercialId): void
     {
@@ -424,9 +434,10 @@ class GetDashboardUseCase
         }
 
         $query->whereIn('oportunidad.entidad_id', function ($q) use ($comercialId) {
-            $q->select('entidad_id')
-                ->from('entidad_usuario')
-                ->where('usuario_id', $comercialId);
+            $q->select('ep.entidad_id')
+                ->from('entidad_persona as ep')
+                ->join('usuarios as u', 'u.persona_id', '=', 'ep.persona_id')
+                ->where('u.id', $comercialId);
         });
     }
 

@@ -21,7 +21,8 @@ interface SeguimientoRepositoryInterface
      * Paginate seguimientos visible to the given user.
      *
      * For Comercial users, only seguimientos linked to entidades in the user's
-     * `entidad_usuario` rows are returned. For Admin/SuperAdmin, all seguimientos.
+     * `entidad_persona` rows are returned (resolved through
+     * `usuarios.persona_id` FK added in migration 000003). For Admin/SuperAdmin, all seguimientos.
      *
      * @param  array<string, mixed>  $filters  Standard filter keys: estado, fecha_desde,
      *                                         fecha_hasta, tipo, oportunidad_id, contacto_id

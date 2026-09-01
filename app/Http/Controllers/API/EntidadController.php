@@ -33,7 +33,11 @@ class EntidadController extends Controller
     /**
      * Comprueba si el usuario autenticado puede acceder a la entidad:
      * - SuperAdmin y roles no Comercial: siempre permitido.
-     * - Comercial: solo si la entidad está asignada a su usuario en `entidad_usuario`.
+     * - Comercial: solo si la entidad está asignada a su usuario en `entidad_persona`.
+     *
+     * Per commit fe99f70 + migration 000003: the pivot is now keyed on
+     * `persona_id` (NOT `usuario_id`), joined via the `usuarios.persona_id`
+     * FK (NOT NULL).
      *
      * Devuelve null si está permitido, o una JsonResponse 403 si no.
      */
@@ -58,9 +62,10 @@ class EntidadController extends Controller
             return $this->errorResponse('Entidad no encontrada.', 404);
         }
 
-        $isAssigned = DB::table('entidad_usuario')
-            ->where('entidad_id', $entidadId)
-            ->where('usuario_id', $user->id)
+        $isAssigned = DB::table('entidad_persona')
+            ->join('usuarios', 'usuarios.persona_id', '=', 'entidad_persona.persona_id')
+            ->where('entidad_persona.entidad_id', $entidadId)
+            ->where('usuarios.id', $user->id)
             ->exists();
 
         if (! $isAssigned) {

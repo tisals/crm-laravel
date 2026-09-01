@@ -20,7 +20,8 @@ use App\Domain\Repositories\PersonaRepositoryInterface;
  *   - persona not in DB    → NOT_FOUND
  *
  * The "primary entidad id" for a non-admin comes from the user's first
- * `entidad_usuario` binding; if the user has no binding at all, the
+ * `entidad_persona` binding (resolved through `usuarios.persona_id` FK
+ * added in migration 000003). If the user has no binding at all, the
  * tenant check is bypassed (Sanctum auth is the only gate).
  *
  * The admin check uses `MultiAppRbacService` with the wildcard `*` —
@@ -49,7 +50,7 @@ class ShowPersonaUseCase
         }
 
         // Non-admin path: enforce the entidad match. A user with no
-        // `entidad_usuario` binding has no enforcement scope yet.
+        // `entidad_persona` binding has no enforcement scope yet.
         if ($userEntidadId !== null && (int) $persona->entidad_id !== $userEntidadId) {
             return PersonaLookupResult::forbidden();
         }

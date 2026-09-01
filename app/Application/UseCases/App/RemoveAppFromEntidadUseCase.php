@@ -21,8 +21,9 @@ class RemoveAppFromEntidadUseCase
      * Cascade (the multi-app behavior):
      *   After the pivot is removed, delete any `usuario_app_permisos`
      *   rows for (app_id, user) where user belongs to the entity via
-     *   `entidad_usuario`. This way the affected users immediately lose
-     *   the app-scoped overrides. Core rol permissions are unaffected.
+     *   `entidad_persona` (resolved through `usuarios.persona_id`).
+     *   This way the affected users immediately lose the app-scoped
+     *   overrides. Core rol permissions are unaffected.
      *
      *   Affected users' identity snapshots are marked stale so the next
      *   /me/identity read recomputes.
@@ -45,12 +46,16 @@ class RemoveAppFromEntidadUseCase
     /**
      * For every user on the entity, delete their scoped grants for the
      * given app. Then mark their snapshot row stale.
+     *
+     * Per commit fe99f70: pivot is `entidad_persona` (keyed on persona_id),
+     * resolved to `usuarios.id` via the NOT NULL `usuarios.persona_id` FK.
      */
     private function cascade(int $appId, int $entidadId): void
     {
-        $userIds = DB::table('entidad_usuario')
-            ->where('entidad_id', $entidadId)
-            ->pluck('usuario_id')
+        $userIds = DB::table('entidad_persona as ep')
+            ->join('usuarios as u', 'u.persona_id', '=', 'ep.persona_id')
+            ->where('ep.entidad_id', $entidadId)
+            ->pluck('u.id')
             ->map(fn ($id) => (int) $id)
             ->all();
 

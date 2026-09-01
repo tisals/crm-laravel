@@ -39,6 +39,11 @@ class EloquentContactoRepository extends BaseRepository implements ContactoRepos
 
     /**
      * Query that always brings the entidad name for display in frontend lists.
+     *
+     * Per commit fe99f70: `contacto.entidad_id` was dropped. The contacto →
+     * entidad link now goes through the persona pivot:
+     *   contacto.persona_id → persona.entidad_id (set on Persona rows)
+     *
      * Routes to the read replica only when actually configured (different
      * host/port than the master). Otherwise uses the master — critical for
      * tests that use RefreshDatabase transaction isolation.
@@ -52,8 +57,12 @@ class EloquentContactoRepository extends BaseRepository implements ContactoRepos
             ? (new EloquentContacto)->setConnection($this->readConnection)
             : new EloquentContacto;
 
+        // Left join through persona → entidad so we still pick up the
+        // entidad_nombre for display, while accommodating contactos that
+        // lack a persona_id (orphans under the new model).
         return $model->newQuery()
-            ->leftJoin('entidad', 'contacto.entidad_id', '=', 'entidad.id')
+            ->leftJoin('personas', 'contacto.persona_id', '=', 'personas.id')
+            ->leftJoin('entidad', 'personas.entidad_id', '=', 'entidad.id')
             ->select('contacto.*', 'entidad.nombre as entidad_nombre');
     }
 
@@ -77,13 +86,19 @@ class EloquentContactoRepository extends BaseRepository implements ContactoRepos
 
     protected function applyFilters($query, array $filters): Builder
     {
-        // Auto-filter by entidad_usuario for Comercial role
+        // Auto-filter by entidad_persona (via usuarios.persona_id) for Comercial role.
         $user = Auth::user();
         if ($user && $user->rol?->nombre === 'Comercial') {
-            $query->whereIn('contacto.entidad_id', function ($q) use ($user) {
-                $q->select('entidad_id')
-                    ->from('entidad_usuario')
-                    ->where('usuario_id', $user->id);
+            $query->whereIn('contacto.persona_id', function ($q) use ($user) {
+                $q->select('ep.persona_id')
+                    ->from('entidad_persona as ep')
+                    ->where('ep.entidad_id', function ($sq) use ($user) {
+                        // Match the user's entities via the new pivot.
+                        $sq->select('entidad_id')
+                            ->from('entidad_persona')
+                            ->join('usuarios', 'usuarios.persona_id', '=', 'entidad_persona.persona_id')
+                            ->where('usuarios.id', $user->id);
+                    });
             });
         }
 

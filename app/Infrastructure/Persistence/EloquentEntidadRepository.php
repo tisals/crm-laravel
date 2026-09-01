@@ -56,13 +56,15 @@ class EloquentEntidadRepository extends BaseRepository implements EntidadReposit
 
     protected function applyFilters($query, array $filters): Builder
     {
-        // Auto-filter by entidad_usuario for Comercial role
+        // Auto-filter by entidad_persona (via usuarios.persona_id FK) for Comercial role.
+        // Per commit fe99f70 + migration 000003.
         $user = Auth::user();
         if ($user && $user->rol?->nombre === 'Comercial') {
             $query->whereIn('id', function ($q) use ($user) {
-                $q->select('entidad_id')
-                    ->from('entidad_usuario')
-                    ->where('usuario_id', $user->id);
+                $q->select('ep.entidad_id')
+                    ->from('entidad_persona as ep')
+                    ->join('usuarios as u', 'u.persona_id', '=', 'ep.persona_id')
+                    ->where('u.id', $user->id);
             });
         }
 

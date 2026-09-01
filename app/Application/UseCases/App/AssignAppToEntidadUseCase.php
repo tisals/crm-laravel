@@ -20,7 +20,8 @@ class AssignAppToEntidadUseCase
      *
      * Cascade (the multi-app behavior — see spec/app-scoped-permissions):
      *   After the assignment is written, for every user that belongs to
-     *   the entity via `entidad_usuario`, we propagate default scoped
+     *   the entity via `entidad_persona` (resolved through the user's
+     *   `usuarios.persona_id` FK), we propagate default scoped
      *   permissions into `usuario_app_permisos`. The defaults come from
      *   the user's rol's `permisos` table (excluding the wildcard '*').
      *
@@ -94,13 +95,19 @@ class AssignAppToEntidadUseCase
      * For every user on the entity, copy the user's rol default permisos
      * (excluding the wildcard '*') into `usuario_app_permisos` for this
      * app, then mark the affected users' snapshot rows as stale.
+     *
+     * The cascade walks: entidad → entidad_persona (pivot) → usuarios
+     * (joined on usuarios.persona_id = entidad_persona.persona_id).
      */
     private function cascade(int $appId, int $entidadId): void
     {
         // Collect (usuario_id, rol_id) tuples for users in this entidad.
-        $userRows = DB::table('entidad_usuario as eu')
-            ->join('usuarios as u', 'eu.usuario_id', '=', 'u.id')
-            ->where('eu.entidad_id', $entidadId)
+        // Per commit fe99f70: pivot is now entidad_persona (composite PK
+        // on persona_id+entidad_id), joined to usuarios via the NOT NULL
+        // `usuarios.persona_id` FK added in migration 000003.
+        $userRows = DB::table('entidad_persona as ep')
+            ->join('usuarios as u', 'u.persona_id', '=', 'ep.persona_id')
+            ->where('ep.entidad_id', $entidadId)
             ->whereNull('u.deleted_at')
             ->select('u.id as usuario_id', 'u.rol_id')
             ->get();

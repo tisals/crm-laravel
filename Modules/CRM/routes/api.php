@@ -30,7 +30,8 @@ Route::prefix('v1')->group(function () {
 
     // Self-service endpoints (auth:sanctum, throttle:api). "me/apps" lets
     // the authenticated user list which apps they have access to
-    // (transitively via entidad_usuario + app_entidad).
+    // (transitively via entidad_persona + app_entidad; user resolves
+    //  through usuarios.persona_id FK added in migration 000003).
     Route::middleware(['auth:sanctum', 'throttle:api'])->prefix('me')->group(function () {
         Route::get('/apps', [MeController::class, 'apps'])->name('me.apps');
         Route::get('/apps/{slug}/permisos', [MeController::class, 'appPermisos'])->name('me.apps.permisos');

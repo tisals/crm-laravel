@@ -63,12 +63,15 @@ class GetUserIdentityUseCase
             return null;
         }
 
-        // 2. Apps transitively assigned (user -> entidad_usuario -> app_entidad)
+        // 2. Apps transitively assigned
+        //    user -> usuarios.persona_id -> entidad_persona -> app_entidad
+        //    (per commit fe99f70 + migration 000003).
         $apps = DB::connection($conn)
-            ->table('entidad_usuario')
-            ->join('app_entidad', 'entidad_usuario.entidad_id', '=', 'app_entidad.entidad_id')
+            ->table('entidad_persona')
+            ->join('usuarios', 'usuarios.persona_id', '=', 'entidad_persona.persona_id')
+            ->join('app_entidad', 'entidad_persona.entidad_id', '=', 'app_entidad.entidad_id')
             ->join('apps', 'app_entidad.app_id', '=', 'apps.id')
-            ->where('entidad_usuario.usuario_id', $targetUserId)
+            ->where('usuarios.id', $targetUserId)
             ->where('app_entidad.estado', 'Activo')
             ->whereNull('apps.deleted_at')
             ->groupBy(
@@ -81,7 +84,7 @@ class GetUserIdentityUseCase
                 'apps.tipo',
                 'apps.auth_type',
                 'apps.activo',
-                DB::raw('COUNT(DISTINCT entidad_usuario.entidad_id) as entidades_count')
+                DB::raw('COUNT(DISTINCT entidad_persona.entidad_id) as entidades_count')
             )
             ->orderBy('apps.nombre')
             ->get()

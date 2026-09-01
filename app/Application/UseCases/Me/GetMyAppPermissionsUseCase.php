@@ -41,11 +41,14 @@ class GetMyAppPermissionsUseCase
             return null;
         }
 
+        // Per commit fe99f70: pivot is `entidad_persona`; user → entidad
+        // resolves via `usuarios.persona_id` (NOT NULL FK added in migration 000003).
         $entities = DB::connection('mysql_read')
-            ->table('entidad_usuario')
-            ->join('app_entidad', 'entidad_usuario.entidad_id', '=', 'app_entidad.entidad_id')
-            ->join('entidad', 'entidad_usuario.entidad_id', '=', 'entidad.id')
-            ->where('entidad_usuario.usuario_id', $userId)
+            ->table('entidad_persona')
+            ->join('usuarios', 'usuarios.persona_id', '=', 'entidad_persona.persona_id')
+            ->join('app_entidad', 'entidad_persona.entidad_id', '=', 'app_entidad.entidad_id')
+            ->join('entidad', 'entidad_persona.entidad_id', '=', 'entidad.id')
+            ->where('usuarios.id', $userId)
             ->where('app_entidad.app_id', $app->id)
             ->where('app_entidad.estado', 'Activo')
             ->whereNull('entidad.deleted_at')
