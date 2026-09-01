@@ -5,11 +5,28 @@ namespace App\Http\Controllers\API;
 use App\Http\Controllers\API\Concerns\ApiResponse;
 use App\Http\Controllers\Controller;
 use App\Models\Entidad;
+use App\Models\Persona;
 use App\Models\Usuario;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 
-class EntidadUsuarioController extends Controller
+/**
+ * REST controller for the `entidad_persona` pivot (renamed from
+ * `entidad_usuario` in commit fe99f70, see tenant-data-model-correction).
+ *
+ * The endpoint shape stays the same as before — `usuario_id` is still the
+ * public-facing input — but the persistence layer resolves the user → persona
+ * link (via `usuarios.persona_id` FK, NOT NULL after migration 000003)
+ * and writes/reads `entidad_persona` (composite PK on persona_id+entidad_id).
+ *
+ * Naming rationale: the controller and route names match the new pivot
+ * model (`EntidadPersona`). The legacy route path /api/v1/entidad-usuario
+ * is preserved verbatim to avoid breaking external callers (FastAPI
+ * integration tests, etc.) — only the backing class and pivot table
+ * changed.
+ */
+class EntidadPersonaController extends Controller
 {
     use ApiResponse;
 
@@ -58,12 +75,28 @@ class EntidadUsuarioController extends Controller
 
         $entidad = Entidad::find($validated['entidad_id']);
 
-        // Check if already assigned
-        if ($entidad->usuarios()->where('usuario_id', $validated['usuario_id'])->exists()) {
+        // Already assigned? (look up via the same pivot the relation uses)
+        $exists = DB::table('entidad_persona as ep')
+            ->join('usuarios as u', 'u.persona_id', '=', 'ep.persona_id')
+            ->where('ep.entidad_id', $validated['entidad_id'])
+            ->where('u.id', $validated['usuario_id'])
+            ->exists();
+
+        if ($exists) {
             return $this->errorResponse('El usuario ya está asignado a esta entidad.', 409);
         }
 
-        $entidad->usuarios()->attach($validated['usuario_id']);
+        // Resolve the user's persona_id (NOT NULL FK added in migration 000003)
+        // and write the pivot row directly. We can't use the relation's
+        // attach() because the relation is hasManyThrough (intermediate),
+        // not belongsToMany — so we insert explicitly.
+        DB::table('entidad_persona')->insert([
+            'entidad_id' => (int) $validated['entidad_id'],
+            'persona_id' => (int) $usuario->persona_id,
+            'categoria' => 'asignacion',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
 
         return $this->successResponse(
             ['usuario_id' => (int) $validated['usuario_id'], 'entidad_id' => (int) $validated['entidad_id']],
@@ -84,14 +117,16 @@ class EntidadUsuarioController extends Controller
             'entidad_id' => 'required|integer|exists:entidad,id',
         ]);
 
-        $entidad = Entidad::find($validated['entidad_id']);
+        // Idempotent: if no assignment exists, treat as success
+        $deleted = DB::table('entidad_persona as ep')
+            ->join('usuarios as u', 'u.persona_id', '=', 'ep.persona_id')
+            ->where('ep.entidad_id', $validated['entidad_id'])
+            ->where('u.id', $validated['usuario_id'])
+            ->delete();
 
-        // Idempotent: if assignment doesn't exist, treat as success
-        if (! $entidad->usuarios()->where('usuario_id', $validated['usuario_id'])->exists()) {
+        if ($deleted === 0) {
             return $this->successResponse(null, 200, 'La asignación no existía (idempotente).');
         }
-
-        $entidad->usuarios()->detach($validated['usuario_id']);
 
         return $this->successResponse(null, 200, 'Usuario desasignado de la entidad exitosamente.');
     }

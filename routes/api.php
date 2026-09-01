@@ -13,7 +13,7 @@ use App\Http\Controllers\API\DashboardController;
 use App\Http\Controllers\API\DetalleOportunidadController;
 use App\Http\Controllers\API\DetalleServicioController;
 use App\Http\Controllers\API\EntidadController;
-use App\Http\Controllers\API\EntidadUsuarioController;
+use App\Http\Controllers\API\EntidadPersonaController;
 use App\Http\Controllers\API\EtiquetaController;
 use App\Http\Controllers\API\LugarEntidadController;
 use App\Http\Controllers\API\MaestroController;
@@ -333,11 +333,13 @@ Route::prefix('v1')->group(function () {
             Route::delete('/movimientos/{id}', [MovimientoController::class, 'destroy'])->name('movimientos.destroy');
         });
 
-        // Entity-User assignment
+        // Entity-User assignment (controller renamed to EntidadPersonaController
+        // to match the entidad_persona pivot table; route paths preserved for
+        // backward-compat with FastAPI integration).
         Route::middleware('rbac')->group(function () {
-            Route::get('/entidad/{id}/usuarios', [EntidadUsuarioController::class, 'index'])->name('entidad.usuarios.index');
-            Route::post('/entidad-usuario', [EntidadUsuarioController::class, 'store'])->name('entidad-usuario.store');
-            Route::delete('/entidad-usuario', [EntidadUsuarioController::class, 'destroy'])->name('entidad-usuario.destroy');
+            Route::get('/entidad/{id}/usuarios', [EntidadPersonaController::class, 'index'])->name('entidad.usuarios.index');
+            Route::post('/entidad-usuario', [EntidadPersonaController::class, 'store'])->name('entidad-usuario.store');
+            Route::delete('/entidad-usuario', [EntidadPersonaController::class, 'destroy'])->name('entidad-usuario.destroy');
         });
     });
 });
