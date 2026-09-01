@@ -4,7 +4,6 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Modules\CRM\Models\Oportunidad;
 
@@ -112,15 +111,59 @@ class Entidad extends Model
         ];
     }
 
-    public function usuarios(): BelongsToMany
+    /**
+     * Users (auth credentials) linked to this entidad via the
+     * `entidad_persona` pivot and `usuarios.persona_id` FK.
+     *
+     * Per `tenant-data-model-correction` (commit fe99f70): the pivot
+     * `entidad_usuario` was renamed to `entidad_persona` and its FK
+     * retargeted from `usuarios.id` to `personas.id`. Since `usuarios`
+     * has a NOT NULL `persona_id` FK back to `personas`, we can resolve
+     * user ↔ entidad in two hops:
+     *
+     *   entidad (this) ──► entidad_persona ──► usuarios
+     *                       (entidad_id)        (persona_id)
+     *
+     * The composite PK on `entidad_persona` (persona_id, entidad_id)
+     * keeps the relation deduplicated per (persona, entidad) pair, and
+     * `usuarios.persona_id` may not be unique (one persona can have
+     * multiple auth rows), so a single user can still appear once per
+     * their matching persona.
+     */
+    public function usuarios()
     {
-        return $this->belongsToMany(Usuario::class, 'entidad_usuario', 'entidad_id', 'usuario_id')
-            ->withTimestamps();
+        return $this->hasManyThrough(
+            Usuario::class,
+            EntidadPersona::class,
+            'entidad_id',   // FK on entidad_persona -> entidad.id
+            'persona_id',   // FK on usuarios -> entidad_persona.persona_id
+            'id',           // local key on entidad
+            'persona_id'    // local key on entidad_persona
+        );
     }
 
+    /**
+     * Contactos linked to this entidad via the persona pivot:
+     *
+     *   entidad (this) ──► personas ──► contacto
+     *                       (entidad_id)   (persona_id)
+     *
+     * Per `tenant-data-model-correction` (commit fe99f70): `contacto.entidad_id`
+     * was dropped because the contacto ↔ entidad relationship now goes through
+     * the persona identity. Contactos without a `persona_id` are not
+     * associated with any entidad in the new model (they were orphans under
+     * the old direct FK too — see migration 000002's drop rationale).
+     */
     public function contactos()
     {
-        return $this->hasMany(Contacto::class, 'entidad_id');
+        return $this->hasManyThrough(
+            Contacto::class,
+            Persona::class,
+            'entidad_id',   // FK on personas -> entidad.id
+            'persona_id',   // FK on contacto -> persona.id
+            'id',           // local key on entidad
+            'id'            // local key on persona
+        );
     }
 
     public function oportunidades()
