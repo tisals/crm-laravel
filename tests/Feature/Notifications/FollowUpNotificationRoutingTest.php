@@ -13,7 +13,7 @@ use Tests\TestCase;
 
 /**
  * T-BE-10: FollowUpNotification routing:
- *   - Primary: comercials mapped to seguimiento's entidad via entidad_usuario.
+ *   - Primary: comercials mapped to seguimiento's entidad via entidad_persona.
  *   - Fallback: Admin and SuperAdmin users.
  *   - No recipients: returns empty collection (caller logs warning).
  *
@@ -83,9 +83,12 @@ class FollowUpNotificationRoutingTest extends TestCase
         $otherComercial = $this->makeUsuario('other@test.com', $comercialRol);
 
         $entidad = $this->makeEntidad('900111111');
-        \DB::table('entidad_usuario')->insert([
+        // Per commit fe99f70: pivot is `entidad_persona` keyed on
+        // usuarios.persona_id (NOT NULL FK added in migration 000003).
+        \DB::table('entidad_persona')->insert([
             'entidad_id' => $entidad->id,
-            'usuario_id' => $comercial->id,
+            'persona_id' => $comercial->persona_id,
+            'categoria' => 'asignacion',
             'created_at' => now(),
             'updated_at' => now(),
         ]);
@@ -107,9 +110,10 @@ class FollowUpNotificationRoutingTest extends TestCase
         $c2 = $this->makeUsuario('c2@test.com', $comercialRol);
 
         $entidad = $this->makeEntidad('900222222');
-        \DB::table('entidad_usuario')->insert([
-            ['entidad_id' => $entidad->id, 'usuario_id' => $c1->id, 'created_at' => now(), 'updated_at' => now()],
-            ['entidad_id' => $entidad->id, 'usuario_id' => $c2->id, 'created_at' => now(), 'updated_at' => now()],
+        // Per commit fe99f70: pivot is `entidad_persona` keyed on persona_id.
+        \DB::table('entidad_persona')->insert([
+            ['entidad_id' => $entidad->id, 'persona_id' => $c1->persona_id, 'categoria' => 'asignacion', 'created_at' => now(), 'updated_at' => now()],
+            ['entidad_id' => $entidad->id, 'persona_id' => $c2->persona_id, 'categoria' => 'asignacion', 'created_at' => now(), 'updated_at' => now()],
         ]);
 
         $seguimiento = $this->makeSeguimiento($entidad->id);
@@ -131,7 +135,7 @@ class FollowUpNotificationRoutingTest extends TestCase
         $superAdmin = $this->makeUsuario('super@test.com', $superAdminRol);
 
         $entidad = $this->makeEntidad('900333333');
-        // No entidad_usuario row.
+        // No entidad_persona row.
 
         $seguimiento = $this->makeSeguimiento($entidad->id);
 
@@ -166,9 +170,10 @@ class FollowUpNotificationRoutingTest extends TestCase
         $inactive = $this->makeUsuario('inactive@test.com', $comercialRol, 'Inactivo');
 
         $entidad = $this->makeEntidad('900555555');
-        \DB::table('entidad_usuario')->insert([
-            ['entidad_id' => $entidad->id, 'usuario_id' => $active->id, 'created_at' => now(), 'updated_at' => now()],
-            ['entidad_id' => $entidad->id, 'usuario_id' => $inactive->id, 'created_at' => now(), 'updated_at' => now()],
+        // Per commit fe99f70: pivot is `entidad_persona` keyed on persona_id.
+        \DB::table('entidad_persona')->insert([
+            ['entidad_id' => $entidad->id, 'persona_id' => $active->persona_id, 'categoria' => 'asignacion', 'created_at' => now(), 'updated_at' => now()],
+            ['entidad_id' => $entidad->id, 'persona_id' => $inactive->persona_id, 'categoria' => 'asignacion', 'created_at' => now(), 'updated_at' => now()],
         ]);
 
         $seguimiento = $this->makeSeguimiento($entidad->id);

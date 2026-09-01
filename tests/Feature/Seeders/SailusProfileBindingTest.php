@@ -26,7 +26,7 @@ use Tests\TestCase;
  *     rejected by the validation layer when an admin POSTs to assign an
  *     app to an entidad with `perfil` set. `perfil=null` is accepted.
  *
- *   - REQ-PRBN-006 — a usuario linked via `entidad_usuario` to a SAIlus
+ *   - REQ-PRBN-006 — a usuario linked via `entidad_persona` to a SAIlus
  *     Agent-bound entidad MUST see `sailus` in `GET /api/v1/me/apps`. The
  *     `perfil` column is metadata only; it does NOT gate user access.
  *
@@ -53,7 +53,7 @@ class SailusProfileBindingTest extends TestCase
         // Build a user with a Rol, link to entidad, link entidad to sailus
         // app_entidad (with a perfil). The seeder already linked the sailus
         // app_entidad row to its brand entidad; we need to add an extra
-        // entidad_usuario link to that entidad to test transitive access.
+        // entidad_persona link to that entidad to test transitive access.
         $rol = Rol::create(['nombre' => 'Comercial', 'estado' => 'Activo']);
 
         $user = Usuario::create([
@@ -73,9 +73,11 @@ class SailusProfileBindingTest extends TestCase
 
         $entidad = Entidad::findOrFail($brandEntidadId);
 
-        DB::table('entidad_usuario')->insert([
-            'usuario_id' => $user->id,
+        // Per commit fe99f70: pivot is `entidad_persona` keyed on persona_id.
+        DB::table('entidad_persona')->insert([
+            'persona_id' => $user->persona_id,
             'entidad_id' => $entidad->id,
+            'categoria' => 'asignacion',
             'created_at' => now(),
             'updated_at' => now(),
         ]);
@@ -199,7 +201,7 @@ class SailusProfileBindingTest extends TestCase
     public function usuario_linked_to_sailus_entidad_sees_sailus_in_me_apps(): void
     {
         // Build the full transitive chain:
-        //   usuario → entidad_usuario → entidad → app_entidad(app=sailus, perfil=X)
+        //   usuario → entidad_persona → entidad → app_entidad(app=sailus, perfil=X)
         $ctx = $this->bindUsuarioToSailusEntidad();
         $token = $ctx['token'];
 
@@ -229,7 +231,7 @@ class SailusProfileBindingTest extends TestCase
         $this->assertContains(
             'sailus',
             $slugs,
-            'GET /api/v1/me/apps MUST include sailus for a usuario linked via entidad_usuario to a SAIlus Agent-bound entidad (REQ-PRBN-006)'
+            'GET /api/v1/me/apps MUST include sailus for a usuario linked via entidad_persona to a SAIlus Agent-bound entidad (REQ-PRBN-006)'
         );
 
         // perfil is metadata; the me/apps response MUST NOT include it

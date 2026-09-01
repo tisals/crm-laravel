@@ -80,9 +80,10 @@ class SeguimientoCalendarioEndpointTest extends TestCase
             'identificacion' => '900333333',
             'estado' => 'Cliente',
         ]);
-        DB::table('entidad_usuario')->insert([
+        DB::table('entidad_persona')->insert([
             'entidad_id' => $entidad->id,
-            'usuario_id' => $this->comercial->id,
+            'persona_id' => $this->comercial->persona_id,
+            'categoria' => 'asignacion',
             'created_at' => now(),
             'updated_at' => now(),
         ]);

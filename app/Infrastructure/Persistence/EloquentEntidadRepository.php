@@ -26,11 +26,17 @@ class EloquentEntidadRepository extends BaseRepository implements EntidadReposit
 
     protected function newQuery()
     {
-        $model = $this->readConnection
-            ? (new EloquentEntidad)->setConnection($this->readConnection)
-            : new EloquentEntidad;
+        // Defer to BaseRepository::newQuery() so the isReadReplicaConfigured()
+        // guard runs. The previous override forced mysql_read even when the
+        // replica pointed at the same host/port as the master (dev / tests),
+        // which broke test isolation: tests using RefreshDatabase wrap writes
+        // in a transaction on the default connection, and a separate
+        // mysql_read connection cannot see uncommitted rows. The base class
+        // falls back to the default connection when the replica is not
+        // actually configured, which fixes this.
+        $query = parent::newQuery();
 
-        return $model->newQuery()
+        return $query
             ->withCount(['contactos', 'oportunidades'])
             ->with(['usuarios', 'ciudad']);
     }

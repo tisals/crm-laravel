@@ -15,7 +15,7 @@ use Tests\TestCase;
 /**
  * T-BE-13: New repo methods scope by user role.
  *
- * - findForUser(): Comercial sees only entities mapped via entidad_usuario.
+ * - findForUser(): Comercial sees only entities mapped via entidad_persona.
  *                    Admin/SuperAdmin see all.
  * - findCalendarForUser(): same scope, plus date range filter, default
  *                          estado=Pendiente.
@@ -85,9 +85,13 @@ class EloquentSeguimientoRepositoryTest extends TestCase
 
     private function mapComercial(int $userId, int $entidadId): void
     {
-        DB::table('entidad_usuario')->insert([
+        // Per commit fe99f70: pivot is `entidad_persona` keyed on
+        // usuarios.persona_id (NOT NULL FK added in migration 000003).
+        $personaId = DB::table('usuarios')->where('id', $userId)->value('persona_id');
+        DB::table('entidad_persona')->insert([
             'entidad_id' => $entidadId,
-            'usuario_id' => $userId,
+            'persona_id' => $personaId,
+            'categoria' => 'asignacion',
             'created_at' => now(),
             'updated_at' => now(),
         ]);

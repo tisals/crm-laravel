@@ -83,9 +83,12 @@ class PersonaControllerTest extends TestCase
 
     private function bindUsuarioToEntidad(Usuario $usuario, int $entidadId): void
     {
-        DB::table('entidad_usuario')->insert([
-            'usuario_id' => $usuario->id,
+        // Per commit fe99f70: pivot is `entidad_persona` keyed on
+        // usuarios.persona_id (NOT NULL FK added in migration 000003).
+        DB::table('entidad_persona')->insert([
+            'persona_id' => $usuario->persona_id,
             'entidad_id' => $entidadId,
+            'categoria' => 'asignacion',
             'created_at' => now(),
             'updated_at' => now(),
         ]);

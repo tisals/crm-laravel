@@ -205,9 +205,12 @@ class EntidadControllerTest extends TestCase
             'nombre' => 'Empresa Asignada',
             'estado' => 'Prospecto',
         ]);
-        DB::table('entidad_usuario')->insert([
+        DB::table('entidad_persona')->insert([
             'entidad_id' => $entidad->id,
-            'usuario_id' => $comercial['usuario']->id,
+            'persona_id' => $comercial['usuario']->persona_id,
+            'categoria' => 'asignacion',
+            'created_at' => now(),
+            'updated_at' => now(),
         ]);
 
         $response = $this->withHeader('Authorization', 'Bearer '.$comercial['token'])

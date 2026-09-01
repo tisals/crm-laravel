@@ -14,7 +14,7 @@ use Tests\TestCase;
 
 /**
  * T-BE-18: GET /api/v1/seguimientos/mios
- *   - Comercial returns only seguimientos for entidades in entidad_usuario.
+ *   - Comercial returns only seguimientos for entidades in entidad_persona.
  *   - Admin returns all seguimientos.
  *   - Filters compose (estado, fecha_desde, fecha_hasta, tipo).
  */
@@ -79,9 +79,10 @@ class SeguimientosMiosEndpointTest extends TestCase
             'estado' => 'Cliente',
         ]);
 
-        DB::table('entidad_usuario')->insert([
+        DB::table('entidad_persona')->insert([
             'entidad_id' => $this->eMapped->id,
-            'usuario_id' => $this->comercial->id,
+            'persona_id' => $this->comercial->persona_id,
+            'categoria' => 'asignacion',
             'created_at' => now(),
             'updated_at' => now(),
         ]);

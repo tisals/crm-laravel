@@ -45,11 +45,13 @@ class MeControllerIdentityTest extends TestCase
             'estado' => 'Activo',
         ]);
 
-        // Create the transitive link: user -> entidad -> app
+        // Create the transitive link: user -> usuarios.persona_id ->
+        // entidad_persona -> entidad -> app_entidad.
         $entidad = Entidad::create(['nombre' => 'Test Entidad', 'estado' => 'Activo']);
-        DB::table('entidad_usuario')->insert([
-            'usuario_id' => $user->id,
+        DB::table('entidad_persona')->insert([
+            'persona_id' => $user->persona_id,
             'entidad_id' => $entidad->id,
+            'categoria' => 'asignacion',
             'created_at' => now(),
             'updated_at' => now(),
         ]);

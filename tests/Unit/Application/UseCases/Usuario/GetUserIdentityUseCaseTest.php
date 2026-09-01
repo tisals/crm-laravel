@@ -71,13 +71,15 @@ class GetUserIdentityUseCaseTest extends TestCase
             'activo' => true, 'created_at' => now(), 'updated_at' => now(),
         ]);
 
-        // User has access to BRP via entidad_usuario + app_entidad
+        // User has access to BRP via entidad_persona (pivot keyed on
+        // usuarios.persona_id, NOT NULL FK added in migration 000003) + app_entidad
         $entidad = \DB::table('entidad')->insertGetId([
             'nombre' => 'Acme', 'identificacion' => '1', 'estado' => 'Activo', 'tipo_persona' => 'Juridica',
             'created_at' => now(), 'updated_at' => now(),
         ]);
-        \DB::table('entidad_usuario')->insert([
-            'usuario_id' => $user->id, 'entidad_id' => $entidad, 'created_at' => now(), 'updated_at' => now(),
+        \DB::table('entidad_persona')->insert([
+            'persona_id' => $user->persona_id, 'entidad_id' => $entidad, 'categoria' => 'asignacion',
+            'created_at' => now(), 'updated_at' => now(),
         ]);
         \DB::table('app_entidad')->insert([
             'app_id' => $app, 'entidad_id' => $entidad, 'estado' => 'Activo',
@@ -120,8 +122,9 @@ class GetUserIdentityUseCaseTest extends TestCase
             'nombre' => 'A', 'identificacion' => '1', 'estado' => 'Activo', 'tipo_persona' => 'Juridica',
             'created_at' => now(), 'updated_at' => now(),
         ]);
-        \DB::table('entidad_usuario')->insert([
-            'usuario_id' => $user->id, 'entidad_id' => $entidad, 'created_at' => now(), 'updated_at' => now(),
+        \DB::table('entidad_persona')->insert([
+            'persona_id' => $user->persona_id, 'entidad_id' => $entidad, 'categoria' => 'asignacion',
+            'created_at' => now(), 'updated_at' => now(),
         ]);
         \DB::table('app_entidad')->insert([
             'app_id' => $app, 'entidad_id' => $entidad, 'estado' => 'Activo',
