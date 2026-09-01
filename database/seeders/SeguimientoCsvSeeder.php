@@ -17,6 +17,11 @@ use Illuminate\Support\Facades\DB;
  * - estado defaults to "Completado"
  *
  * Run: php artisan db:seed --class=SeguimientoCsvSeeder
+ *
+ * Per commit fe99f70: `contacto.entidad_id` was dropped. The contacto's
+ * entidad binding is now on `entidad_persona`. This seeder doesn't write
+ * entity_persona rows (the entity binding lives on the contacto); it only
+ * reads `oportunidad.entidad_id` which is still a column.
  */
 class SeguimientoCsvSeeder extends Seeder
 {

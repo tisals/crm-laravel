@@ -13,7 +13,7 @@ use Illuminate\Database\Seeder;
  * OLDEST rows are removed (preserving the most recent work).
  *
  * This seeder runs LAST in DatabaseSeeder so that all dependent data
- * (detalle_oportunidad, seguimiento, entidad_usuario assignments, etc.)
+ * (detalle_oportunidad, seguimiento, entidad_persona assignments, etc.)
  * has been seeded against the full set of opportunities/contacts BEFORE
  * the cap removes the oldest rows.
  *

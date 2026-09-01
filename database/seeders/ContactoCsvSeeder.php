@@ -206,6 +206,7 @@ class ContactoCsvSeeder extends Seeder
         $entidadMap = $this->buildEntidadMap();
         $seen = [];
         $rows = [];
+        $pivots = [];
         $skippedNoEmail = 0;
         $skippedNoEntidad = 0;
         $skippedDuplicate = 0;
@@ -229,7 +230,10 @@ class ContactoCsvSeeder extends Seeder
                 continue;
             }
 
-            // Look up entidad_id — allow null if not found (entidad_id is nullable)
+            // Look up entidad_id — allow null if not found.
+            // Per commit fe99f70: contacto.entidad_id was dropped; the
+            // CSV importer stores it transiently for dedup purposes and
+            // writes it as an entidad_persona pivot row at the end.
             $entidadRef = $row['entidad'] ?? null;
             $entidadId = $entidadRef ? $this->findEntidadId($entidadRef, $entidadMap) : null;
 
@@ -260,8 +264,26 @@ class ContactoCsvSeeder extends Seeder
                 }
             }
 
+            // Resolve persona_id by email (PR-E additive column on contacto,
+            // PR-F backfill populated it). For contacts without a persona we
+            // create one inline so the entidad_persona pivot can be written.
+            $personaId = DB::table('personas')
+                ->where('email_principal', $email)
+                ->value('id');
+
+            if (! $personaId) {
+                $personaId = DB::table('personas')->insertGetId([
+                    'email_principal' => $email,
+                    'nombres' => $row['nombres'] ?? '',
+                    'apellidos' => $row['apellidos'] ?? '',
+                    'tipo_persona' => 'Natural',
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+            }
+
             $rows[] = [
-                'entidad_id' => $entidadId,
+                'persona_id' => $personaId,
                 'email_contacto' => $email,
                 'nombres' => $row['nombres'] ?? '',
                 'apellidos' => $row['apellidos'] ?? '',
@@ -275,6 +297,10 @@ class ContactoCsvSeeder extends Seeder
                 'created_at' => now(),
                 'updated_at' => now(),
             ];
+
+            // Defer pivot writes until after bulk insert (we'll need the
+            // contacto id, which insertGetId would force to per-row).
+            $pivots[] = ['persona_id' => $personaId, 'entidad_id' => $entidadId];
         }
 
         if (empty($rows)) {
@@ -283,17 +309,43 @@ class ContactoCsvSeeder extends Seeder
             return;
         }
 
-        DB::transaction(function () use ($rows) {
-            // Delete existing contacts for matched entities OR all contacts with null entidad_id
-            $entidadIds = array_unique(array_column($rows, 'entidad_id'));
-            $nonNullIds = array_filter($entidadIds, fn ($id) => $id !== null);
-            if (! empty($nonNullIds)) {
-                DB::table('contacto')->whereIn('entidad_id', $nonNullIds)->delete();
+        DB::transaction(function () use ($rows, $pivots) {
+            // Delete existing contactos whose persona_id overlaps with the
+            // incoming rows (the legacy code matched on entidad_id; with
+            // that column gone we match on the persona pivot instead).
+            $personaIds = array_unique(array_filter(array_column($rows, 'persona_id')));
+            if (! empty($personaIds)) {
+                DB::table('contacto')
+                    ->whereIn('persona_id', $personaIds)
+                    ->delete();
+                // Drop the corresponding pivots so the bulk insert below
+                // is conflict-free.
+                DB::table('entidad_persona')
+                    ->whereIn('persona_id', $personaIds)
+                    ->delete();
             }
-            // Delete contacts with null entidad_id
-            DB::table('contacto')->whereNull('entidad_id')->delete();
 
             DB::table('contacto')->insert($rows);
+
+            // Write the pivot rows. contacto.entidad_id was dropped (commit
+            // fe99f70); the canonical link is now entidad_persona.
+            $now = now();
+            $pivotRows = [];
+            foreach ($pivots as $p) {
+                if (! $p['entidad_id']) {
+                    continue;
+                }
+                $pivotRows[] = [
+                    'persona_id' => $p['persona_id'],
+                    'entidad_id' => $p['entidad_id'],
+                    'categoria' => 'asignacion',
+                    'created_at' => $now,
+                    'updated_at' => $now,
+                ];
+            }
+            if (! empty($pivotRows)) {
+                DB::table('entidad_persona')->insert($pivotRows);
+            }
         });
 
         $this->command->info('Contactos seeded: '.count($rows)." rows ({$skippedNoEmail} no email, {$skippedNoEntidad} unmatched ref, {$skippedDuplicate} duplicates, {$withNullEntidad} without entidad).");
@@ -308,6 +360,10 @@ class ContactoCsvSeeder extends Seeder
      * Apply the DOD cap on the `contacto` table. See OportunidadCsvSeeder::applyDodCap
      * for the same logic on opportunities.
      *
+     * Per commit fe99f70: `contacto.entidad_id` was dropped. The cap is
+     * now applied against contactos belonging to each entidad via the
+     * `entidad_persona` pivot (keyed on the contacto's persona_id).
+     *
      * Returns ['contactos_eliminados' => int].
      */
     public function applyDodCap(int $maxOps = 10, int $maxContactos = 10): array
@@ -317,14 +373,25 @@ class ContactoCsvSeeder extends Seeder
         if ($maxContactos > 0) {
             $rowsToDelete = $this->countContactosOverCap($maxContactos);
 
+            // Cap per "entidad" — the entidad is the contacto's pivot-bound
+            // entidad (resolved from contacto.persona_id → entidad_persona).
             DB::statement('
                 DELETE FROM contacto
                 WHERE id IN (
                     SELECT id FROM (
-                        SELECT id,
-                               ROW_NUMBER() OVER (PARTITION BY entidad_id ORDER BY created_at DESC) AS rn
-                        FROM contacto
-                        WHERE entidad_id IS NOT NULL
+                        SELECT c.id,
+                               ROW_NUMBER() OVER (
+                                   PARTITION BY (
+                                       SELECT ep.entidad_id
+                                       FROM entidad_persona ep
+                                       WHERE ep.persona_id = c.persona_id
+                                       ORDER BY ep.entidad_id
+                                       LIMIT 1
+                                   )
+                                   ORDER BY c.created_at DESC
+                               ) AS rn
+                        FROM contacto c
+                        WHERE c.persona_id IS NOT NULL
                     ) t
                     WHERE rn > ?
                 )
@@ -340,7 +407,17 @@ class ContactoCsvSeeder extends Seeder
     {
         $rows = DB::select('
             SELECT entidad_id, COUNT(*) AS total
-            FROM contacto
+            FROM (
+                SELECT (
+                    SELECT ep.entidad_id
+                    FROM entidad_persona ep
+                    WHERE ep.persona_id = c.persona_id
+                    ORDER BY ep.entidad_id
+                    LIMIT 1
+                ) AS entidad_id
+                FROM contacto c
+                WHERE c.persona_id IS NOT NULL
+            ) t
             WHERE entidad_id IS NOT NULL
             GROUP BY entidad_id
             HAVING total > ?
