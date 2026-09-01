@@ -10,6 +10,13 @@ use Illuminate\Support\Facades\DB;
  *
  * Limpia contactos duplicados (mismo email en múltiples entidades).
  *
+ * Per `tenant-data-model-fixes` (commit 2.5) + commit fe99f70: the old
+ * "contacto.entidad_id" column was dropped. A contacto's entidad binding
+ * now lives in the `entidad_persona` pivot, keyed on the contacto's
+ * underlying `persona_id`. We resolve each contacto's "primary entidad"
+ * as the first row of `entidad_persona` for its persona (ordered by
+ * entidad_id ASC, the same tiebreaker the old code used).
+ *
  * Regla de decisión (versión final):
  *
  *   PASO 0: Cargar dominios compartidos (2+ entidades con mismo dominio)
@@ -153,10 +160,24 @@ class LimpiarDuplicadosContactos extends Command
 
     /**
      * Carga los emails que aparecen en 2+ entidades (contactos duplicados).
+     *
+     * Per commit fe99f70: `contacto.entidad_id` was dropped. The "primary
+     * entidad" for a contacto is resolved via the `entidad_persona` pivot
+     * (the first row by entidad_id ASC).
      */
     private function cargarGruposDuplicados()
     {
-        $emailsDup = DB::select('SELECT email_contacto FROM contacto WHERE deleted_at IS NULL AND email_contacto IS NOT NULL AND email_contacto != "" GROUP BY email_contacto HAVING COUNT(DISTINCT entidad_id) > 1');
+        // Find emails whose contactos appear in 2+ entidades via the pivot.
+        $emailsDup = DB::select("
+            SELECT c.email_contacto
+            FROM contacto c
+            INNER JOIN entidad_persona ep ON ep.persona_id = c.persona_id
+            WHERE c.deleted_at IS NULL
+              AND c.email_contacto IS NOT NULL
+              AND c.email_contacto != ''
+            GROUP BY c.email_contacto
+            HAVING COUNT(DISTINCT ep.entidad_id) > 1
+        ");
 
         if (empty($emailsDup)) {
             return array();
@@ -168,7 +189,31 @@ class LimpiarDuplicadosContactos extends Command
         foreach ($emailsDup as $row) {
             $email = $row->email_contacto;
 
-            $contactos = DB::select('SELECT c.id, c.entidad_id, c.nombres, c.apellidos, c.email_contacto, c.created_at, e.nombre as entidad_nombre, e.dominio as entidad_dominio, e.tipo_id as entidad_tipo_id, e.identificacion as entidad_identificacion FROM contacto c INNER JOIN entidad e ON e.id = c.entidad_id WHERE c.email_contacto = ? AND c.deleted_at IS NULL AND e.deleted_at IS NULL ORDER BY c.entidad_id, c.id', array($email));
+            // Resolve each contacto's primary entidad via the pivot.
+            $contactos = DB::select("
+                SELECT
+                    c.id,
+                    (SELECT ep.entidad_id
+                       FROM entidad_persona ep
+                       WHERE ep.persona_id = c.persona_id
+                       ORDER BY ep.entidad_id ASC
+                       LIMIT 1) AS entidad_id,
+                    c.nombres,
+                    c.apellidos,
+                    c.email_contacto,
+                    c.created_at,
+                    e.nombre AS entidad_nombre,
+                    e.dominio AS entidad_dominio,
+                    e.tipo_id AS entidad_tipo_id,
+                    e.identificacion AS entidad_identificacion
+                FROM contacto c
+                LEFT JOIN entidad_persona ep ON ep.persona_id = c.persona_id
+                LEFT JOIN entidad e ON e.id = ep.entidad_id
+                WHERE c.email_contacto = ?
+                  AND c.deleted_at IS NULL
+                  AND (e.id IS NULL OR e.deleted_at IS NULL)
+                ORDER BY entidad_id ASC, c.id ASC
+            ", array($email));
 
             if (count($contactos) >= 2) {
                 $grupos[$email] = array_map(function ($c) {
@@ -381,6 +426,9 @@ class LimpiarDuplicadosContactos extends Command
 
     /**
      * Cuenta contactos por entidad (incluyendo el propio contacto).
+     *
+     * Per commit fe99f70: `contacto.entidad_id` was dropped. We count
+     * distinct contactos per entidad via the `entidad_persona` pivot.
      */
     private function contarContactosPorEntidad($contactosGrupo)
     {
@@ -390,7 +438,14 @@ class LimpiarDuplicadosContactos extends Command
         }
 
         $placeholders = implode(',', array_fill(0, count($entityIds), '?'));
-        $resultados = DB::select("SELECT entidad_id, COUNT(*) as total FROM contacto WHERE deleted_at IS NULL AND entidad_id IN ({$placeholders}) GROUP BY entidad_id", array_values($entityIds));
+        $resultados = DB::select("
+            SELECT ep.entidad_id AS entidad_id, COUNT(DISTINCT c.id) AS total
+            FROM contacto c
+            INNER JOIN entidad_persona ep ON ep.persona_id = c.persona_id
+            WHERE c.deleted_at IS NULL
+              AND ep.entidad_id IN ({$placeholders})
+            GROUP BY ep.entidad_id
+        ", array_values($entityIds));
 
         $counts = array();
         foreach ($resultados as $r) {

@@ -13,6 +13,7 @@ use App\Models\Seguimiento;
 use Barryvdh\DomPDF\Facade\Pdf;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 
 class CotizacionController extends Controller
@@ -100,8 +101,17 @@ class CotizacionController extends Controller
         if ($request->filled('contacto_id')) {
             $overrideContacto = Contacto::find($validated['contacto_id']);
 
-            // Validate it belongs to the opportunity's entidad
-            if (! $overrideContacto || $overrideContacto->entidad_id !== $oportunidad->entidad_id) {
+            // Per commit fe99f70: `contacto.entidad_id` was dropped.
+            // Validate that the contacto's underlying persona has an
+            // `entidad_persona` pivot pointing at the opportunity's entidad.
+            $belongsToEntidad = $overrideContacto
+                ? DB::table('entidad_persona')
+                    ->where('persona_id', $overrideContacto->persona_id)
+                    ->where('entidad_id', $oportunidad->entidad_id)
+                    ->exists()
+                : false;
+
+            if (! $overrideContacto || ! $belongsToEntidad) {
                 return $this->errorResponse(
                     'El contacto debe pertenecer a la entidad de esta oportunidad.',
                     422

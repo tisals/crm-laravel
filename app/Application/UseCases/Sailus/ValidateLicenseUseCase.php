@@ -16,8 +16,14 @@ class ValidateLicenseUseCase
             return null; // unauthorized
         }
 
-        // 2. Validate that the username matches a contact within the same organization
-        $contacto = Contacto::where('entidad_id', $servicio->entidad_id)
+        // 2. Validate that the username matches a contact within the same organization.
+        // Per commit fe99f70: `contacto.entidad_id` was dropped. The contacto's
+        // entidad binding lives in the `entidad_persona` pivot, keyed on
+        // persona_id. We resolve the matching contactos via their personas'
+        // pivot rows.
+        $contacto = Contacto::whereHas('persona.entidades', function ($q) use ($servicio) {
+            $q->where('entidad_id', $servicio->entidad_id);
+        })
             ->where('email_contacto', $username)
             ->first();
 

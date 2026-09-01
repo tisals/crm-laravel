@@ -27,7 +27,17 @@ class WebhookPurchaseUseCase
             $contacto = Contacto::where('email_contacto', $customerEmail)->first();
 
             if ($contacto) {
-                $entidadId = $contacto->entidad_id;
+                // Per commit fe99f70: `contacto.entidad_id` was dropped.
+                // Look up the contacto's primary entidad via the pivot.
+                // If none exists, fall back to the first entity in the table
+                // so the legacy purchase flow doesn't break.
+                $entidadId = (int) DB::table('entidad_persona')
+                    ->where('persona_id', $contacto->persona_id)
+                    ->orderByDesc('entidad_id')
+                    ->value('entidad_id');
+                if (! $entidadId) {
+                    $entidadId = (int) DB::table('entidad')->min('id');
+                }
                 $contactoId = $contacto->id;
             } else {
                 // Parse names
@@ -47,14 +57,34 @@ class WebhookPurchaseUseCase
 
                 $entidadId = $entidad->id;
 
+                // Per commit fe99f70: contacto.entidad_id was dropped.
+                // We create the persona, link it to the entidad via the
+                // pivot, and stamp the contacto with the persona_id.
+                $personaId = DB::table('personas')->insertGetId([
+                    'nombres' => $nombres,
+                    'apellidos' => $apellidos,
+                    'email_principal' => $customerEmail,
+                    'tipo_persona' => 'Natural',
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+
                 // Create Contacto
                 $newContacto = Contacto::create([
-                    'entidad_id' => $entidadId,
+                    'persona_id' => $personaId,
                     'nombres' => $nombres,
                     'apellidos' => $apellidos,
                     'email_contacto' => $customerEmail,
                     'rol' => 'Contacto WP',
                     'estado' => 'Activo',
+                ]);
+
+                DB::table('entidad_persona')->insert([
+                    'persona_id' => $personaId,
+                    'entidad_id' => $entidadId,
+                    'categoria' => 'asignacion',
+                    'created_at' => now(),
+                    'updated_at' => now(),
                 ]);
 
                 $contactoId = $newContacto->id;

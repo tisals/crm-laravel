@@ -532,7 +532,11 @@ class OportunidadCsvImportUseCase
         }
 
         // Check DB
-        $existing = Contacto::where('entidad_id', $entidadId)
+        // Per commit fe99f70: `contacto.entidad_id` was dropped. Look up
+        // contactos for this entidad via the persona pivot.
+        $existing = Contacto::whereHas('persona.entidades', function ($q) use ($entidadId) {
+            $q->where('entidad_id', $entidadId);
+        })
             ->where('email_contacto', $email)
             ->first();
 
@@ -547,7 +551,6 @@ class OportunidadCsvImportUseCase
         $nombre = $contactoRaw ? trim(explode("\n", $contactoRaw)[0]) : '';
 
         $newId = DB::table('contacto')->insertGetId([
-            'entidad_id' => $entidadId,
             'email_contacto' => $email,
             'nombres' => mb_substr($nombre, 0, 255) ?: 'Sin nombre',
             'apellidos' => ' ',    // MariaDB: NOT NULL, no default
@@ -555,6 +558,34 @@ class OportunidadCsvImportUseCase
             'tel_contacto' => $this->cleanStr($row['tel_contacto'] ?? null),
             'movil' => $this->cleanStr($row['movil'] ?? null),
             'estado' => 'Activo',
+            'created_at' => $now,
+            'updated_at' => $now,
+        ]);
+
+        // Per commit fe99f70: `contacto.entidad_id` was dropped. The CSV
+        // importer previously wrote a direct FK; it now creates the
+        // persona (if missing) and writes the entidad_persona pivot row.
+        // The persona_id column on contacto is additive (PR-E) and the
+        // PR-F backfill command keeps it populated.
+        $personaId = DB::table('personas')
+            ->where('email_principal', $email)
+            ->value('id');
+
+        if (! $personaId) {
+            $personaId = DB::table('personas')->insertGetId([
+                'nombres' => mb_substr($nombre, 0, 255) ?: 'Sin nombre',
+                'email_principal' => $email,
+                'created_at' => $now,
+                'updated_at' => $now,
+            ]);
+        }
+
+        DB::table('contacto')->where('id', $newId)->update(['persona_id' => $personaId]);
+
+        DB::table('entidad_persona')->insert([
+            'persona_id' => $personaId,
+            'entidad_id' => $entidadId,
+            'categoria' => 'asignacion',
             'created_at' => $now,
             'updated_at' => $now,
         ]);

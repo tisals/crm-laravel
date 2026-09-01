@@ -52,7 +52,10 @@ class PersonaResource extends JsonResource
     /**
      * Fetch the latest linked role row id for each of the three role
      * tables, plus resolve the effective entidad_id (personas.entidad_id
-     * or the linked contacto's entidad_id).
+     * or the first entidad_persona pivot for this persona).
+     *
+     * Per commit fe99f70: `contacto.entidad_id` was dropped. The entidad
+     * binding now lives in `entidad_persona`, keyed on persona_id.
      *
      * @return array{contacto_id: int|null, colaborador_id: int|null, proveedor_id: int|null, entidad_id: int|null}
      */
@@ -76,19 +79,20 @@ class PersonaResource extends JsonResource
             ->value('id');
 
         // entidad_id comes from the persona itself if set; otherwise we
-        // fall back to whichever contacto rowed most recently linked this
-        // persona (per spec REQ-PRAPI-003 `relations.entidad_id` clause).
+        // fall back to whichever entidad the persona is bound to via the
+        // `entidad_persona` pivot (per spec REQ-PRAPI-003 `relations.entidad_id`).
         $entidadId = $this->entidad_id !== null
             ? (int) $this->entidad_id
-            : ($contactoId
-                ? (int) DB::table('contacto')->where('id', $contactoId)->value('entidad_id')
-                : null);
+            : DB::table('entidad_persona')
+                ->where('persona_id', $personaId)
+                ->orderBy('entidad_id')
+                ->value('entidad_id');
 
         return [
             'contacto_id' => $contactoId ? (int) $contactoId : null,
             'colaborador_id' => $colaboradorId ? (int) $colaboradorId : null,
             'proveedor_id' => $proveedorId ? (int) $proveedorId : null,
-            'entidad_id' => $entidadId,
+            'entidad_id' => $entidadId !== null ? (int) $entidadId : null,
         ];
     }
 }

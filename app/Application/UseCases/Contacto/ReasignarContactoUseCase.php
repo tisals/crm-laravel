@@ -5,13 +5,24 @@ namespace App\Application\UseCases\Contacto;
 use App\Models\Contacto;
 use App\Models\Oportunidad;
 use App\Models\Seguimiento;
+use Illuminate\Support\Facades\DB;
 
 class ReasignarContactoUseCase
 {
     /**
      * Reasigna un contacto a otra entidad.
+     *
+     * Per `tenant-data-model-fixes` (commit 2.5) + commit fe99f70:
+     * `contacto.entidad_id` was dropped. The contacto's entidad binding
+     * now lives in the `entidad_persona` pivot, keyed on the contacto's
+     * underlying `persona_id`. Reassigning the contacto means moving the
+     * pivot row from (persona_id, loserEntidadId) to (persona_id,
+     * winnerEntidadId) — the contacto table itself does NOT change.
+     *
      * Si ya existe un contacto con el mismo email en la entidad destino,
-     * retorna conflicto a menos que se pida merge explícito.
+     * retorna conflicto a menos que se pida merge explícito. The "same
+     * email in target entidad" check now resolves the target's contactos
+     * via their personas' pivot rows.
      *
      * @return array{success: bool, data?: Contacto, conflict?: array, message?: string}
      */
@@ -23,8 +34,23 @@ class ReasignarContactoUseCase
             return ['success' => false, 'message' => 'Contacto no encontrado.'];
         }
 
-        // Misma entidad → no-op
-        if ($contacto->entidad_id == $nuevaEntidadId) {
+        // Sin persona_id no podemos operar el pivot (no hay FK para mover).
+        // Esto puede ocurrir con contactos pre-PR-E que no fueron backfilled;
+        // el caller debería re-backfill antes de reasignar.
+        if ($contacto->persona_id === null) {
+            return [
+                'success' => false,
+                'message' => 'El contacto no tiene persona_id — no se puede reasignar por el pivot entidad_persona.',
+            ];
+        }
+
+        // ¿Ya está en esta entidad via pivot? (chequeo "no-op").
+        $yaAsignado = DB::table('entidad_persona')
+            ->where('persona_id', $contacto->persona_id)
+            ->where('entidad_id', $nuevaEntidadId)
+            ->exists();
+
+        if ($yaAsignado) {
             return [
                 'success' => true,
                 'data' => $contacto,
@@ -32,9 +58,11 @@ class ReasignarContactoUseCase
             ];
         }
 
-        // Buscar conflicto de email en la entidad destino
+        // Buscar conflicto de email en la entidad destino (via pivot).
         if ($contacto->email_contacto) {
-            $existente = Contacto::where('entidad_id', $nuevaEntidadId)
+            $existente = Contacto::whereHas('persona.entidades', function ($q) use ($nuevaEntidadId) {
+                $q->where('entidad_id', $nuevaEntidadId);
+            })
                 ->where('email_contacto', $contacto->email_contacto)
                 ->where('id', '!=', $contactoId)
                 ->first();
@@ -57,8 +85,28 @@ class ReasignarContactoUseCase
             }
         }
 
-        // Actualizar entidad_id
-        $contacto->update(['entidad_id' => $nuevaEntidadId]);
+        // Mover el pivot: crear (persona_id, nuevaEntidadId) y borrar el viejo
+        // (persona_id, $entidadActual). Si la persona está en múltiples
+        // entidades via 'dependencia'/'asignacion'/'delegacion', sólo
+        // borramos la fila exacta del viejo id (no las demás categorías).
+        DB::transaction(function () use ($contacto, $nuevaEntidadId) {
+            DB::table('entidad_persona')->updateOrInsert(
+                [
+                    'persona_id' => (int) $contacto->persona_id,
+                    'entidad_id' => (int) $nuevaEntidadId,
+                ],
+                [
+                    'categoria' => 'asignacion',
+                    'updated_at' => now(),
+                    'created_at' => now(),
+                ]
+            );
+
+            DB::table('entidad_persona')
+                ->where('persona_id', $contacto->persona_id)
+                ->where('entidad_id', '!=', $nuevaEntidadId)
+                ->delete();
+        });
 
         return [
             'success' => true,

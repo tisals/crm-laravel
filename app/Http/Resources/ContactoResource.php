@@ -9,10 +9,24 @@ class ContactoResource extends JsonResource
 {
     public function toArray(Request $request): array
     {
+        // Per commit fe99f70: `contacto.entidad_id` was dropped. The
+        // contacto's entidad binding lives in the `entidad_persona` pivot
+        // (via the underlying persona). We expose the FIRST pivot's
+        // entidad_id as the legacy `entidad_id` field for API consumers
+        // that still depend on it.
+        $entidadId = null;
+        if ($this->persona_id !== null) {
+            $entidadId = \Illuminate\Support\Facades\DB::table('entidad_persona')
+                ->where('persona_id', $this->persona_id)
+                ->orderBy('entidad_id')
+                ->value('entidad_id');
+        }
+
         return [
             'id' => $this->id,
-            'entidad_id' => $this->entidad_id,
+            'entidad_id' => $entidadId !== null ? (int) $entidadId : null,
             'entidad_nombre' => $this->entidad_nombre ?? $this->entidad?->nombre,
+            'persona_id' => $this->persona_id,
             'nombres' => $this->nombres,
             'apellidos' => $this->apellidos,
             'area' => $this->area,

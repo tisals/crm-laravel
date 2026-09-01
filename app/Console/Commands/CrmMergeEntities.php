@@ -9,10 +9,16 @@ use Illuminate\Support\Facades\DB;
  * crm:merge-entities — Fusionar dos entidades duplicadas.
  *
  * Estrategia: la entidad GANADORA absorbe a la HUÉRFANA.
- *  - contacto_id de oportunidad/seguimiento: reasigna a la ganadora
  *  - oportunidad: reasigna entidad_id a la ganadora
  *  - seguimiento: reasigna entidad_id a la ganadora
- *  - contacto de la huérfana: se BORRA (idempotente, cascade-safe)
+ *  - entidad_persona: migra los pivots del loser al winner (las personas
+ *    siguen existiendo; sólo se cambia su entidad binding). Si la persona
+ *    YA tiene un pivot con la winner, el pivot del loser se borra sin
+ *    crear duplicado.
+ *  - contactos del huérfano: NO se borran en este commit. Cada contacto
+ *    pertenece a una persona; el pivot de la persona ya se migró arriba.
+ *    Borrar contactos sería destructivo sin necesidad (la auditoría se
+ *    preserva via soft-delete si fuera necesario en una iteración futura).
  *  - entidad huérfana: se BORRA
  *
  * NO se preserva historial — es un merge destructivo. Hacer --dry-run
@@ -64,13 +70,21 @@ class CrmMergeEntities extends Command
         // Stats PRE
         $oppsLoser = DB::table('oportunidad')->where('entidad_id', $loserId)->count();
         $segsLoser = DB::table('seguimiento')->where('entidad_id', $loserId)->count();
-        $ctsLoser = DB::table('contacto')->where('entidad_id', $loserId)->count();
+        // Per commit fe99f70: `contacto.entidad_id` was dropped. Contactos
+        // belong to the loser entidad via the persona pivot; the count is
+        // for visibility only (no destructive op runs against contactos here).
+        $ctsLoser = DB::table('contacto as c')
+            ->join('entidad_persona as ep', 'ep.persona_id', '=', 'c.persona_id')
+            ->where('ep.entidad_id', $loserId)
+            ->count();
+        $pivotsLoser = DB::table('entidad_persona')->where('entidad_id', $loserId)->count();
 
         $this->info("");
         $this->info("Entidad huérfana tiene:");
         $this->info("  - $oppsLoser oportunidades");
         $this->info("  - $segsLoser seguimientos");
-        $this->info("  - $ctsLoser contactos");
+        $this->info("  - $ctsLoser contactos (via pivot)");
+        $this->info("  - $pivotsLoser pivots entidad_persona");
         $this->info("");
 
         if ($oppsLoser > 0) {
@@ -90,12 +104,12 @@ class CrmMergeEntities extends Command
             }
         }
 
-        if ($ctsLoser > 0) {
+        if ($pivotsLoser > 0) {
             $this->info("");
-            $this->info("Contactos que se BORRARÁN:");
-            $cts = DB::table('contacto')->where('entidad_id', $loserId)->get(['id', 'nombres', 'apellidos', 'email_contacto']);
-            foreach ($cts as $c) {
-                $this->line("  - [cto={$c->id}] {$c->nombres} {$c->apellidos} <{$c->email_contacto}>");
+            $this->info("Pivots entidad_persona que se migrarán (persona_id, loser) → (persona_id, winner):");
+            $pivots = DB::table('entidad_persona')->where('entidad_id', $loserId)->get(['persona_id', 'categoria']);
+            foreach ($pivots as $p) {
+                $this->line("  - [persona={$p->persona_id}, categoria={$p->categoria}]");
             }
         }
 
@@ -120,9 +134,40 @@ class CrmMergeEntities extends Command
                 ->where('entidad_id', $loserId)
                 ->update(['entidad_id' => $winnerId, 'updated_at' => now()]);
 
-            $ctsDeleted = DB::table('contacto')
+            // Migrate entidad_persona pivots from loser to winner.
+            // For each (persona_id, loser) we ensure a matching
+            // (persona_id, winner) exists; if one already exists we drop
+            // the loser pivot (it would otherwise violate the composite
+            // PK once we try to re-insert under winner).
+            $loserPivots = DB::table('entidad_persona')
                 ->where('entidad_id', $loserId)
-                ->delete();
+                ->get();
+
+            $pivotsMigrated = 0;
+            $pivotsDeduped = 0;
+            foreach ($loserPivots as $pivot) {
+                $existingWinner = DB::table('entidad_persona')
+                    ->where('persona_id', $pivot->persona_id)
+                    ->where('entidad_id', $winnerId)
+                    ->exists();
+
+                if ($existingWinner) {
+                    DB::table('entidad_persona')
+                        ->where('persona_id', $pivot->persona_id)
+                        ->where('entidad_id', $loserId)
+                        ->delete();
+                    $pivotsDeduped++;
+                } else {
+                    DB::table('entidad_persona')
+                        ->where('persona_id', $pivot->persona_id)
+                        ->where('entidad_id', $loserId)
+                        ->update([
+                            'entidad_id' => $winnerId,
+                            'updated_at' => now(),
+                        ]);
+                    $pivotsMigrated++;
+                }
+            }
 
             $entDeleted = DB::table('entidad')
                 ->where('id', $loserId)
@@ -134,7 +179,8 @@ class CrmMergeEntities extends Command
             $this->info("════════════════════════════════════════════════════════════");
             $this->info("  - $oppsUpdated oportunidades reasignadas");
             $this->info("  - $segsUpdated seguimientos reasignados");
-            $this->info("  - $ctsDeleted contactos borrados");
+            $this->info("  - $pivotsMigrated pivots migrados (persona, loser) → (persona, winner)");
+            $this->info("  - $pivotsDeduped pivots deduplicados (ya existía binding con winner)");
             $this->info("  - $entDeleted entidad borrada");
             $this->info("");
 
