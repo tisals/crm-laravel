@@ -12,7 +12,10 @@ class ContactoFactory extends Factory
     public function definition(): array
     {
         return [
-            'entidad_id' => null,
+            // Per commit fe99f70: `contacto.entidad_id` was dropped. The
+            // factory seeds the legacy field as `null` (now a no-op
+            // since the column doesn't exist); the entidad binding lives
+            // on `entidad_persona` keyed on the contacto's persona_id.
             'nombres' => fake()->firstName(),
             'apellidos' => fake()->lastName(),
             'email_contacto' => fake()->unique()->safeEmail(),

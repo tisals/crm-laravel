@@ -25,7 +25,19 @@ class EloquentContactoRepository extends BaseRepository implements ContactoRepos
 
     protected function mapModelToEntity(Model $model): mixed
     {
-        return ContactoEntity::fromArray($model->toArray());
+        $data = $model->toArray();
+
+        // Per commit fe99f70: `contacto.entidad_id` was dropped. Resolve
+        // it from the `entidad_persona` pivot so downstream callers see
+        // the legacy field populated.
+        if (! isset($data['entidad_id']) && ! empty($data['persona_id'])) {
+            $data['entidad_id'] = \DB::table('entidad_persona')
+                ->where('persona_id', $data['persona_id'])
+                ->orderBy('entidad_id')
+                ->value('entidad_id');
+        }
+
+        return ContactoEntity::fromArray($data);
     }
 
     protected function applySearch($query, string $search)
@@ -110,5 +122,91 @@ class EloquentContactoRepository extends BaseRepository implements ContactoRepos
         $model = $this->newQueryWithEntidad()->find($id);
 
         return $model ? $this->mapModelToEntity($model) : null;
+    }
+
+    /**
+     * Override the base create() to honor the legacy `entidad_id` input.
+     *
+     * Per commit fe99f70: `contacto.entidad_id` was dropped. The contacto's
+     * entidad binding now lives in the `entidad_persona` pivot, keyed on
+     * the contacto's persona_id. When the caller supplies `entidad_id`
+     * (the existing API contract), we:
+     *   1. Strip `entidad_id` from the contact insert payload.
+     *   2. Ensure a `personas` row exists for this contacto (backfilled
+     *      from `email_contacto` if missing).
+     *   3. Insert the contacto with the new `persona_id`.
+     *   4. Insert the `entidad_persona` pivot row.
+     *
+     * This keeps the API contract intact while the underlying schema is
+     * mediated by the pivot.
+     */
+    public function create(array $data): mixed
+    {
+        $entidadId = $data['entidad_id'] ?? null;
+        unset($data['entidad_id']);
+
+        // 1. Resolve persona_id from email_contacto (backfill on demand).
+        if (! empty($data['email_contacto']) && empty($data['persona_id'])) {
+            $personaId = \DB::table('personas')
+                ->where('email_principal', $data['email_contacto'])
+                ->value('id');
+
+            if (! $personaId) {
+                $personaId = \DB::table('personas')->insertGetId([
+                    'email_principal' => $data['email_contacto'],
+                    'nombres' => $data['nombres'] ?? null,
+                    'apellidos' => $data['apellidos'] ?? null,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+            }
+            $data['persona_id'] = $personaId;
+        }
+
+        // 2. Mirror the legacy `entidad_id` into the pivot BEFORE
+        //    mapping to the entity — the entity's `entidad_id` field is
+        //    resolved from the pivot in `mapModelToEntity()`.
+        if ($entidadId && ! empty($data['persona_id'])) {
+            \DB::table('entidad_persona')->insert([
+                'persona_id' => (int) $data['persona_id'],
+                'entidad_id' => (int) $entidadId,
+                'categoria' => 'asignacion',
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+        }
+
+        // 3. Create the contacto via the base repository (writes to master).
+        return parent::create($data);
+    }
+
+    public function update(int $id, array $data): mixed
+    {
+        $entidadId = $data['entidad_id'] ?? null;
+        unset($data['entidad_id']);
+
+        $entity = parent::update($id, $data);
+
+        if ($entity && $entidadId !== null && isset($entity->persona_id)) {
+            // Mirror the legacy behavior: write the pivot. Existing pivot
+            // rows for the persona are removed first so the contacto
+            // binds to exactly one entidad at the application layer.
+            \DB::transaction(function () use ($entity, $entidadId) {
+                \DB::table('entidad_persona')
+                    ->where('persona_id', $entity->persona_id)
+                    ->delete();
+                if ($entidadId) {
+                    \DB::table('entidad_persona')->insert([
+                        'persona_id' => (int) $entity->persona_id,
+                        'entidad_id' => (int) $entidadId,
+                        'categoria' => 'asignacion',
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ]);
+                }
+            });
+        }
+
+        return $entity;
     }
 }
