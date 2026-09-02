@@ -46,8 +46,19 @@ class DodTruncateTest extends TestCase
 
     private function makeContacto(Entidad $entidad, string $email): void
     {
-        DB::table('contacto')->insert([
-            'entidad_id' => $entidad->id,
+        // Per commit fe99f70: `contacto.entidad_id` was dropped. The
+        // contacto's entidad binding lives on `entidad_persona` keyed on
+        // the contacto's persona_id. We backfill the persona row inline
+        // and write the pivot row instead of the legacy column.
+        $personaId = DB::table('personas')->insertGetId([
+            'email_principal' => $email,
+            'nombres' => 'Test',
+            'apellidos' => 'User',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+        $contactoId = DB::table('contacto')->insertGetId([
+            'persona_id' => $personaId,
             'email_contacto' => $email,
             'nombres' => 'Test',
             'apellidos' => 'User',
@@ -55,7 +66,18 @@ class DodTruncateTest extends TestCase
             'created_at' => now(),
             'updated_at' => now(),
         ]);
+        DB::table('entidad_persona')->insert([
+            'persona_id' => $personaId,
+            'entidad_id' => $entidad->id,
+            'categoria' => 'asignacion',
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+        // Stash the contacto id in a static var so the caller can find it.
+        self::$lastContactoId = $contactoId;
     }
+
+    private static ?int $lastContactoId = null;
 
     #[Test]
     public function oportunidad_seeder_truncates_to_10_oldest_removed(): void
@@ -117,12 +139,22 @@ class DodTruncateTest extends TestCase
             $this->makeContacto($entidad, sprintf('user%02d@test.com', $i));
         }
 
-        $this->assertSame(13, Contacto::where('entidad_id', $entidad->id)->count());
+        // Per commit fe99f70: `contacto.entidad_id` was dropped. Count
+        // contactos for this entidad via the pivot.
+        $contactoCount = DB::table('contacto as c')
+            ->join('entidad_persona as ep', 'ep.persona_id', '=', 'c.persona_id')
+            ->where('ep.entidad_id', $entidad->id)
+            ->count();
+        $this->assertSame(13, $contactoCount);
 
         $seeder = new ContactoCsvSeeder;
         $stats = $seeder->applyDodCap(maxOps: 10, maxContactos: 10);
 
-        $this->assertSame(10, Contacto::where('entidad_id', $entidad->id)->count());
+        $contactoCount = DB::table('contacto as c')
+            ->join('entidad_persona as ep', 'ep.persona_id', '=', 'c.persona_id')
+            ->where('ep.entidad_id', $entidad->id)
+            ->count();
+        $this->assertSame(10, $contactoCount);
         $this->assertSame(3, $stats['contactos_eliminados'] ?? null);
     }
 
