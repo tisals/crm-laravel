@@ -109,10 +109,11 @@ class PersonaTableExtensionTest extends TestCase
         // Roll back enough migrations to undo PR-A. After PR-A landed,
         // PR-B/C/D/E/G added 9 migrations (000002..000006 + 000010..000012
         // + 000099), Commit 1+2 added 4 more (`2026_08_29_000001..000004`),
-        // and Commit 2.5 added the pagos_cliente migration. That's 14
-        // newer migrations on top of PR-A, so we roll back 15 to reach
-        // the pre-PR-A state.
-        $this->artisan('migrate:rollback', ['--step' => 15])->assertExitCode(0);
+        // Commit 2.5 added the pagos_cliente migration, and Commit 3
+        // added 12 more (5 tables + 7 backfills). That's 26 newer
+        // migrations on top of PR-A, so we roll back 27 to reach the
+        // pre-PR-A state.
+        $this->artisan('migrate:rollback', ['--step' => 27])->assertExitCode(0);
 
         // Post-rollback: `entidad_id` gone.
         $this->assertFalse(
