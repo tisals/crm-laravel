@@ -22,10 +22,12 @@ class EloquentPipelineEtapaRepositoryTest extends TestCase
         $this->repository = $this->app->make(PipelineEtapaRepositoryInterface::class);
     }
 
-    protected function seeder(): string|false
-    {
-        return false;
-    }
+    /**
+     * Laravel 12 changed the RefreshDatabase seeder hook from a method to
+     * a property: `protected ?string $seeder = ...`. Pinning the property
+     * to `null` keeps the DB empty for these repository tests.
+     */
+    protected ?string $seeder = null;
 
     // ─── Find by ID ───────────────────────────────────────────────────
 

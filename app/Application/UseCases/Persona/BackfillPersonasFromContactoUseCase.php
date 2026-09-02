@@ -175,7 +175,14 @@ class BackfillPersonasFromContactoUseCase
                                 ? (string) $contacto->apellidos
                                 : null,
                             'email_principal' => $email,
-                            'tipo_persona' => 'Natural',
+                            // `tipo_persona` ENUM was dropped from personas
+                            // in commit 7a2d33c (PR-A cleanup). The new
+                            // personas table is type-agnostic; the
+                            // Natural/Juridica split lives on entidad
+                            // (and on persona->entidad_id for the legacy
+                            // 1:1 link). We default new personas to the
+                            // implicit "Natural" persona type without
+                            // writing it anywhere.
                             'telefono_principal' => $contacto->tel_contacto !== null && $contacto->tel_contacto !== ''
                                 ? (string) $contacto->tel_contacto
                                 : null,

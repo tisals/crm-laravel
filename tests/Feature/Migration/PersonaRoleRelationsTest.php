@@ -97,14 +97,19 @@ class PersonaRoleRelationsTest extends TestCase
     {
         $entidad = $this->createEntidad();
 
-        // Simulate "data exists BEFORE the migration runs" by rolling back
-        // my 3 PR-E migrations (which drops the columns + removes the
-        // migration rows from the `migrations` table). Then insert rows
-        // under the pre-migration schema. Then re-run migrate to add the
-        // columns back. The migrations table state is fully restored at
-        // the end (rollback removed rows → migrate re-adds them), so
-        // subsequent tests in this class see a consistent state.
-        $this->artisan('migrate:rollback', ['--step' => 3])->assertExitCode(0);
+        // Simulate "data exists BEFORE the migration runs" by rolling
+        // back the 3 PR-E migrations (which drop the columns + remove
+        // the migration rows from the `migrations` table). The original
+        // test rolled back only 3 steps, but Commit 1+2 added 4
+        // migrations on top of the PR-E chain (`2026_08_29_000001..000004`)
+        // plus PR-G (`2026_08_28_000099`) — so to reach the pre-PR-E
+        // state we have to roll back 8 steps: 4 from Commit 1+2 + PR-G
+        // + the 3 PR-E migrations. Then insert rows under the
+        // pre-migration schema. Then re-run migrate to add the columns
+        // back. The migrations table state is fully restored at the end
+        // (rollback removed rows → migrate re-adds them), so subsequent
+        // tests in this class see a consistent state.
+        $this->artisan('migrate:rollback', ['--step' => 8])->assertExitCode(0);
 
         $now = now();
         DB::table('contacto')->insert([
@@ -396,8 +401,14 @@ class PersonaRoleRelationsTest extends TestCase
             'precondition: proveedores.persona_id should exist before rollback'
         );
 
-        // Roll back the 3 most-recent migrations (10, 11, 12).
-        $this->artisan('migrate:rollback', ['--step' => 3])->assertExitCode(0);
+        // Commit 1+2 added 4 migrations on top of the PR-E migrations
+        // (`2026_08_29_000001..000004`), plus PR-G (000099) on top of
+        // PR-E, plus the pagos_cliente migration (added in Commit 2.5
+        // to satisfy PagosClienteMigrationTest). That's 9 newer
+        // migrations on top of PR-E, so we roll back 9 steps: 1
+        // pagos_cliente + 4 from Commit 1+2 + PR-G + the 3 PR-E
+        // migrations (000010, 000011, 000012) added in this PR.
+        $this->artisan('migrate:rollback', ['--step' => 9])->assertExitCode(0);
 
         // All three persona_id columns are gone.
         $this->assertFalse(

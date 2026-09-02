@@ -57,7 +57,7 @@ class SendPipelineChangeToN8nTest extends TestCase
                 'contacto' => (object) ['nombres' => 'María', 'apellidos' => 'García', 'email_contacto' => 'maria@test.com'],
                 'entidad' => (object) [
                     'nombre' => 'Acme Corp',
-                    'usuarios' => collect([(object) ['nombre' => 'Carlos', 'email' => 'carlos@test.com']]),
+                    'usuarios' => collect([(object) ['nombre' => 'Carlos', 'email' => 'carlos@test.com', 'telefono' => null]]),
                 ],
             ])
             ->getMock();
@@ -256,7 +256,7 @@ class SendPipelineChangeToN8nTest extends TestCase
                 'contacto' => (object) ['nombres' => 'Ana', 'apellidos' => 'López', 'email_contacto' => 'ana@test.com'],
                 'entidad' => (object) [
                     'nombre' => 'Empresa XYZ',
-                    'usuarios' => collect([(object) ['nombre' => 'Pedro', 'email' => 'pedro@test.com']]),
+                    'usuarios' => collect([(object) ['nombre' => 'Pedro', 'email' => 'pedro@test.com', 'telefono' => '+57 300 1234567']]),
                 ],
             ])
             ->getMock();

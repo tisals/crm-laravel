@@ -92,11 +92,17 @@ class BackfillPersonaFromContactoTest extends TestCase
             );
         }
 
-        // REQ-PCBF-001: each persona defaults to Natural classification.
+        // REQ-PCBF-001 (legacy): each persona defaulted to tipo_persona=Natural.
+        // Commit 7a2d33c dropped `personas.tipo_persona` ENUM; the new
+        // personas table is type-agnostic and the Natural/Juridica split
+        // lives on `entidad.tipo_persona`. Backfilled personas are simply
+        // inserted without a tipo_persona column; we verify the
+        // equivalent invariant — all 3 personas exist and are linked —
+        // instead of checking the dropped column.
         $this->assertSame(
             3,
-            DB::table('personas')->where('tipo_persona', 'Natural')->count(),
-            'all backfilled personas MUST default to tipo_persona=Natural'
+            DB::table('personas')->count(),
+            'all 3 personas must exist after the backfill'
         );
     }
 

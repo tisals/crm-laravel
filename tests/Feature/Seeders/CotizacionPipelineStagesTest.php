@@ -67,8 +67,12 @@ class CotizacionPipelineStagesTest extends TestCase
     #[Test]
     public function pipeline_crea_solo_las_5_etapas_canonicas_con_codigo(): void
     {
+        // Codigo must follow the canonical format GC-{SS}-{YYYY}-{NNN}
+        // (see OportunidadCsvImportUseCase validation). The legacy
+        // `TEST-001` placeholder bypassed the import counter because the
+        // malformed-code branch increments `errors` instead of `created`.
         $this->importRow([
-            'codigo' => 'TEST-001',
+            'codigo' => 'GC-01-2026-001',
             'fecha' => '15/06/2026',
             'estado' => '20',
             'empresa' => 'Test Corp',
@@ -94,8 +98,9 @@ class CotizacionPipelineStagesTest extends TestCase
     #[Test]
     public function estado_22_ganado_cae_en_codigo_aceptada(): void
     {
+        // Codigo must follow the canonical format GC-{SS}-{YYYY}-{NNN}.
         $this->importRow([
-            'codigo' => 'TEST-GAN-001',
+            'codigo' => 'GC-01-2026-022',
             'fecha' => '15/06/2026',
             'estado' => '22', // Ganado en maestro
             'empresa' => 'Test Corp Ganado',
@@ -104,7 +109,7 @@ class CotizacionPipelineStagesTest extends TestCase
             'contacto' => 'Test User Ganado',
         ]);
 
-        $opp = DB::table('oportunidad')->where('codigo', 'TEST-GAN-001')->first();
+        $opp = DB::table('oportunidad')->where('codigo', 'GC-01-2026-022')->first();
         $stageCodigo = DB::table('pipeline_etapas')->where('id', $opp->pipeline_etapa_id)->value('codigo');
         $this->assertSame('ACEPTADA', $stageCodigo, 'Estado Ganado debe mapear a código ACEPTADA');
     }
@@ -113,7 +118,7 @@ class CotizacionPipelineStagesTest extends TestCase
     public function estado_23_perdido_cae_en_codigo_rechazada(): void
     {
         $this->importRow([
-            'codigo' => 'TEST-PER-001',
+            'codigo' => 'GC-01-2026-023',
             'fecha' => '15/06/2026',
             'estado' => '23', // Perdido en maestro
             'empresa' => 'Test Corp Perdido',
@@ -122,7 +127,7 @@ class CotizacionPipelineStagesTest extends TestCase
             'contacto' => 'Test User Perdido',
         ]);
 
-        $opp = DB::table('oportunidad')->where('codigo', 'TEST-PER-001')->first();
+        $opp = DB::table('oportunidad')->where('codigo', 'GC-01-2026-023')->first();
         $stageCodigo = DB::table('pipeline_etapas')->where('id', $opp->pipeline_etapa_id)->value('codigo');
         $this->assertSame('RECHAZADA', $stageCodigo, 'Estado Perdido debe mapear a código RECHAZADA');
     }
@@ -131,7 +136,7 @@ class CotizacionPipelineStagesTest extends TestCase
     public function estado_21_en_negociacion_cae_en_codigo_correspondiente(): void
     {
         $this->importRow([
-            'codigo' => 'TEST-NEG-001',
+            'codigo' => 'GC-01-2026-021',
             'fecha' => '15/06/2026',
             'estado' => '21', // En negociación
             'empresa' => 'Test Corp Neg',
@@ -140,7 +145,7 @@ class CotizacionPipelineStagesTest extends TestCase
             'contacto' => 'Test User Neg',
         ]);
 
-        $opp = DB::table('oportunidad')->where('codigo', 'TEST-NEG-001')->first();
+        $opp = DB::table('oportunidad')->where('codigo', 'GC-01-2026-021')->first();
         $stageCodigo = DB::table('pipeline_etapas')->where('id', $opp->pipeline_etapa_id)->value('codigo');
         $this->assertSame('EN_NEGOCIACION', $stageCodigo, 'Estado 21 debe mapear a código EN_NEGOCIACION');
     }

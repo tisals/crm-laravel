@@ -1,0 +1,124 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link href="https://fonts.googleapis.com/css2?family=Mulish:wght@700;900&family=Roboto:wght@400&display=swap" rel="stylesheet">
+    <script src="https://cdn.tailwindcss.com"></script>
+    <title>Cotización SST - {{ cotizacion_no }}</title>
+    <style>
+        body { font-family: 'Roboto', sans-serif; color: #333333; } /* [cite: 115, 143] */
+        h1, h2, h3 { font-family: 'Mulish', sans-serif; } /* [cite: 138] */
+        .rounded-brand { border-radius: 2.5rem; } /* Máximo 5% de un layout standard  */
+        
+        @media print {
+            .no-print { display: none; }
+            body { background-color: white !important; }
+            .main-container { border: 1px solid #e5e7eb; box-shadow: none; }
+        }
+    </style>
+</head>
+<body class="bg-[#F5F5F5] min-h-screen p-4 md:p-10"> <div class="main-container max-w-5xl mx-auto bg-white p-8 md:p-12 shadow-xl rounded-brand border-t-8 border-[#009188]"> <header class="flex flex-col md:flex-row justify-between items-start border-b border-gray-100 pb-8 mb-8">
+            <div class="space-y-4">
+                {{brand.logo}}<img src="https://deseguridad.net/wp-content/uploads/2026/05/Logo-tecnoinnsoft-183x90-1.png" 
+                     alt="deseguridad.net" 
+                     class="h-16 w-auto object-contain"> <p class="text-[#004843] text-sm font-bold tracking-wide italic"> "{{ brand.slogan }}"
+                </p>
+            </div>
+            <div class="text-right mt-6 md:mt-0">
+                <h1 class="text-3xl font-black text-[#333333] uppercase leading-none">Cotización</h1> <p class="text-[#009188] font-bold text-xl">N° {{ opportunity.id }}-v{{opportunity.version}}</p> <div class="mt-2 text-sm text-gray-500">
+                    <p>Fecha: {{ opportunity.sent_at }}</p>
+                    <p>Validez: {{ opportunity.due_date }} días</p>
+                </div>
+            </div>
+        </header>
+
+        <section class="grid grid-cols-1 md:grid-cols-2 gap-8 mb-10">
+            <div class="bg-[#AFFFF9]/20 p-6 rounded-2xl border border-[#AFFFF9]"> <h3 class="text-[#004843] text-xs font-black uppercase tracking-widest mb-2">Dirigida a:</h3>
+                <p class="text-lg font-bold text-[#333333]">{{ entity.name }}</p>
+                <p class="text-lg font-bold text-[#333333]">{{ entity.city }}</p>
+            </div>
+            <div class="p-6">
+                <h3 class="text-[#004843] text-xs font-black uppercase tracking-widest mb-2">Responsable:</h3>
+                <p class="text-lg font-bold text-[#333333]">{{ contact.user.name }}</p>
+                <p class="text-sm text-gray-600">{{ contact.user.email }}</p>
+            </div>
+        </section>
+
+        <div class="overflow-hidden border border-gray-200 rounded-xl mb-8">
+            <table class="w-full text-left">
+                <thead>
+                    <tr class="bg-[#009188] text-white"> <th class="p-4 font-bold uppercase text-xs">Descripción del Servicio / Recurso</th>
+                        <th class="p-4 font-bold uppercase text-xs text-center">Unidad</th>
+                        <th class="p-4 font-bold uppercase text-xs text-right">Cant.</th>
+                        <th class="p-4 font-bold uppercase text-xs text-right">Vr. Unitario</th>
+                        <th class="p-4 font-bold uppercase text-xs text-right">Total</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-100">
+                    {{#each detalle_oportunidad}}
+                    <tr>
+                        <td class="p-4">{{this.name}}</td>
+                        <td class="p-4">{{this.unidad}}</td>
+                        <td class="p-4">{{this.qty}}</td>
+                        <td class="p-4">{{this.unit_value}}</td>
+                        <td class="p-4">{{this.total}}</td>
+                    </tr>
+                    {{/each}}
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="flex flex-col md:flex-row justify-between items-start gap-8">
+            <div class="flex-1 text-sm text-gray-600 space-y-3">
+                <p class="font-bold text-[#009188]">Observaciones</p>
+                <p class="italic">{{oportunity.observations}}</p>
+                <div class="h-4 border-b border-gray-400"></div>
+                <p class="font-bold text-[#009188]">Notas Aclaratorias</p>
+                <p class="italic">{{oportunity.aclarations}}</p>
+            </div>
+            
+            <div class="w-full md:w-72 bg-gray-50 p-6 rounded-xl space-y-3">
+                <div class="flex justify-between text-gray-600">
+                    <span>Subtotal:</span>
+                    <span>${{ subtotal }}</span>
+                </div>
+                <div class="flex justify-between text-gray-600">
+                    <span>IVA (19%):</span>
+                    <span>${{ iva }}</span>
+                </div>
+                <div class="flex justify-between items-center pt-3 border-t border-gray-200">
+                    <span class="font-black text-[#333333] uppercase">Total:</span>
+                    <span class="text-2xl font-black text-[#B35524]">${{ total_general }}</span> </div>
+
+                <p class="font-black text-gray-500 mb-1">Forma de Pago</p>
+                <p>{{oportunity.payment_conditions}}</p>
+                
+                <button class="w-full bg-[#B35524] hover:bg-[#7D3A19] text-white font-bold py-3 px-4 rounded-lg transition-colors mt-4 no-print">
+                    Aprobar Cotización
+                </button>
+            </div>
+        </div>
+
+        <footer class="grid grid-cols-1 md:grid-cols-2 mt-12 pt-8 border-t border-gray-100 gap-6 text-[11px] text-gray-400 uppercase tracking-widest text-center md:text-left">
+            <div class="w-full md:w-1/2 pr-5 space-y-6" >    
+                <div class="text-center ">
+                    <p class="font-black text-gray-500 mb-1">Garantía</p>
+                    <p>{{oportunity.guarantees}}</p>
+                </div>
+                <div class="text-center pt-6 border-t border-gray-200">
+                    <p class="font-black text-gray-500 mb-1">Tiempo de entrega</p> 
+                    <p class="text-xs">{{oportunity.delivery_time}} días</p>   
+                </div>
+            </div>    
+                <div class="text-center w-1/2">
+                    <p class="text-[#009188] text-xl font-black">{{brand_name}}</p> 
+                    <p class="text-xs">{{brand.business_sign}}</p>   
+                </div>
+            
+        </footer>
+    </div>
+
+</body>
+</html>

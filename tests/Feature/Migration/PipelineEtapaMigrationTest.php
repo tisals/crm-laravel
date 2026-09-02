@@ -118,13 +118,29 @@ class PipelineEtapaMigrationTest extends TestCase
      */
     private function seedPipelines(): void
     {
-        $this->cotizacionId = DB::table('pipelines')->insertGetId([
-            'nombre' => 'Cotización',
-            'codigo' => 'COTIZACION',
-            'habilitado' => true,
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]);
+        // The migrations
+        // (`2026_06_04_192500_migrate_existing_opportunities_to_pipelines_and_stages`
+        // and `2026_06_07_000000_assign_pipeline_etapa_to_existing_oportunidades`)
+        // pre-create `COTIZACION` and `RECUPERACION` via
+        // `ensurePipelineExists()`. A fresh `migrate:fresh` already has
+        // rows on `pipelines`, so an `insertGetId` here would violate
+        // the UNIQUE codigo constraint. Use `updateOrInsert` to make
+        // the seed idempotent against the migration-side bootstrap.
+        DB::table('pipelines')->updateOrInsert(
+            ['codigo' => 'COTIZACION'],
+            ['nombre' => 'Cotización', 'habilitado' => true, 'created_at' => now(), 'updated_at' => now()]
+        );
+        $this->cotizacionId = (int) DB::table('pipelines')->where('codigo', 'COTIZACION')->value('id');
+
+        // The bootstrap migration
+        // (`2026_06_25_000000_refactor_cotizacion_pipeline_etapas`) already
+        // inserts 5 canonical etapas (BORRADOR, ENVIADA, EN_NEGOCIACION,
+        // ACEPTADA, RECHAZADA) keyed by stable `codigo`. This test seeds
+        // the pre-PR-E state with 6 legacy etapas keyed by `nombre` only,
+        // so the migration we're about to run can map them. Drop the
+        // bootstrap rows first to avoid 11 duplicate etapas on the same
+        // pipeline after the seed.
+        DB::table('pipeline_etapas')->where('pipeline_id', $this->cotizacionId)->delete();
 
         $etapas = [
             ['nombre' => 'Borrador',        'orden' => 1],
@@ -150,14 +166,23 @@ class PipelineEtapaMigrationTest extends TestCase
             }
         }
 
-        // Seed RECUPERACION pipeline with etapas
-        $recuperacionId = DB::table('pipelines')->insertGetId([
-            'nombre' => 'Recuperación',
-            'codigo' => 'RECUPERACION',
-            'habilitado' => true,
-            'created_at' => now(),
-            'updated_at' => now(),
-        ]);
+        // Seed RECUPERACION pipeline with etapas. Like COTIZACION above,
+        // the bootstrap migrations
+        // (`2026_06_04_192500_migrate_existing_opportunities_to_pipelines_and_stages`
+        // and `2026_06_07_000000_assign_pipeline_etapa_to_existing_oportunidades`)
+        // pre-create `RECUPERACION` via `ensurePipelineExists()`; we use
+        // `updateOrInsert` to keep the seed idempotent against the
+        // migration-side bootstrap.
+        DB::table('pipelines')->updateOrInsert(
+            ['codigo' => 'RECUPERACION'],
+            ['nombre' => 'Recuperación', 'habilitado' => true, 'created_at' => now(), 'updated_at' => now()]
+        );
+        $recuperacionId = (int) DB::table('pipelines')->where('codigo', 'RECUPERACION')->value('id');
+
+        // Drop bootstrap-inserted etapas so the migration under test
+        // starts from a clean RECUPERACION with only the legacy 5
+        // etapas this test seeds below.
+        DB::table('pipeline_etapas')->where('pipeline_id', $recuperacionId)->delete();
 
         $recuperacionEtapas = [
             ['nombre' => 'Inicio',              'orden' => 1],

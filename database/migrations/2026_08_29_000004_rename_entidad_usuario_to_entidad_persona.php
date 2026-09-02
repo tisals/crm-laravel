@@ -63,14 +63,20 @@ return new class extends Migration
         // ── 4. persona_id NOT NULL + FK + composite PK on
         //       (persona_id, entidad_id). The composite matches the
         //       one-user-per-entidad invariant the old PK had, but
-        //       pivots on natural-person identity. ─────────────────────
+        //       pivots on natural-person identity.
+        //
+        // The `entidad_id` index already exists from the original
+        // `create_entidad_usuario_table` migration; we skip it here to
+        // keep `up()` idempotent under `migrate:rollback && migrate`
+        // cycles in the migration tests. The composite PK already
+        // covers lookups by persona_id; the entidad_id index is
+        // inherited from the old schema and survives the rename. ─────
         Schema::table('entidad_usuario', function (Blueprint $table) {
             $table->unsignedBigInteger('persona_id')->nullable(false)->change();
             $table->foreign('persona_id')
                 ->references('id')->on('personas')
                 ->cascadeOnDelete();
             $table->primary(['persona_id', 'entidad_id']);
-            $table->index('entidad_id');  // already exists but be explicit
         });
 
         // ── 5. Rename the table. ────────────────────────────────────────
@@ -96,16 +102,24 @@ return new class extends Migration
 
     public function down(): void
     {
+        // Drop categoria first.
         Schema::table('entidad_persona', function (Blueprint $table) {
             $table->dropColumn('categoria');
         });
 
+        // Rename back. The composite PK and the FK to personas still live
+        // on `persona_id`; we drop them below before re-adding usuario_id.
         Schema::rename('entidad_persona', 'entidad_usuario');
 
+        // IMPORTANT: drop FK persona_id BEFORE the composite PK that
+        // references it. MariaDB refuses `DROP PRIMARY KEY` while a
+        // foreign-key constraint still points at one of the PK columns.
         Schema::table('entidad_usuario', function (Blueprint $table) {
-            $table->dropPrimary();
             $table->dropForeign(['persona_id']);
+            $table->dropPrimary();
             $table->dropColumn('persona_id');
+
+            // Recreate the original auth-keyed pivot.
             $table->unsignedBigInteger('usuario_id')->nullable();
             $table->foreign('usuario_id')
                 ->references('id')->on('usuarios')

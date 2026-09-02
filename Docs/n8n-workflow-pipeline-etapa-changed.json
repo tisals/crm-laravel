@@ -1,0 +1,328 @@
+{
+  "nodes": [
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "https://deseguridad.ipzmarketing.com/api/v1/subscribers/sync",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-AUTH-TOKEN",
+              "value": "8y4MSkxCpNZqF5Msdg8V9JDjh2oioyeYU2YjzkCK"
+            }
+          ]
+        },
+        "sendBody": true,
+        "specifyBody": "json",
+        "jsonBody": "={\n  \"replace_groups\": true,\n  \"status\":\"active\",\n  \"email\": \"{{ $('Wh_deseguridad.net').item.json.body['9'] }}\",\n  \"group_ids\": [\n    14,6\n  ]\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.4,
+      "position": [
+        768,
+        512
+      ],
+      "id": "702eb0d9-a170-4184-aa18-8bbc2d643b35",
+      "name": "Cambiar a grupo frio"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "string": [
+            {
+              "value1": "={{$json.body.pipeline_codigo}}",
+              "value2": "COTIZACION"
+            },
+            {
+              "value1": "={{$json.body.pipeline_codigo}}",
+              "value2": "RECUPERACION"
+            }
+          ]
+        }
+      },
+      "id": "ccf49307-58bf-4111-a366-f93d9af60478",
+      "name": "Filter: Pipeline LLEGADA or RECUPERACION",
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 1,
+      "position": [
+        -32,
+        400
+      ]
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "template_id_llegada",
+              "value": "={{$env.MAILRELAY_TEMPLATE_LLEGADA}}"
+            },
+            {
+              "name": "subject_variant",
+              "value": "={{mapSubjectVariant($json.body.etapa_nombre)}}"
+            },
+            {
+              "name": "pipeline_type",
+              "value": "llegada"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "58955f7e-bef5-4059-a578-ceadd3737f73",
+      "name": "Set LLEGADA Params",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [
+        400,
+        272
+      ]
+    },
+    {
+      "parameters": {
+        "values": {
+          "string": [
+            {
+              "name": "template_id_recuperacion",
+              "value": "={{$env.MAILRELAY_TEMPLATE_RECUPERACION}}"
+            },
+            {
+              "name": "subject_variant",
+              "value": "={{mapSubjectVariantRecuperacion($json.body.etapa_nombre)}}"
+            },
+            {
+              "name": "pipeline_type",
+              "value": "recuperacion"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "cedd0cf0-0a9c-4c8d-8ecf-d153528f4c65",
+      "name": "Set RECUPERACION Params",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [
+        416,
+        512
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://deseguridad.ipzmarketing.com/api/v1/contacts",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "X-AUTH-TOKEN",
+              "value": "8y4MSkxCpNZqF5Msdg8V9JDjh2oioyeYU2YjzkCK"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "email",
+              "value": "={{$json.body.contacto_email}}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "e70ed20e-8d65-47b8-86c6-4dfa5c3534a1",
+      "name": "Lookup Contact in Mailrelay",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [
+        768,
+        272
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "=https://deseguridad.ipzmarketing.com/api/v1/campaigns/14/send_all",
+        "sendHeaders": true,
+        "headerParameters": {
+          "parameters": [
+            {
+              "name": "x"
+            }
+          ]
+        },
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "to",
+              "value": "={{$json.body.contacto_email}}"
+            },
+            {
+              "name": "subject",
+              "value": "={{buildSubject($json.body, $json.pipeline_type)}}"
+            },
+            {
+              "name": "template_id",
+              "value": "={{$json.pipeline_type === 'llegada' ? $json.template_id_llegada : $json.template_id_recuperacion}}"
+            },
+            {
+              "name": "merge_tags",
+              "value": "={{JSON.stringify(buildMergeTags($json.body))}}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "9ea8618d-6df6-4d82-b3fb-686d746024a9",
+      "name": "Send via Mailrelay",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [
+        1040,
+        384
+      ]
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://localhost:8001/api/v1/oportunidades/{{$json.body.oportunidad_id}}/email-sent",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "status",
+              "value": "sent"
+            },
+            {
+              "name": "pipeline_type",
+              "value": "={{$json.pipeline_type}}"
+            },
+            {
+              "name": "etapa",
+              "value": "={{$json.body.etapa_nombre}}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "d31e8868-c802-4c1d-9669-6d2d14863c31",
+      "name": "Log Send Status to CRM",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 3,
+      "position": [
+        1248,
+        384
+      ]
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "a82b59ee-0143-4534-9e13-f3252b1f815d",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -256,
+        400
+      ],
+      "id": "ffa5805a-8a4c-4aa6-8523-a1017d8d711c",
+      "name": "WebhookCRM",
+      "webhookId": "a82b59ee-0143-4534-9e13-f3252b1f815d"
+    }
+  ],
+  "connections": {
+    "Cambiar a grupo frio": {
+      "main": [
+        [
+          {
+            "node": "Send via Mailrelay",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter: Pipeline LLEGADA or RECUPERACION": {
+      "main": [
+        [
+          {
+            "node": "Set LLEGADA Params",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Set RECUPERACION Params",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set LLEGADA Params": {
+      "main": [
+        [
+          {
+            "node": "Lookup Contact in Mailrelay",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Set RECUPERACION Params": {
+      "main": [
+        [
+          {
+            "node": "Cambiar a grupo frio",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Lookup Contact in Mailrelay": {
+      "main": [
+        [
+          {
+            "node": "Send via Mailrelay",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send via Mailrelay": {
+      "main": [
+        [
+          {
+            "node": "Log Send Status to CRM",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "WebhookCRM": {
+      "main": [
+        [
+          {
+            "node": "Filter: Pipeline LLEGADA or RECUPERACION",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "pinData": {},
+  "meta": {
+    "instanceId": "c7feb867d271e0d7ced642f54b9a5bc0a52c75db19f74330db76f7fdc494785f"
+  }
+}

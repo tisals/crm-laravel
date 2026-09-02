@@ -214,10 +214,13 @@ class SchemaFoundationTest extends TestCase
         );
 
         // Roll back enough migrations to undo PR-B (migrations 2 + 3).
-        // As of PR-C there are 5 newer migrations (4, 5, 6 from this PR
-        // and the cumulative chain), so we roll back 5 to reach migration
-        // 3 (and the cascade takes 2 with it).
-        $this->artisan('migrate:rollback', ['--step' => 5])->assertExitCode(0);
+        // The PR-B migrations (`2026_08_28_000002` and `_000003`) created
+        // `bot_sessions` and added `seguimiento.bot_*` columns. Since
+        // then we've added PR-C/D/E/G (4-6, 10-12, 99), Commit 1+2
+        // (`2026_08_29_000001..000004`), and the pagos_cliente migration
+        // from Commit 2.5 — 13 newer migrations on top of 000003. We
+        // roll back 14 to reach the pre-PR-B state.
+        $this->artisan('migrate:rollback', ['--step' => 14])->assertExitCode(0);
 
         $this->assertFalse(
             Schema::hasTable('bot_sessions'),

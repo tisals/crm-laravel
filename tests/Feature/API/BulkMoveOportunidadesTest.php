@@ -48,10 +48,12 @@ class BulkMoveOportunidadesTest extends TestCase
         ]);
     }
 
-    protected function seeder(): string|false
-    {
-        return false;
-    }
+    /**
+     * Laravel 12 changed the RefreshDatabase seeder hook from a method to
+     * a property: `protected ?string $seeder = ...`. Pinning the property
+     * to `null` keeps the DB empty for these bulk-move tests.
+     */
+    protected ?string $seeder = null;
 
     private function authenticate(): array
     {

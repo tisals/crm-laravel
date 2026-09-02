@@ -25,9 +25,14 @@ class PersonaTableExtensionTest extends TestCase
     #[Test]
     public function personas_has_tipo_persona_and_entidad_id_columns(): void
     {
-        $this->assertTrue(
+        // Commit 7a2d33c (`tenant-data-model-correction` Commit 1) dropped
+        // `personas.tipo_persona` ENUM as part of the iter4 schema cleanup:
+        // the new personas table is type-agnostic and the Natural/Juridica
+        // split lives on `entidad.tipo_persona`. We verify the new state
+        // (column gone, but `entidad_id` retained because PR-A still owns it).
+        $this->assertFalse(
             Schema::hasColumn('personas', 'tipo_persona'),
-            'Expected personas.tipo_persona column to exist'
+            'personas.tipo_persona was dropped by Commit 7a2d33c; it must NOT exist'
         );
         $this->assertTrue(
             Schema::hasColumn('personas', 'entidad_id'),
@@ -90,26 +95,26 @@ class PersonaTableExtensionTest extends TestCase
     #[Test]
     public function down_reverses_all_changes(): void
     {
-        // Precondition: the new columns exist after RefreshDatabase.
-        // This forces the test to be RED when the migration is missing.
-        $this->assertTrue(
+        // Precondition: `entidad_id` still exists (Commit 1 only dropped
+        // `tipo_persona`); `tipo_persona` is gone.
+        $this->assertFalse(
             Schema::hasColumn('personas', 'tipo_persona'),
-            'precondition: tipo_persona should exist before rollback'
+            'precondition: tipo_persona should already be gone (Commit 1)'
         );
         $this->assertTrue(
             Schema::hasColumn('personas', 'entidad_id'),
             'precondition: entidad_id should exist before rollback'
         );
 
-        // Roll back the last applied migration — by timestamp ordering this
-        // is 2026_08_28_000001_add_tipo_persona_and_entidad_id_to_personas_table.
-        $this->artisan('migrate:rollback', ['--step' => 1])->assertExitCode(0);
+        // Roll back enough migrations to undo PR-A. After PR-A landed,
+        // PR-B/C/D/E/G added 9 migrations (000002..000006 + 000010..000012
+        // + 000099), Commit 1+2 added 4 more (`2026_08_29_000001..000004`),
+        // and Commit 2.5 added the pagos_cliente migration. That's 14
+        // newer migrations on top of PR-A, so we roll back 15 to reach
+        // the pre-PR-A state.
+        $this->artisan('migrate:rollback', ['--step' => 15])->assertExitCode(0);
 
-        // Post-rollback: columns gone.
-        $this->assertFalse(
-            Schema::hasColumn('personas', 'tipo_persona'),
-            'tipo_persona column should be gone after rollback'
-        );
+        // Post-rollback: `entidad_id` gone.
         $this->assertFalse(
             Schema::hasColumn('personas', 'entidad_id'),
             'entidad_id column should be gone after rollback'

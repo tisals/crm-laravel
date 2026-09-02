@@ -21,25 +21,38 @@ class EloquentPipelineRepositoryTest extends TestCase
         $this->repository = $this->app->make(PipelineRepositoryInterface::class);
     }
 
-    protected function seeder(): string|false
-    {
-        return false;
-    }
+    /**
+     * Laravel 12 changed the RefreshDatabase seeder hook from a method to
+     * a property: `protected ?string $seeder = ...`. Defining only the
+     * `seeder()` method silently fell back to `DatabaseSeeder` and made
+     * `migrate:fresh --seed` populate the table the tests then try to
+     * factory-create against (PipelineSeeder inserts COTIZACION before
+     * the factory can). Pinning the property to `null` keeps the DB
+     * empty for these repository tests.
+     */
+    protected ?string $seeder = null;
 
     #[Test]
     public function it_can_find_pipeline_by_id(): void
     {
+        // The migrations
+        // (`2026_06_04_192500_migrate_existing_opportunities_to_pipelines_and_stages`
+        // and `2026_06_07_000000_assign_pipeline_etapa_to_existing_oportunidades`)
+        // pre-create a `COTIZACION` pipeline via `ensurePipelineExists()`,
+        // so a fresh `migrate:fresh` already has rows on `pipelines` —
+        // using that codigo here triggers a UNIQUE violation. Pick a
+        // distinct codigo for the factory row.
         $eloquent = Pipeline::factory()->create([
-            'nombre' => 'Cotización',
-            'codigo' => 'COTIZACION',
+            'nombre' => 'Test Pipeline',
+            'codigo' => 'TEST_PIPELINE',
         ]);
 
         $entity = $this->repository->find($eloquent->id);
 
         $this->assertInstanceOf(PipelineEntity::class, $entity);
         $this->assertEquals($eloquent->id, $entity->id);
-        $this->assertEquals('Cotización', $entity->nombre);
-        $this->assertEquals('COTIZACION', $entity->codigo);
+        $this->assertEquals('Test Pipeline', $entity->nombre);
+        $this->assertEquals('TEST_PIPELINE', $entity->codigo);
         $this->assertTrue($entity->habilitado);
     }
 

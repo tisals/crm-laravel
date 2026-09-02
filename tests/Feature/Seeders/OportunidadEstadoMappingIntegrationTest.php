@@ -66,8 +66,10 @@ class OportunidadEstadoMappingIntegrationTest extends TestCase
     #[Test]
     public function it_maps_estado_22_ganado_to_aceptada_stage(): void
     {
+        // Codigo must follow the canonical format GC-{SS}-{YYYY}-{NNN};
+        // see OportunidadCsvImportUseCase::import() validation.
         $result = $this->importRow([
-            'codigo' => 'TEST-001',
+            'codigo' => 'GC-01-2026-001',
             'fecha' => '15/06/2026',
             'estado' => '22',
             'empresa' => 'Test Corp',
@@ -79,7 +81,7 @@ class OportunidadEstadoMappingIntegrationTest extends TestCase
         $this->assertSame(1, $result['created']);
         $this->assertSame(0, $result['errors']);
 
-        $opp = DB::table('oportunidad')->where('codigo', 'TEST-001')->first();
+        $opp = DB::table('oportunidad')->where('codigo', 'GC-01-2026-001')->first();
         $this->assertNotNull($opp);
 
         $stageCodigo = DB::table('pipeline_etapas')->where('id', $opp->pipeline_etapa_id)->value('codigo');
@@ -90,7 +92,7 @@ class OportunidadEstadoMappingIntegrationTest extends TestCase
     public function it_maps_estado_23_perdido_to_rechazada_stage(): void
     {
         $this->importRow([
-            'codigo' => 'TEST-002',
+            'codigo' => 'GC-01-2026-002',
             'fecha' => '15/06/2026',
             'estado' => '23',
             'empresa' => 'Test Corp 2',
@@ -99,7 +101,7 @@ class OportunidadEstadoMappingIntegrationTest extends TestCase
             'contacto' => 'Test User 2',
         ]);
 
-        $opp = DB::table('oportunidad')->where('codigo', 'TEST-002')->first();
+        $opp = DB::table('oportunidad')->where('codigo', 'GC-01-2026-002')->first();
         $stageCodigo = DB::table('pipeline_etapas')->where('id', $opp->pipeline_etapa_id)->value('codigo');
 
         $this->assertSame('RECHAZADA', $stageCodigo);
@@ -109,7 +111,7 @@ class OportunidadEstadoMappingIntegrationTest extends TestCase
     public function it_maps_text_Generada_to_enviada_stage(): void
     {
         $this->importRow([
-            'codigo' => 'TEST-003',
+            'codigo' => 'GC-01-2026-003',
             'fecha' => '15/06/2026',
             'estado' => 'Generada',
             'empresa' => 'Test Corp 3',
@@ -118,7 +120,7 @@ class OportunidadEstadoMappingIntegrationTest extends TestCase
             'contacto' => 'Test User 3',
         ]);
 
-        $opp = DB::table('oportunidad')->where('codigo', 'TEST-003')->first();
+        $opp = DB::table('oportunidad')->where('codigo', 'GC-01-2026-003')->first();
         $stageCodigo = DB::table('pipeline_etapas')->where('id', $opp->pipeline_etapa_id)->value('codigo');
 
         $this->assertSame('ENVIADA', $stageCodigo);
@@ -128,7 +130,7 @@ class OportunidadEstadoMappingIntegrationTest extends TestCase
     public function it_maps_estado_20_enviado_to_enviada_stage(): void
     {
         $this->importRow([
-            'codigo' => 'TEST-004',
+            'codigo' => 'GC-01-2026-004',
             'fecha' => '15/06/2026',
             'estado' => '20',
             'empresa' => 'Test Corp 4',
@@ -137,7 +139,7 @@ class OportunidadEstadoMappingIntegrationTest extends TestCase
             'contacto' => 'Test User 4',
         ]);
 
-        $opp = DB::table('oportunidad')->where('codigo', 'TEST-004')->first();
+        $opp = DB::table('oportunidad')->where('codigo', 'GC-01-2026-004')->first();
         $stageCodigo = DB::table('pipeline_etapas')->where('id', $opp->pipeline_etapa_id)->value('codigo');
 
         $this->assertSame('ENVIADA', $stageCodigo);
