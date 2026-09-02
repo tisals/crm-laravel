@@ -61,12 +61,28 @@ class CotizacionControllerTest extends TestCase
         ]);
 
         $contacto = Contacto::create([
-            'entidad_id' => $entidad->id,
+            // Per commit fe99f70: `contacto.entidad_id` was dropped; the
+            // contacto's entidad binding lives on `entidad_persona`,
+            // keyed on the contacto's persona_id.
             'nombres' => 'Juan',
             'apellidos' => 'Pérez',
             'email_contacto' => 'juan@testcorp.com',
             'movil' => '3000000000',
             'estado' => 'Activo',
+        ]);
+        // Stamp the pivot so CotizacionController's "belongs to entidad"
+        // check via the pivot still resolves.
+        $contacto->persona_id = \App\Models\Persona::create([
+            'email_principal' => 'juan@testcorp.com',
+            'nombres' => 'Juan',
+        ])->id;
+        $contacto->save();
+        \Illuminate\Support\Facades\DB::table('entidad_persona')->insert([
+            'persona_id' => $contacto->persona_id,
+            'entidad_id' => $entidad->id,
+            'categoria' => 'asignacion',
+            'created_at' => now(),
+            'updated_at' => now(),
         ]);
 
         $this->oportunidad = Oportunidad::create([
