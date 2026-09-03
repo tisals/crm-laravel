@@ -69,8 +69,10 @@ class PersonaStoreRequest extends FormRequest
             'nombres' => 'required|string|max:100',
             'apellidos' => 'nullable|string|max:100',
 
-            // RQ-7: app-level uniqueness scoped to entidad. NULL emails are
-            // not subject to the rule (multiple personas may share a NULL
+            // RQ-7: app-level uniqueness scoped to entidad. The
+            // check now queries the shared `emails` table (Commit 4
+            // dropped `personas.email_principal`). NULL emails are not
+            // subject to the rule (multiple personas may share a NULL
             // email column).
             'email_principal' => [
                 'nullable',
@@ -80,12 +82,21 @@ class PersonaStoreRequest extends FormRequest
                     if ($value === null || $value === '') {
                         return;
                     }
-                    $exists = Persona::query()
-                        ->where('email_principal', $value)
+                    $exists = \DB::table('emails')
+                        ->where('email', $value)
                         ->when(
                             $entidadId !== null,
-                            fn ($q) => $q->where('entidad_id', (int) $entidadId),
-                            fn ($q) => $q->whereNull('entidad_id'),
+                            fn ($q) => $q->whereExists(
+                                fn ($sub) => $sub
+                                    ->from('entidad_persona')
+                                    ->whereColumn('entidad_persona.persona_id', 'emails.persona_id')
+                                    ->where('entidad_persona.entidad_id', (int) $entidadId)
+                            ),
+                            fn ($q) => $q->whereNotExists(
+                                fn ($sub) => $sub
+                                    ->from('entidad_persona')
+                                    ->whereColumn('entidad_persona.persona_id', 'emails.persona_id')
+                            )
                         )
                         ->exists();
                     if ($exists) {
@@ -101,6 +112,13 @@ class PersonaStoreRequest extends FormRequest
                 Rule::in(['CC', 'CE', 'NIT', 'PAS', 'TI', 'PEP']),
             ],
             'identificacion_numero' => 'nullable|string|max:20',
+            // Commit 4 dropped `telefono_principal`, `direccion`,
+            // `ciudad`, `pais` from `personas`. They now live in the
+            // shared `telefonos` / `direcciones` tables, written through
+            // their own REST verbs (`POST /api/v1/telefonos`, etc.). The
+            // request still ACCEPTS these fields for backwards
+            // compatibility and mirrors them into the new tables in
+            // the use case; once the API migrates, drop the rules.
             'telefono_principal' => 'nullable|string|max:30',
             'direccion' => 'nullable|string|max:200',
             'ciudad' => 'nullable|string|max:100',

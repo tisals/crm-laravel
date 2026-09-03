@@ -27,17 +27,22 @@ class PersonaResource extends JsonResource
 {
     public function toArray(Request $request): array
     {
+        // Commit 4 dropped `email_principal`, `telefono_principal`,
+        // `direccion`, `ciudad`, `pais` — those values now live in the
+        // shared `emails` / `telefonos` / `direcciones` tables. The
+        // `relations` block below surfaces them via sub-queries that
+        // pick the primary row per contact table (es_principal=true).
         return [
             'id' => $this->id,
             'identificacion_tipo' => $this->identificacion_tipo,
             'identificacion_numero' => $this->identificacion_numero,
             'nombres' => $this->nombres,
             'apellidos' => $this->apellidos,
-            'email_principal' => $this->email_principal,
-            'telefono_principal' => $this->telefono_principal,
-            'direccion' => $this->direccion,
-            'ciudad' => $this->ciudad,
-            'pais' => $this->pais,
+            'email_principal' => $this->primaryEmail($this->id),
+            'telefono_principal' => $this->primaryTelefono($this->id),
+            'direccion' => $this->primaryDireccion($this->id)['direccion_principal'] ?? null,
+            'ciudad' => $this->primaryDireccion($this->id)['nombre_sede'] ?? null,
+            'pais' => $this->primaryDireccion($this->id)['pais'] ?? null,
             // PR-A / PR-I: the iter4 fields show up in the response so
             // downstream (Mercury) can serialize the full person shape.
             'tipo_persona' => $this->tipo_persona ?? 'Natural',
@@ -46,6 +51,57 @@ class PersonaResource extends JsonResource
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
             'relations' => $this->resolveRelations(),
+        ];
+    }
+
+    /** Primary email row (es_principal=true) for a persona, or null. */
+    private function primaryEmail(int $personaId): ?string
+    {
+        $row = DB::table('emails')
+            ->where('persona_id', $personaId)
+            ->where('es_principal', true)
+            ->orderByDesc('id')
+            ->first(['email']);
+
+        return $row?->email;
+    }
+
+    /** Primary telefono row (es_principal=true) for a persona, or null. */
+    private function primaryTelefono(int $personaId): ?string
+    {
+        $row = DB::table('telefonos')
+            ->where('persona_id', $personaId)
+            ->where('es_principal', true)
+            ->orderByDesc('id')
+            ->first(['numero']);
+
+        return $row?->numero;
+    }
+
+    /**
+     * Primary direccion row (es_principal=true) for a persona, or empty
+     * array. We keep the shape flat (each key optional) so callers can
+     * read `$persona->primary_direccion['direccion_principal']` without
+     * hitting a nested object.
+     *
+     * @return array{direccion_principal: ?string, nombre_sede: ?string, pais: ?string}
+     */
+    private function primaryDireccion(int $personaId): array
+    {
+        $row = DB::table('direcciones')
+            ->where('persona_id', $personaId)
+            ->where('es_principal', true)
+            ->orderByDesc('id')
+            ->first(['direccion_principal', 'nombre_sede', 'pais']);
+
+        if (! $row) {
+            return ['direccion_principal' => null, 'nombre_sede' => null, 'pais' => null];
+        }
+
+        return [
+            'direccion_principal' => $row->direccion_principal,
+            'nombre_sede' => $row->nombre_sede,
+            'pais' => $row->pais,
         ];
     }
 

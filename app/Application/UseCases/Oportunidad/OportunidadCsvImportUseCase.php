@@ -567,14 +567,27 @@ class OportunidadCsvImportUseCase
         // persona (if missing) and writes the entidad_persona pivot row.
         // The persona_id column on contacto is additive (PR-E) and the
         // PR-F backfill command keeps it populated.
-        $personaId = DB::table('personas')
-            ->where('email_principal', $email)
-            ->value('id');
+        //
+        // Commit 4 dropped `personas.email_principal`; the dedup now
+        // reads from the shared `emails` table. When we create a new
+        // persona we ALSO insert the matching `emails` row so the
+        // backfilled data stays consistent.
+        $personaId = DB::table('emails')
+            ->where('email', $email)
+            ->value('persona_id');
 
         if (! $personaId) {
             $personaId = DB::table('personas')->insertGetId([
                 'nombres' => mb_substr($nombre, 0, 255) ?: 'Sin nombre',
-                'email_principal' => $email,
+                'created_at' => $now,
+                'updated_at' => $now,
+            ]);
+
+            DB::table('emails')->insert([
+                'persona_id' => (int) $personaId,
+                'email' => $email,
+                'tipo' => 'personal',
+                'es_principal' => true,
                 'created_at' => $now,
                 'updated_at' => $now,
             ]);

@@ -4,6 +4,20 @@ namespace App\Domain\Entities;
 
 class Entidad
 {
+    /**
+     * Commit 4 dropped the contact-data fields (`email`, `telefono`,
+     * `direccion`, `ciudad_cod`, `dominio`, `red_social_url`) that
+     * previously lived inline on this entity. They now live in the
+     * shared `emails` / `telefonos` / `direcciones` /
+     * `presencia_online` tables (Commit 3), reached via the Eloquent
+     * `Entidad` model's `emails()` / `telefonos()` / `direcciones()` /
+     * `presenciaOnline()` relations.
+     *
+     * `ciudad_nombre` survives as a derived/denormalized read for
+     * callers that want a single string; it now resolves from the
+     * primary `direcciones.ciudad_codigo` via the joined
+     * `ciudades.cod_municipio` (see `EloquentEntidadRepository`).
+     */
     public function __construct(
         public int $id,
         public string $tipo_persona,
@@ -11,9 +25,6 @@ class Entidad
         public ?string $identificacion,
         public string $nombre,
         public ?string $nombre_comercial = null,
-        public ?string $direccion = null,
-        public ?string $ciudad_cod = null,
-        public ?string $dominio = null,
         public ?string $rut = null,
         public ?string $logo = null,
         public string $estado = 'Activo',
@@ -36,9 +47,6 @@ class Entidad
             identificacion: $data['identificacion'] ?? null,
             nombre: $data['nombre'],
             nombre_comercial: $data['nombre_comercial'] ?? null,
-            direccion: $data['direccion'] ?? null,
-            ciudad_cod: $data['ciudad_cod'] ?? null,
-            dominio: $data['dominio'] ?? null,
             rut: $data['rut'] ?? null,
             logo: $data['logo'] ?? null,
             estado: $data['estado'] ?? 'Activo',
@@ -62,9 +70,6 @@ class Entidad
             'identificacion' => $this->identificacion ?? '',
             'nombre' => $this->nombre,
             'nombre_comercial' => $this->nombre_comercial,
-            'direccion' => $this->direccion,
-            'ciudad_cod' => $this->ciudad_cod,
-            'dominio' => $this->dominio,
             'rut' => $this->rut,
             'logo' => $this->logo,
             'estado' => $this->estado,

@@ -146,19 +146,34 @@ class EloquentContactoRepository extends BaseRepository implements ContactoRepos
         unset($data['entidad_id']);
 
         // 1. Resolve persona_id from email_contacto (backfill on demand).
+        //
+        // Commit 4 dropped `personas.email_principal` — the email
+        // lookup now goes through the shared `emails` table. The new
+        // persona row we create here ships without an `email_principal`
+        // column; the email lives in the `emails` row we insert below.
         if (! empty($data['email_contacto']) && empty($data['persona_id'])) {
-            $personaId = \DB::table('personas')
-                ->where('email_principal', $data['email_contacto'])
-                ->value('id');
+            $personaId = \DB::table('emails')
+                ->where('email', $data['email_contacto'])
+                ->value('persona_id');
 
             if (! $personaId) {
                 $personaId = \DB::table('personas')->insertGetId([
-                    'email_principal' => $data['email_contacto'],
                     'nombres' => $data['nombres'] ?? null,
                     'apellidos' => $data['apellidos'] ?? null,
                     'created_at' => now(),
                     'updated_at' => now(),
                 ]);
+
+                if (! empty($data['email_contacto'])) {
+                    \DB::table('emails')->insert([
+                        'persona_id' => (int) $personaId,
+                        'email' => (string) $data['email_contacto'],
+                        'tipo' => 'personal',
+                        'es_principal' => true,
+                        'created_at' => now(),
+                        'updated_at' => now(),
+                    ]);
+                }
             }
             $data['persona_id'] = $personaId;
         }

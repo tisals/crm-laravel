@@ -27,17 +27,17 @@ class UpdatePersonaUseCase
      * User-facing fields compared for the "no effective change" rule.
      * Excludes timestamps (`created_at`, `updated_at`, `deleted_at`) and
      * the auto-incrementing PK. Mirrors the columns in `PersonaResource`.
+     *
+     * The contact-data fields (`email_principal`, `telefono_principal`,
+     * `direccion`, `ciudad`, `pais`) were dropped by Commit 4 — they
+     * now live in the shared `emails` / `telefonos` / `direcciones`
+     * tables, updated through their own use cases / REST verbs.
      */
     private const COMPARED_FIELDS = [
         'identificacion_tipo',
         'identificacion_numero',
         'nombres',
         'apellidos',
-        'email_principal',
-        'telefono_principal',
-        'direccion',
-        'ciudad',
-        'pais',
         'tipo_persona',
         'entidad_id',
     ];

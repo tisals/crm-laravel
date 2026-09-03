@@ -37,10 +37,13 @@ return new class extends Migration
 
     public function down(): void
     {
+        // Commit 4 dropped `personas.email_principal`. The `after`
+        // position used to be `email_principal`; we switch to `nombres`
+        // so the rollback works against the post-Commit 4 schema.
         Schema::table('personas', function (Blueprint $table) {
             $table->enum('tipo_persona', ['Natural', 'Juridica'])
                 ->default(null)
-                ->after('email_principal');
+                ->after('nombres');
         });
 
         // Restore default value for Natural-only personas (the only kind

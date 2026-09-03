@@ -5,11 +5,24 @@ namespace App\Domain\Entities;
 class Persona
 {
     /**
-     * PR-A: `tipoPersona` and `entidadId` added so the domain entity mirrors
+     * PR-A added `tipoPersona` + `entidadId` so the domain entity mirrors
      * the Eloquent model's iter4 fields. Default for tipo_persona is 'Natural'
      * per REQ-PNCE-005 — the application layer is responsible for setting it
      * before persistence, but the entity carries the default for in-memory
      * construction.
+     *
+     * Commit 4 dropped the contact-data fields (`email_principal`,
+     * `telefono_principal`, `direccion`, `ciudad`, `pais`) because
+     * those values now live in the shared `emails` / `telefonos` /
+     * `direcciones` tables (Commit 3). The corresponding getters on
+     * the Eloquent model return `Collection`s; the domain entity just
+     * carries the persona identity (FK targets) so callers reach for
+     * the shared contact tables explicitly.
+     *
+     * Commit 7a2d33c had already dropped `tipo_persona` from the
+     * `personas` table (it lives on `entidad` now), so the entity
+     * keeps the field as an optional legacy read for any caller that
+     * still passes it through `fromArray`.
      */
     public function __construct(
         public int $id,
@@ -17,11 +30,6 @@ class Persona
         public ?string $identificacion_numero = null,
         public string $nombres = '',
         public ?string $apellidos = null,
-        public ?string $email_principal = null,
-        public ?string $telefono_principal = null,
-        public ?string $direccion = null,
-        public ?string $ciudad = null,
-        public ?string $pais = null,
         public ?string $tipo_persona = 'Natural',
         public ?int $entidad_id = null,
         public ?string $created_at = null,
@@ -37,11 +45,6 @@ class Persona
             identificacion_numero: $data['identificacion_numero'] ?? null,
             nombres: $data['nombres'] ?? '',
             apellidos: $data['apellidos'] ?? null,
-            email_principal: $data['email_principal'] ?? null,
-            telefono_principal: $data['telefono_principal'] ?? null,
-            direccion: $data['direccion'] ?? null,
-            ciudad: $data['ciudad'] ?? null,
-            pais: $data['pais'] ?? null,
             tipo_persona: $data['tipo_persona'] ?? 'Natural',
             entidad_id: isset($data['entidad_id']) ? (int) $data['entidad_id'] : null,
             created_at: $data['created_at'] ?? null,
@@ -58,11 +61,6 @@ class Persona
             'identificacion_numero' => $this->identificacion_numero,
             'nombres' => $this->nombres,
             'apellidos' => $this->apellidos,
-            'email_principal' => $this->email_principal,
-            'telefono_principal' => $this->telefono_principal,
-            'direccion' => $this->direccion,
-            'ciudad' => $this->ciudad,
-            'pais' => $this->pais,
             'tipo_persona' => $this->tipo_persona,
             'entidad_id' => $this->entidad_id,
             'nombre_completo' => trim("{$this->nombres} {$this->apellidos}"),

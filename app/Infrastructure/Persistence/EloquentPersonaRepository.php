@@ -43,12 +43,25 @@ class EloquentPersonaRepository extends BaseRepository implements PersonaReposit
 
     protected function applySearch($query, string $search)
     {
+        // Commit 4 dropped `personas.email_principal` /
+        // `personas.telefono_principal` — search now goes through
+        // the shared `emails` / `telefonos` tables via `whereExists`.
         return $query->where(function ($q) use ($search) {
             $q->where('nombres', 'like', "%{$search}%")
                 ->orWhere('apellidos', 'like', "%{$search}%")
-                ->orWhere('email_principal', 'like', "%{$search}%")
                 ->orWhere('identificacion_numero', 'like', "%{$search}%")
-                ->orWhere('telefono_principal', 'like', "%{$search}%");
+                ->orWhereExists(
+                    fn ($sub) => $sub
+                        ->from('emails')
+                        ->whereColumn('emails.persona_id', 'personas.id')
+                        ->where('emails.email', 'like', "%{$search}%")
+                )
+                ->orWhereExists(
+                    fn ($sub) => $sub
+                        ->from('telefonos')
+                        ->whereColumn('telefonos.persona_id', 'personas.id')
+                        ->where('telefonos.numero', 'like', "%{$search}%")
+                );
         });
     }
 

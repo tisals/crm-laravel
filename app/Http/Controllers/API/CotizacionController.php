@@ -262,6 +262,10 @@ class CotizacionController extends Controller
                     ?? 'deseguridad.net',
                 'nombre_comercial' => $brandEntity?->nombre_comercial ?? $brandEntity?->nombre ?? '',
                 'nit' => $brandEntity?->identificacion ?? '',
+                // Commit 4: `entidad.email`, `entidad.telefono`,
+                // `entidad.direccion`, `entidad.dominio` are now
+                // accessors that resolve from `emails` /
+                // `telefonos` / `direcciones` / `presencia_online`.
                 'email' => $brandEntity?->email ?? '',
                 'direccion' => $brandEntity?->direccion ?? '',
                 'telefono' => $brandEntity?->telefono ?? '',

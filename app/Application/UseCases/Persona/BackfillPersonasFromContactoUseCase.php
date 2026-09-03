@@ -79,10 +79,11 @@ class BackfillPersonasFromContactoUseCase
         $wouldSkipDuplicate = 0;
 
         // Pre-load existing personas emails (case-insensitive) for the
-        // pre-existing-dedup case.
-        $existingEmails = DB::table('personas')
-            ->whereNotNull('email_principal')
-            ->pluck('email_principal')
+        // pre-existing-dedup case. Commit 4 dropped `personas.email_principal`;
+        // the dedup now reads from the shared `emails` table.
+        $existingEmails = DB::table('emails')
+            ->whereNotNull('email')
+            ->pluck('email')
             ->map(fn ($e) => strtolower(trim((string) $e)))
             ->flip()
             ->all();
@@ -150,21 +151,24 @@ class BackfillPersonasFromContactoUseCase
 
                 DB::transaction(function () use ($contactoId, $contacto, $email, $emailLower, &$inserted, &$updated, &$skippedDuplicate) {
                     // Cross-entidad dedupe by lowercased email (AD-12).
-                    $existing = DB::table('personas')
-                        ->whereRaw('LOWER(email_principal) = ?', [$emailLower])
-                        ->first();
+                    // Commit 4 dropped `personas.email_principal`; the
+                    // dedup now reads from the shared `emails` table.
+                    $existing = DB::table('emails')
+                        ->whereRaw('LOWER(email) = ?', [$emailLower])
+                        ->value('persona_id');
 
                     if ($existing) {
+                        $personaId = (int) $existing;
                         Log::info('backfill.dedupe.matched', [
                             'contacto_id' => $contactoId,
-                            'persona_id' => (int) $existing->id,
+                            'persona_id' => $personaId,
                             'code' => 'backfill.dedupe.matched',
                         ]);
 
                         DB::table('contacto')
                             ->where('id', $contactoId)
                             ->update([
-                                'persona_id' => (int) $existing->id,
+                                'persona_id' => $personaId,
                                 'updated_at' => now(),
                             ]);
                         $skippedDuplicate++;
@@ -174,7 +178,6 @@ class BackfillPersonasFromContactoUseCase
                             'apellidos' => $contacto->apellidos !== null && $contacto->apellidos !== ''
                                 ? (string) $contacto->apellidos
                                 : null,
-                            'email_principal' => $email,
                             // `tipo_persona` ENUM was dropped from personas
                             // in commit 7a2d33c (PR-A cleanup). The new
                             // personas table is type-agnostic; the
@@ -183,12 +186,38 @@ class BackfillPersonasFromContactoUseCase
                             // 1:1 link). We default new personas to the
                             // implicit "Natural" persona type without
                             // writing it anywhere.
-                            'telefono_principal' => $contacto->tel_contacto !== null && $contacto->tel_contacto !== ''
-                                ? (string) $contacto->tel_contacto
-                                : null,
+                            //
+                            // Commit 4 dropped `email_principal` /
+                            // `telefono_principal`; those values now live
+                            // in the shared `emails` / `telefonos`
+                            // tables. We insert them right after the
+                            // persona row below so the backfill
+                            // produces a fully-populated persona.
                             'created_at' => now(),
                             'updated_at' => now(),
                         ]);
+
+                        if ($email !== '') {
+                            DB::table('emails')->insert([
+                                'persona_id' => (int) $personaId,
+                                'email' => $email,
+                                'tipo' => 'personal',
+                                'es_principal' => true,
+                                'created_at' => now(),
+                                'updated_at' => now(),
+                            ]);
+                        }
+
+                        if (! empty($contacto->tel_contacto)) {
+                            DB::table('telefonos')->insert([
+                                'persona_id' => (int) $personaId,
+                                'numero' => (string) $contacto->tel_contacto,
+                                'tipo' => 'movil',
+                                'es_principal' => true,
+                                'created_at' => now(),
+                                'updated_at' => now(),
+                            ]);
+                        }
 
                         DB::table('contacto')
                             ->where('id', $contactoId)

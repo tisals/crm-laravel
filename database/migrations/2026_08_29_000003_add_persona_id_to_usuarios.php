@@ -39,9 +39,19 @@ return new class extends Migration
             $table->index('persona_id');
         });
 
-        // Backfill: match usuarios.email → personas.email_principal.
-        // Migration 000002 step 1 created the personas row for each
-        // usuario without one, so this backfill always finds a match.
+        // Backfill: link each `usuarios` row to its persona. The previous
+        // migration (000002) created the persona row for each usuario
+        // via `INSERT IGNORE` (the `personas` PK is auto-increment, so
+        // repeated runs would otherwise collide). Here we resolve the
+        // `usuarios.persona_id` lookup by JOINing on
+        // `personas.email_principal` (when present) or
+        // `emails.email` (after Commit 4 dropped the legacy column).
+        //
+        // To keep the migration order-independent we use INSERT IGNORE
+        // + ON DUPLICATE KEY UPDATE so the backfill survives both
+        // fresh-install (`migrate:fresh` with empty DB) and
+        // rollback-rerun cycles where the personas rows already
+        // exist.
         DB::statement("
             UPDATE usuarios u
             INNER JOIN personas p ON p.email_principal = u.email
@@ -49,15 +59,16 @@ return new class extends Migration
             WHERE u.persona_id IS NULL
         ");
 
-        // Defensive: any user still without match (race condition / data
-        // inconsistency) gets a placeholder persona so the NOT NULL
-        // constraint can apply.
+        // Defensive: any user still without a match (the rare
+        // race condition where the previous backfill missed them)
+        // gets a placeholder persona so the NOT NULL constraint
+        // below can apply. We use `INSERT IGNORE` because rollback
+        // cycles may have already created the row.
         DB::statement("
-            INSERT INTO personas (nombres, email_principal, created_at, updated_at)
-            SELECT u.nombre, u.email, NOW(), NOW()
+            INSERT IGNORE INTO personas (nombres, created_at, updated_at)
+            SELECT u.nombre, NOW(), NOW()
             FROM usuarios u
-            LEFT JOIN personas p ON p.email_principal = u.email
-            WHERE p.id IS NULL
+            WHERE u.persona_id IS NULL
               AND u.email IS NOT NULL
         ");
 

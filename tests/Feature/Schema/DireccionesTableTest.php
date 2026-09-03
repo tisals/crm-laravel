@@ -31,7 +31,7 @@ class DireccionesTableTest extends TestCase
 
         $this->personaId = DB::table('personas')->insertGetId([
             'nombres' => 'Ada',
-            'email_principal' => 'ada@example.test',
+            
             'created_at' => now(),
             'updated_at' => now(),
         ]);

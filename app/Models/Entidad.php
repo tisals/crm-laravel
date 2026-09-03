@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Modules\CRM\Models\Oportunidad;
 
@@ -30,6 +31,17 @@ class Entidad extends Model
         'cliente',    // legacy lowercased
     ];
 
+    /**
+     * Commit 4 dropped the contact-data columns that Commit 3
+     * backfilled to `emails` / `telefonos` / `direcciones` /
+     * `presencia_online`. Callers that need an entidad's primary
+     * email now go through `$entidad->emails()->where('es_principal', true)->first()`
+     * (or filter by `tipo='trabajo'` for the canonical work address).
+     *
+     * `ciudad_cod` had an FK to `ciudades.cod_municipio`; the FK was
+     * dropped before the column. Callers that need the ciudad code
+     * read it off `$entidad->direcciones()->first()->ciudad_codigo`.
+     */
     protected $fillable = [
         'tipo_persona',
         'tipo_id',
@@ -37,11 +49,6 @@ class Entidad extends Model
         'nombre',
         'nombre_comercial',
         'linea_negocio',
-        'direccion',
-        'ciudad_cod',
-        'dominio',
-        'email',
-        'telefono',
         'cantidad_empleados',
         'rut',
         'logo',
@@ -171,8 +178,98 @@ class Entidad extends Model
         return $this->hasMany(Oportunidad::class, 'entidad_id');
     }
 
-    public function ciudad()
+    /**
+     * Ciudad (municipality) this entidad is registered in. The legacy
+     * `entidad.ciudad_cod` FK column was dropped in Commit 4; the
+     * ciudad code now lives on the entidad's primary `direcciones`
+     * row. Returns the first `Direccion` row that has a non-null
+     * `ciudad_codigo`, or null if no addresses carry one yet.
+     */
+    public function ciudad(): ?Direccion
     {
-        return $this->belongsTo(Ciudad::class, 'ciudad_cod', 'cod_municipio');
+        return $this->direcciones()
+            ->whereNotNull('ciudad_codigo')
+            ->orderByDesc('es_principal')
+            ->first();
+    }
+
+    // ── Commit 3 shared contact relations ──────────────────────────────
+
+    public function telefonos(): HasMany
+    {
+        return $this->hasMany(Telefono::class, 'entidad_id');
+    }
+
+    public function emails(): HasMany
+    {
+        return $this->hasMany(Email::class, 'entidad_id');
+    }
+
+    public function direcciones(): HasMany
+    {
+        return $this->hasMany(Direccion::class, 'entidad_id');
+    }
+
+    public function presenciaOnline(): HasMany
+    {
+        return $this->hasMany(PresenciaOnline::class, 'entidad_id');
+    }
+
+    public function documentos(): HasMany
+    {
+        return $this->hasMany(Documento::class, 'entidad_id');
+    }
+
+    // ── Commit 4 accessors: legacy field semantics via the new tables ──
+
+    /**
+     * Primary email address (tipo=trabajo, es_principal=true). Backed
+     * by the `emails` table now that `entidad.email` was dropped.
+     */
+    public function getEmailAttribute(): ?string
+    {
+        return $this->emails()
+            ->where('tipo', 'trabajo')
+            ->where('es_principal', true)
+            ->orderByDesc('id')
+            ->value('email');
+    }
+
+    /**
+     * Primary phone number (tipo=trabajo, es_principal=true). Backed
+     * by the `telefonos` table now that `entidad.telefono` was dropped.
+     */
+    public function getTelefonoAttribute(): ?string
+    {
+        return $this->telefonos()
+            ->where('tipo', 'trabajo')
+            ->where('es_principal', true)
+            ->orderByDesc('id')
+            ->value('numero');
+    }
+
+    /**
+     * Primary street address (tipo=oficina, es_principal=true). Backed
+     * by the `direcciones` table now that `entidad.direccion` was dropped.
+     */
+    public function getDireccionAttribute(): ?string
+    {
+        return $this->direcciones()
+            ->where('es_principal', true)
+            ->orderByDesc('id')
+            ->value('direccion_principal');
+    }
+
+    /**
+     * Primary web presence URL (tipo=web, es_principal=true). Backed
+     * by the `presencia_online` table now that `entidad.dominio` was dropped.
+     */
+    public function getDominioAttribute(): ?string
+    {
+        return $this->presenciaOnline()
+            ->where('tipo', 'web')
+            ->where('es_principal', true)
+            ->orderByDesc('id')
+            ->value('url');
     }
 }

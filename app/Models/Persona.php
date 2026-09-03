@@ -16,26 +16,23 @@ class Persona extends Model
     protected $table = 'personas';
 
     /**
-     * PR-A: `tipo_persona` and `entidad_id` are added so the iter4 persona
-     * model can carry a Natural/Juridica classification and an optional
-     * link to a parent entity.
-     *
-     * Commit 7a2d33c dropped `tipo_persona` (lives on `entidad` now).
-     * `entidad_id` is a legacy 1:1 FK that survives only for
-     * backward-compatible single-tenant lookups; the canonical
+     * PR-A added `tipo_persona` + `entidad_id` for the iter4 persona
+     * model. Commit 7a2d33c dropped `tipo_persona` (it lives on
+     * `entidad` now). `entidad_id` is a legacy 1:1 FK that survives
+     * for backward-compatible single-tenant lookups; the canonical
      * multi-tenant relation is `entidades()` via the `entidad_persona`
      * pivot.
+     *
+     * Commit 4 dropped the contact-data columns that Commit 3 backfilled
+     * to `emails` / `telefonos` / `direcciones`. Callers that need to
+     * read a persona's email now go through `$persona->emails()->first()`
+     * (or the email rows' `principal` flag), not a column on this model.
      */
     protected $fillable = [
         'identificacion_tipo',
         'identificacion_numero',
         'nombres',
         'apellidos',
-        'email_principal',
-        'telefono_principal',
-        'direccion',
-        'ciudad',
-        'pais',
         'entidad_id',
     ];
 

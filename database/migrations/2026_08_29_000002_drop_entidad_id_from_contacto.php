@@ -36,21 +36,31 @@ return new class extends Migration
     {
         // Step 1 — create personas rows for usuarios that have none
         // (needed because migration 000003 will add usuarios.persona_id FK).
-        // Idempotent: LEFT JOIN + IS NULL filter skips already-linked usuarios.
+        //
+        // Dedup strategy: this migration runs in two contexts:
+        //   (a) `migrate:fresh` on an empty DB → no dedup needed.
+        //   (b) `migrate:rollback && migrate` cycle where the personas
+        //       table still has rows from the previous cycle → we need
+        //       to skip inserts that would collide on PK.
+        //
+        // We use `INSERT IGNORE` (MariaDB-specific) which discards
+        // duplicate-key errors silently. This is safer than the
+        // original `LEFT JOIN personas ON email_principal = u.email`
+        // (Commit 4 dropped `personas.email_principal`) and survives
+        // rollback cycles without depending on columns that don't
+        // exist in the current schema snapshot.
         DB::statement("
-            INSERT INTO personas (
+            INSERT IGNORE INTO personas (
                 identificacion_tipo, identificacion_numero,
                 nombres, apellidos,
-                email_principal, created_at, updated_at
+                created_at, updated_at
             )
             SELECT
                 NULL, NULL,
                 u.nombre, NULL,
-                u.email, NOW(), NOW()
+                NOW(), NOW()
             FROM usuarios u
-            LEFT JOIN personas p ON p.email_principal = u.email
-            WHERE p.id IS NULL
-              AND u.email IS NOT NULL
+            WHERE u.email IS NOT NULL
         ");
 
         // Step 2 — drop contacto.entidad_id index + column (idempotent).

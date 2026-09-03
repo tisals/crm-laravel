@@ -218,10 +218,10 @@ class SchemaFoundationTest extends TestCase
         // `bot_sessions` and added `seguimiento.bot_*` columns. Since
         // then we've added PR-C/D/E/G (4-6, 10-12, 99), Commit 1+2
         // (`2026_08_29_000001..000004`), Commit 2.5's pagos_cliente,
-        // and Commit 3 (12 migrations: 5 tables + 7 backfills) — 26
-        // newer migrations on top of 000003. We roll back 27 to reach
-        // the pre-PR-B state.
-        $this->artisan('migrate:rollback', ['--step' => 27])->assertExitCode(0);
+        // Commit 3 (12 migrations: 5 tables + 7 backfills), and
+        // Commit 4 (2 drop migrations) — 28 newer migrations on top of
+        // 000003. We roll back 29 to reach the pre-PR-B state.
+        $this->artisan('migrate:rollback', ['--step' => 29])->assertExitCode(0);
 
         $this->assertFalse(
             Schema::hasTable('bot_sessions'),

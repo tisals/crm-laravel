@@ -110,11 +110,9 @@ class PersonaRoleRelationsTest extends TestCase
         // (rollback removed rows → migrate re-adds them), so subsequent
         // tests in this class see a consistent state.
         //
-        // Commit 3 (12 migrations: 5 tables + 7 backfills) plus
-        // Commit 2.5 (1 pagos_cliente) plus Commit 1+2 (4) plus PR-G
-        // plus the 3 PR-E migrations = 21 steps to reach the pre-PR-E
-        // state.
-        $this->artisan('migrate:rollback', ['--step' => 21])->assertExitCode(0);
+        // Commit 1+2 (4) + Commit 2.5 (1) + Commit 3 (12) + Commit 4 (2)
+        // + PR-G (1) + 3 PR-E = 23 steps to reach the pre-PR-E state.
+        $this->artisan('migrate:rollback', ['--step' => 23])->assertExitCode(0);
 
         $now = now();
         DB::table('contacto')->insert([
@@ -409,12 +407,10 @@ class PersonaRoleRelationsTest extends TestCase
         // Commit 1+2 added 4 migrations on top of the PR-E migrations
         // (`2026_08_29_000001..000004`), plus PR-G (000099) on top of
         // PR-E, plus the pagos_cliente migration (Commit 2.5), plus
-        // Commit 3 (12 migrations: 5 tables + 7 backfills).
-        // That's 21 newer migrations on top of PR-E, so we roll back
-        // 21 steps: 12 from Commit 3 + 1 pagos_cliente + 4 from
-        // Commit 1+2 + PR-G + the 3 PR-E migrations (000010, 000011,
-        // 000012) added in this PR.
-        $this->artisan('migrate:rollback', ['--step' => 21])->assertExitCode(0);
+        // Commit 3 (12 migrations: 5 tables + 7 backfills), plus
+        // Commit 4 (2 migrations: drop legacy columns). That's 23
+        // newer migrations on top of PR-E, so we roll back 23 steps.
+        $this->artisan('migrate:rollback', ['--step' => 23])->assertExitCode(0);
 
         // All three persona_id columns are gone.
         $this->assertFalse(

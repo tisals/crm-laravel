@@ -120,9 +120,14 @@ class StorePersonaUseCase
      *   - nombre         ← trim(persona.nombres.' '.persona.apellidos),
      *                       falling back to just `nombres` when apellidos
      *                       is null (juridica personas don't have surnames)
-     *   - nombre_comercial, ciudad_cod, dominio, email_contacto ← NULL
-     *   - direccion      ← persona.direccion (when provided)
+     *   - nombre_comercial, dominio, email_contacto ← NULL
      *   - estado         ← 'Activo'
+     *
+     * Commit 4 dropped `entidad.direccion` and `entidad.ciudad_cod` —
+     * those fields now live in the shared `direcciones` table, which
+     * the caller writes through a separate REST verb after this
+     * insert (or via the legacy `direccion` field on the persona if
+     * present, mirrored into `direcciones` for that new entidad).
      *
      * @param  array<string, mixed>  $persona
      */
@@ -142,13 +147,27 @@ class StorePersonaUseCase
             'identificacion' => $persona['identificacion_numero'] ?? null,
             'nombre' => $nombreCompleto,
             'nombre_comercial' => null,
-            'direccion' => $persona['direccion'] ?? null,
-            'ciudad_cod' => null,
-            'dominio' => null,
             'estado' => 'Activo',
             'created_at' => now(),
             'updated_at' => now(),
         ]);
+
+        // Mirror any persona-level `direccion` value into a new
+        // `direcciones` row for this entidad (Commit 3 contract). The
+        // legacy `personas.direccion` column was dropped by Commit 4,
+        // but personas still carry it in incoming payloads for now —
+        // once the API migrates to the dedicated `/direcciones`
+        // endpoint, this fallback can be deleted.
+        if (! empty($persona['direccion'])) {
+            DB::table('direcciones')->insert([
+                'entidad_id' => (int) $entidadId,
+                'direccion_principal' => (string) $persona['direccion'],
+                'tipo' => 'oficina',
+                'es_principal' => true,
+                'created_at' => now(),
+                'updated_at' => now(),
+            ]);
+        }
 
         return (int) $entidadId;
     }

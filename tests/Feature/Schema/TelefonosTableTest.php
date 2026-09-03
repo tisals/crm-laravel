@@ -31,7 +31,7 @@ class TelefonosTableTest extends TestCase
         $this->personaId = DB::table('personas')->insertGetId([
             'nombres' => 'Ada',
             'apellidos' => 'Lovelace',
-            'email_principal' => 'ada@example.test',
+            
             'created_at' => now(),
             'updated_at' => now(),
         ]);

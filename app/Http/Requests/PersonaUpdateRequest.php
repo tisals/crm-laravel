@@ -47,13 +47,24 @@ class PersonaUpdateRequest extends FormRequest
                     if ($value === null || $value === '') {
                         return;
                     }
-                    $exists = Persona::query()
-                        ->where('id', '!=', $personaId)
-                        ->where('email_principal', $value)
+                    // Commit 4: dedup now queries the shared `emails`
+                    // table; the persona scope is via `persona_id !=`.
+                    $exists = \DB::table('emails')
+                        ->where('persona_id', '!=', $personaId)
+                        ->where('email', $value)
                         ->when(
                             $entidadId !== null,
-                            fn ($q) => $q->where('entidad_id', (int) $entidadId),
-                            fn ($q) => $q->whereNull('entidad_id'),
+                            fn ($q) => $q->whereExists(
+                                fn ($sub) => $sub
+                                    ->from('entidad_persona')
+                                    ->whereColumn('entidad_persona.persona_id', 'emails.persona_id')
+                                    ->where('entidad_persona.entidad_id', (int) $entidadId)
+                            ),
+                            fn ($q) => $q->whereNotExists(
+                                fn ($sub) => $sub
+                                    ->from('entidad_persona')
+                                    ->whereColumn('entidad_persona.persona_id', 'emails.persona_id')
+                            )
                         )
                         ->exists();
                     if ($exists) {
