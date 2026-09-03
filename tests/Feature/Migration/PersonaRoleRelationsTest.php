@@ -404,13 +404,13 @@ class PersonaRoleRelationsTest extends TestCase
             'precondition: proveedores.persona_id should exist before rollback'
         );
 
-        // Commit 1+2 added 4 migrations on top of the PR-E migrations
-        // (`2026_08_29_000001..000004`), plus PR-G (000099) on top of
-        // PR-E, plus the pagos_cliente migration (Commit 2.5), plus
-        // Commit 3 (12 migrations: 5 tables + 7 backfills), plus
-        // Commit 4 (2 migrations: drop legacy columns). That's 23
-        // newer migrations on top of PR-E, so we roll back 23 steps.
-        $this->artisan('migrate:rollback', ['--step' => 23])->assertExitCode(0);
+        // Commit 1+2 added 4, PR-G added 1, pagos_cliente (Commit 2.5)
+        // added 1, Commit 3 added 12 (5 tables + 7 backfills), Commit 4
+        // added 2 (drop legacy columns), Commit 5 added 2
+        // (entidad_relacion table + backfill) = 22 newer migrations.
+        // Plus the 3 PR-E migrations we want to reach = 25 steps to
+        // reach the pre-PR-E state.
+        $this->artisan('migrate:rollback', ['--step' => 25])->assertExitCode(0);
 
         // All three persona_id columns are gone.
         $this->assertFalse(

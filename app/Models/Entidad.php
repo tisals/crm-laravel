@@ -220,6 +220,17 @@ class Entidad extends Model
         return $this->hasMany(Documento::class, 'entidad_id');
     }
 
+    /**
+     * Commit 5 — pivot of business-state relations (cliente /
+     * prospecto / propia / proveedor). Replaces the legacy
+     * `entidad.estado` single-column state with a temporal model
+     * that captures the entity's relationship history.
+     */
+    public function relaciones(): HasMany
+    {
+        return $this->hasMany(EntidadRelacion::class, 'entidad_id');
+    }
+
     // ── Commit 4 accessors: legacy field semantics via the new tables ──
 
     /**
