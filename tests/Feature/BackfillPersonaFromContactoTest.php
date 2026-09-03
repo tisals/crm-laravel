@@ -85,10 +85,16 @@ class BackfillPersonaFromContactoTest extends TestCase
                 $persona->nombres,
                 "persona.nombres for '{$slug}' must equal contacto.nombres"
             );
+            // Commit 4 dropped `personas.email_principal`; the email
+            // now lives in the shared `emails` table. We pick the
+            // primary email (es_principal=true) for the assertion.
+            $primaryEmail = $persona->emails()
+                ->where('es_principal', true)
+                ->value('email');
             $this->assertSame(
                 "{$slug}@example.test",
-                $persona->email_principal,
-                "persona.email_principal for '{$slug}' must equal contacto.email_contacto"
+                $primaryEmail,
+                "persona primary email for '{$slug}' must equal contacto.email_contacto"
             );
         }
 
@@ -279,14 +285,19 @@ class BackfillPersonaFromContactoTest extends TestCase
                 'estado' => 'Activo', 'score' => 0,
             ]);
         }
-        // 1 contacto with email longer than 150 chars (personas.email_principal cap).
-        // This produces a SQL truncation error against personas.email_principal
-        // — the natural "bad row" trigger that exercises per-row isolation.
-        $longEmail = str_repeat('x', 160).'@example.test';
+        // 1 contacto whose `nombres` is longer than 100 chars (the
+        // `personas.nombres` VARCHAR(100) cap). When the backfill
+        // inserts a new persona row, the long `nombres` triggers a
+        // SQL truncation error — the natural "bad row" trigger that
+        // exercises per-row isolation. (We can't use a long email
+        // anymore because Commit 4 raised the `emails.email` cap to
+        // 255; the legacy 150-char cap used to be the trigger but
+        // that column is gone.)
+        $longNombres = str_repeat('X', 150);
         Contacto::create([
             'entidad_id' => $entidad->id,
-            'nombres' => 'Bad', 'apellidos' => 'Row',
-            'email_contacto' => $longEmail,
+            'nombres' => $longNombres, 'apellidos' => 'Row',
+            'email_contacto' => 'bad@example.test',
             'estado' => 'Activo', 'score' => 0,
         ]);
 
