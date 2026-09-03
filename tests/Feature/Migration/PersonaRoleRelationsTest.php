@@ -407,10 +407,11 @@ class PersonaRoleRelationsTest extends TestCase
         // Commit 1+2 added 4, PR-G added 1, pagos_cliente (Commit 2.5)
         // added 1, Commit 3 added 12 (5 tables + 7 backfills), Commit 4
         // added 2 (drop legacy columns), Commit 5 added 2
-        // (entidad_relacion table + backfill) = 22 newer migrations.
-        // Plus the 3 PR-E migrations we want to reach = 25 steps to
+        // (entidad_relacion table + backfill), Commit 5.5 added 2
+        // (frecuencia + add_vigencia_meses) = 24 newer migrations.
+        // Plus the 3 PR-E migrations we want to reach = 27 steps to
         // reach the pre-PR-E state.
-        $this->artisan('migrate:rollback', ['--step' => 25])->assertExitCode(0);
+        $this->artisan('migrate:rollback', ['--step' => 27])->assertExitCode(0);
 
         // All three persona_id columns are gone.
         $this->assertFalse(

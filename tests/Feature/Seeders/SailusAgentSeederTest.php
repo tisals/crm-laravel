@@ -186,7 +186,6 @@ class SailusAgentSeederTest extends TestCase
             'tipo_persona' => 'Juridica',
             'identificacion' => 'TEST-OTHER-'.uniqid(),
             'nombre' => 'Pre-existing unrelated entidad',
-            'estado' => 'Activo',
             'created_at' => now(),
             'updated_at' => now(),
         ]);

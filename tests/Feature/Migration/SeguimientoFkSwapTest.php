@@ -64,9 +64,11 @@ class SeguimientoFkSwapTest extends TestCase
         // pagos_cliente migration, Commit 3 added 12 more (5 tables
         // + 7 backfills), Commit 4 added 2 more (drop legacy
         // columns), Commit 5 added 2 more (entidad_relacion +
-        // backfill). So to reach the pre-PR-G state we roll back 22
-        // steps (PR-G is the 22nd from the top).
-        $this->artisan('migrate:rollback', ['--step' => 22])->assertExitCode(0);
+        // backfill), Commit 5.5 added 2 more (frecuencia + add
+        // vigencia_meses). That's 20 newer migrations on top of
+        // PR-G. To reach the pre-PR-G state we roll back 24 steps
+        // (PR-G + 20 migrations after it).
+        $this->artisan('migrate:rollback', ['--step' => 24])->assertExitCode(0);
         $this->assertTrue(
             Schema::hasColumn('seguimiento', 'contacto_id'),
             'precondition: contacto_id must exist after rolling back PR-G'
@@ -124,9 +126,11 @@ class SeguimientoFkSwapTest extends TestCase
         // pagos_cliente migration, Commit 3 added 12 more (5 tables
         // + 7 backfills), Commit 4 added 2 more (drop legacy
         // columns), Commit 5 added 2 more (entidad_relacion +
-        // backfill). So to reach the pre-PR-G state we roll back 22
-        // steps (PR-G is the 22nd from the top).
-        $this->artisan('migrate:rollback', ['--step' => 22])->assertExitCode(0);
+        // backfill), Commit 5.5 added 2 more (frecuencia + add
+        // vigencia_meses). That's 20 newer migrations on top of
+        // PR-G. To reach the pre-PR-G state we roll back 24 steps
+        // (PR-G + 20 migrations after it).
+        $this->artisan('migrate:rollback', ['--step' => 24])->assertExitCode(0);
         $this->seedSeguimientosWithPersonas(3);
         $this->artisan('migrate', ['--force' => true])->assertExitCode(0);
 
@@ -184,9 +188,11 @@ class SeguimientoFkSwapTest extends TestCase
         // pagos_cliente migration, Commit 3 added 12 more (5 tables
         // + 7 backfills), Commit 4 added 2 more (drop legacy
         // columns), Commit 5 added 2 more (entidad_relacion +
-        // backfill). So to reach the pre-PR-G state we roll back 22
-        // steps (PR-G is the 22nd from the top).
-        $this->artisan('migrate:rollback', ['--step' => 22])->assertExitCode(0);
+        // backfill), Commit 5.5 added 2 more (frecuencia + add
+        // vigencia_meses). That's 20 newer migrations on top of
+        // PR-G. To reach the pre-PR-G state we roll back 24 steps
+        // (PR-G + 20 migrations after it).
+        $this->artisan('migrate:rollback', ['--step' => 24])->assertExitCode(0);
         $this->assertTrue(Schema::hasColumn('seguimiento', 'contacto_id'));
 
         // Create a contacto WITHOUT persona_id (backfill missing).
@@ -300,9 +306,11 @@ class SeguimientoFkSwapTest extends TestCase
         // pagos_cliente migration, Commit 3 added 12 more (5 tables
         // + 7 backfills), Commit 4 added 2 more (drop legacy
         // columns), Commit 5 added 2 more (entidad_relacion +
-        // backfill). So to reach the pre-PR-G state we roll back 22
-        // steps (PR-G is the 22nd from the top).
-        $this->artisan('migrate:rollback', ['--step' => 22])->assertExitCode(0);
+        // backfill), Commit 5.5 added 2 more (frecuencia + add
+        // vigencia_meses). That's 20 newer migrations on top of
+        // PR-G. To reach the pre-PR-G state we roll back 24 steps
+        // (PR-G + 20 migrations after it).
+        $this->artisan('migrate:rollback', ['--step' => 24])->assertExitCode(0);
 
         // contacto_id column is back; persona_id is gone.
         $this->assertTrue(
@@ -366,9 +374,11 @@ class SeguimientoFkSwapTest extends TestCase
         // pagos_cliente migration, Commit 3 added 12 more (5 tables
         // + 7 backfills), Commit 4 added 2 more (drop legacy
         // columns), Commit 5 added 2 more (entidad_relacion +
-        // backfill). So to reach the pre-PR-G state we roll back 22
-        // steps (PR-G is the 22nd from the top).
-        $this->artisan('migrate:rollback', ['--step' => 22])->assertExitCode(0);
+        // backfill), Commit 5.5 added 2 more (frecuencia + add
+        // vigencia_meses). That's 20 newer migrations on top of
+        // PR-G. To reach the pre-PR-G state we roll back 24 steps
+        // (PR-G + 20 migrations after it).
+        $this->artisan('migrate:rollback', ['--step' => 24])->assertExitCode(0);
 
         // Precondition (loud RED if PR-G is missing): the migration must
         // re-add persona_id. We assert after migrate() below.

@@ -41,6 +41,13 @@ class Entidad extends Model
      * `ciudad_cod` had an FK to `ciudades.cod_municipio`; the FK was
      * dropped before the column. Callers that need the ciudad code
      * read it off `$entidad->direcciones()->first()->ciudad_codigo`.
+     *
+     * Commit 5.5 dropped `entidad.estado` and `entidad.cliente_desde`
+     * — operational/business state now lives on the
+     * `entidad_relacion` pivot. `entidad.estado` is DERIVED from the
+     * pivot via `getEstadoAttribute()` (see below): "activo" iff
+     * the entity has at least one pivot row with `effective_to IS
+     * NULL`, otherwise "inactivo".
      */
     protected $fillable = [
         'tipo_persona',
@@ -52,7 +59,6 @@ class Entidad extends Model
         'cantidad_empleados',
         'rut',
         'logo',
-        'estado',
         'allowed_domains',
         'webhook_url',
         'webhook_secret',
@@ -282,5 +288,29 @@ class Entidad extends Model
             ->where('es_principal', true)
             ->orderByDesc('id')
             ->value('url');
+    }
+
+    /**
+     * Commit 5.5: derive `estado` from the `entidad_relacion` pivot.
+     * The legacy `entidad.estado` column is gone; the operational
+     * state is computed from whether the entity has at least one
+     * pivot row with `effective_to IS NULL`.
+     *
+     * "activo" = at least one relation is currently open.
+     * "inactivo" = every relation is closed (or there are none).
+     *
+     * This accessor is cheap enough to call inline in Resources
+     * because the pivot table has an index on
+     * `(entidad_id, effective_from DESC)`. For list endpoints, the
+     * caller can still pre-filter via a sub-query; see
+     * `EloquentEntidadRepository` for the optimized path.
+     */
+    public function getEstadoAttribute(): string
+    {
+        $hasOpenRelation = $this->relaciones()
+            ->whereNull('effective_to')
+            ->exists();
+
+        return $hasOpenRelation ? 'activo' : 'inactivo';
     }
 }

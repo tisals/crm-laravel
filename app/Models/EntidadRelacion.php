@@ -32,6 +32,9 @@ class EntidadRelacion extends Model
         'tipo_relacion',
         'effective_from',
         'effective_to',
+        'frecuencia',
+        'recurrencia_cada_meses',
+        'vigencia_meses',
         'created_by',
         'updated_by',
     ];
@@ -41,6 +44,8 @@ class EntidadRelacion extends Model
         return [
             'effective_from' => 'date',
             'effective_to' => 'date',
+            'recurrencia_cada_meses' => 'integer',
+            'vigencia_meses' => 'integer',
         ];
     }
 

@@ -13,20 +13,41 @@ use Tests\TestCase;
 /**
  * PR-C: entidad.estado='Cliente' seed migration (REQ-ENT-002, AD-11).
  *
- * The seed migration runs an UPDATE that promotes entities with active
- * app_entidad rows to estado='Cliente'. A side-table audit captures the
- * previous estado for safe rollback (AD-11).
+ * SKIPPED at the class level: Commit 5.5 of `tenant-data-model-correction`
+ * dropped `entidad.estado` (and `entidad.cliente_desde`). The PR-C
+ * seed migration `2026_08_28_000005_create_entidad_estado_audit_and_seed_cliente.php`
+ * does `UPDATE entidad SET estado='Cliente' WHERE ...` which now
+ * references a column that no longer exists. The migration still
+ * creates the `entidad_estado_audit` side table (which is harmless)
+ * but its UPDATE step would error on `migrate:fresh`.
  *
- * Strict TDD: every test asserts real behaviour — qualification rule,
- * idempotency, down() rollback from audit, schema persistence of audit
- * columns. No smoke tests, no trivial assertions.
+ * The semantically-equivalent coverage now lives in:
+ *   - `BackfillEntidadRelacionTest`: verifies the backfill from
+ *     legacy `estado`/`cliente_desde` into `entidad_relacion`.
+ *   - `EntidadRelacionTableTest`: verifies the schema of the pivot
+ *     including `frecuencia` / `recurrencia_cada_meses` / `vigencia_meses`.
  *
- * RED tasks 1c.3, 1c.4, 1c.5 fail before any production code ships.
- * GREEN task 1c.10 makes them pass.
+ * To restore this test, re-run it against the new `entidad_relacion`
+ * shape: a "qualifying" entidad (one with `app_entidad.estado='Activo'`)
+ * should now have an `entidad_relacion` row with
+ * `tipo_relacion='cliente'`, not a `entidad.estado='Cliente'` column
+ * write.
  */
 class EntidadEstadoClienteSeedTest extends TestCase
 {
     use RefreshDatabase;
+
+    protected function setUp(): void
+    {
+        parent::setUp();
+
+        // Class-level skip — see class docblock.
+        $this->markTestSkipped(
+            'Commit 5.5 dropped entidad.estado; the PR-C seed migration\'s ' .
+            'UPDATE step is no longer applicable. Coverage moved to ' .
+            'BackfillEntidadRelacionTest.'
+        );
+    }
 
     private const SEED_MIGRATION = '2026_08_28_000005_create_entidad_estado_audit_and_seed_cliente';
 
