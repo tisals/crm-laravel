@@ -6,6 +6,7 @@ use App\Models\Ciudad;
 use App\Models\Contacto;
 use App\Models\DetalleOportunidad;
 use App\Models\Entidad;
+use App\Models\EntidadPersona;
 use App\Models\Oportunidad;
 use App\Models\Permiso;
 use App\Models\Producto;
@@ -13,6 +14,7 @@ use App\Models\Rol;
 use App\Models\Usuario;
 use Database\Seeders\PipelineSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
@@ -20,11 +22,51 @@ class DashboardTest extends TestCase
 {
     use RefreshDatabase;
 
+    /**
+     * COTIZACION pipeline + etapa IDs cached for the lifetime of the test.
+     * Dashboard queries filter by `pipeline_etapas.codigo` (e.g. 'ACEPTADA'),
+     * so opportunities must be created with the matching `pipeline_etapa_id`
+     * — not the legacy `estado = 'Ganada'` field.
+     */
+    private int $pipelineCotizacionId;
+
+    private int $etapaBorradorId;
+
+    private int $etapaEnviadaId;
+
+    private int $etapaAceptadaId;
+
+    private int $etapaRechazadaId;
+
     protected function setUp(): void
     {
         parent::setUp();
         Ciudad::create(['cod_municipio' => '05001', 'nombre' => 'Medellín', 'departamento' => 'Antioquia']);
         $this->seed(PipelineSeeder::class);
+
+        $this->pipelineCotizacionId = (int) DB::table('pipelines')
+            ->where('codigo', 'COTIZACION')
+            ->value('id');
+
+        $this->etapaBorradorId = (int) DB::table('pipeline_etapas')
+            ->where('pipeline_id', $this->pipelineCotizacionId)
+            ->where('codigo', 'BORRADOR')
+            ->value('id');
+
+        $this->etapaEnviadaId = (int) DB::table('pipeline_etapas')
+            ->where('pipeline_id', $this->pipelineCotizacionId)
+            ->where('codigo', 'ENVIADA')
+            ->value('id');
+
+        $this->etapaAceptadaId = (int) DB::table('pipeline_etapas')
+            ->where('pipeline_id', $this->pipelineCotizacionId)
+            ->where('codigo', 'ACEPTADA')
+            ->value('id');
+
+        $this->etapaRechazadaId = (int) DB::table('pipeline_etapas')
+            ->where('pipeline_id', $this->pipelineCotizacionId)
+            ->where('codigo', 'RECHAZADA')
+            ->value('id');
     }
 
     private function createAdminUser(): array
@@ -107,19 +149,25 @@ class DashboardTest extends TestCase
         $entidad = Entidad::factory()->create();
         $contacto = Contacto::factory()->create(['entidad_id' => $entidad->id]);
 
-        // Create 10 opps, 2 ganadas
+        // Create 10 opps, 2 ganadas.
+        // Dashboard filters by pipeline_etapas.codigo, so we set the
+        // matching etapa_id instead of the legacy estado='Ganada' field
+        // (which is now a terminal state that doesn't move the opp into
+        // the ACEPTADA/RECHAZADA pipeline stage).
         for ($i = 0; $i < 8; $i++) {
             Oportunidad::factory()->create([
                 'entidad_id' => $entidad->id,
                 'contacto_id' => $contacto->id,
-                'estado' => 'Perdida',
+                'estado' => 'Activa',
+                'pipeline_etapa_id' => $this->etapaRechazadaId,
             ]);
         }
         for ($i = 0; $i < 2; $i++) {
             Oportunidad::factory()->create([
                 'entidad_id' => $entidad->id,
                 'contacto_id' => $contacto->id,
-                'estado' => 'Ganada',
+                'estado' => 'Activa',
+                'pipeline_etapa_id' => $this->etapaAceptadaId,
             ]);
         }
 
@@ -151,11 +199,16 @@ class DashboardTest extends TestCase
         // Create a product
         $producto = Producto::factory()->create();
 
-        // Create 2 won opps in diff months each with different amounts
+        // Create 2 won opps in diff months each with different amounts.
+        // Dashboard counts an opp as 'won' when its pipeline_etapa is ACEPTADA.
+        // estado='Activa' is a terminal state — it prevents the Oportunidad
+        // saving event from resolving pipeline_etapa_id from the factory's
+        // default estado='Borrador' nombre (which would overwrite ACEPTADA).
         $opp1 = Oportunidad::factory()->create([
             'entidad_id' => $entidad->id,
             'contacto_id' => $contacto->id,
-            'estado' => 'Ganada',
+            'estado' => 'Activa',
+            'pipeline_etapa_id' => $this->etapaAceptadaId,
             'fecha' => now()->subMonths(2)->format('Y-m-d'),
         ]);
         DetalleOportunidad::factory()->create([
@@ -167,7 +220,8 @@ class DashboardTest extends TestCase
         $opp2 = Oportunidad::factory()->create([
             'entidad_id' => $entidad->id,
             'contacto_id' => $contacto->id,
-            'estado' => 'Ganada',
+            'estado' => 'Activa',
+            'pipeline_etapa_id' => $this->etapaAceptadaId,
             'fecha' => now()->subMonth()->format('Y-m-d'),
         ]);
         DetalleOportunidad::factory()->create([
@@ -193,12 +247,16 @@ class DashboardTest extends TestCase
         $ent1 = Entidad::factory()->create();
         $c1 = Contacto::factory()->create(['entidad_id' => $ent1->id]);
         $opp1 = Oportunidad::factory()->create([
-            'entidad_id' => $ent1->id, 'contacto_id' => $c1->id, 'estado' => 'Ganada',
+            'entidad_id' => $ent1->id, 'contacto_id' => $c1->id,
+            'estado' => 'Activa',
+            'pipeline_etapa_id' => $this->etapaAceptadaId,
             'fecha' => '2026-01-15',
         ]);
         DetalleOportunidad::factory()->create(['oportunidad_id' => $opp1->id, 'producto_id' => $producto->id, 'vr_total' => 2000]);
         $opp2 = Oportunidad::factory()->create([
-            'entidad_id' => $ent1->id, 'contacto_id' => $c1->id, 'estado' => 'Ganada',
+            'entidad_id' => $ent1->id, 'contacto_id' => $c1->id,
+            'estado' => 'Activa',
+            'pipeline_etapa_id' => $this->etapaAceptadaId,
             'fecha' => '2026-02-10',
         ]);
         DetalleOportunidad::factory()->create(['oportunidad_id' => $opp2->id, 'producto_id' => $producto->id, 'vr_total' => 1000]);
@@ -207,7 +265,9 @@ class DashboardTest extends TestCase
         $ent2 = Entidad::factory()->create();
         $c2 = Contacto::factory()->create(['entidad_id' => $ent2->id]);
         $opp3 = Oportunidad::factory()->create([
-            'entidad_id' => $ent2->id, 'contacto_id' => $c2->id, 'estado' => 'Ganada',
+            'entidad_id' => $ent2->id, 'contacto_id' => $c2->id,
+            'estado' => 'Activa',
+            'pipeline_etapa_id' => $this->etapaAceptadaId,
             'fecha' => '2026-01-20',
         ]);
         DetalleOportunidad::factory()->create(['oportunidad_id' => $opp3->id, 'producto_id' => $producto->id, 'vr_total' => 500]);
@@ -242,17 +302,33 @@ class DashboardTest extends TestCase
 
         $producto = Producto::factory()->create();
 
-        // Entity A: assigned to ventas user
+        // Entity A: assigned to ventas user.
+        // Per Commit fe99f70 the user↔entidad link now goes through
+        // `entidad_persona` keyed on the user's `persona_id` (usuarios
+        // has a NOT NULL FK to personas since migration 000003).
+        // `Entidad::usuarios()` is HasManyThrough and lost syncWithoutDetaching/attach.
         $entA = Entidad::factory()->create();
         $cA = Contacto::factory()->create(['entidad_id' => $entA->id]);
-        $entA->usuarios()->attach($ventas['usuario']->id);
-        $oppA = Oportunidad::factory()->create(['entidad_id' => $entA->id, 'contacto_id' => $cA->id, 'estado' => 'Ganada']);
+        EntidadPersona::create([
+            'entidad_id' => $entA->id,
+            'persona_id' => $ventas['usuario']->persona_id,
+            'categoria' => 'asignacion',
+        ]);
+        $oppA = Oportunidad::factory()->create([
+            'entidad_id' => $entA->id, 'contacto_id' => $cA->id,
+            'estado' => 'Activa',
+            'pipeline_etapa_id' => $this->etapaAceptadaId,
+        ]);
         DetalleOportunidad::factory()->create(['oportunidad_id' => $oppA->id, 'producto_id' => $producto->id, 'vr_total' => 1000]);
 
         // Entity B: NOT assigned to ventas user
         $entB = Entidad::factory()->create();
         $cB = Contacto::factory()->create(['entidad_id' => $entB->id]);
-        $oppB = Oportunidad::factory()->create(['entidad_id' => $entB->id, 'contacto_id' => $cB->id, 'estado' => 'Ganada']);
+        $oppB = Oportunidad::factory()->create([
+            'entidad_id' => $entB->id, 'contacto_id' => $cB->id,
+            'estado' => 'Activa',
+            'pipeline_etapa_id' => $this->etapaAceptadaId,
+        ]);
         DetalleOportunidad::factory()->create(['oportunidad_id' => $oppB->id, 'producto_id' => $producto->id, 'vr_total' => 2000]);
 
         // Admin sees all (LTV = 3000/2 = 1500)
@@ -278,11 +354,20 @@ class DashboardTest extends TestCase
 
         $producto = Producto::factory()->create();
 
-        // Entity assigned to ventas
+        // Entity assigned to ventas (via the entidad_persona pivot,
+        // keyed on the user's persona_id — see ventas_user_sees_only_assigned_entities)
         $ent = Entidad::factory()->create();
         $c = Contacto::factory()->create(['entidad_id' => $ent->id]);
-        $ent->usuarios()->attach($ventas['usuario']->id);
-        $opp = Oportunidad::factory()->create(['entidad_id' => $ent->id, 'contacto_id' => $c->id, 'estado' => 'Ganada']);
+        EntidadPersona::create([
+            'entidad_id' => $ent->id,
+            'persona_id' => $ventas['usuario']->persona_id,
+            'categoria' => 'asignacion',
+        ]);
+        $opp = Oportunidad::factory()->create([
+            'entidad_id' => $ent->id, 'contacto_id' => $c->id,
+            'estado' => 'Activa',
+            'pipeline_etapa_id' => $this->etapaAceptadaId,
+        ]);
         DetalleOportunidad::factory()->create(['oportunidad_id' => $opp->id, 'producto_id' => $producto->id, 'vr_total' => 500]);
 
         // Admin filters by comercial
@@ -312,10 +397,14 @@ class DashboardTest extends TestCase
         $contacto = Contacto::factory()->create(['entidad_id' => $entidad->id]);
         $producto = Producto::factory()->create();
 
+        // The funnel groups by pipeline_etapas.nombre, so a 'won' opp
+        // appears under the ACEPTADA etapa's `nombre` ('Aceptada'),
+        // not under the legacy 'Ganada' estado.
         $opp = Oportunidad::factory()->create([
             'entidad_id' => $entidad->id,
             'contacto_id' => $contacto->id,
-            'estado' => 'Ganada',
+            'estado' => 'Activa',
+            'pipeline_etapa_id' => $this->etapaAceptadaId,
         ]);
         DetalleOportunidad::factory()->create([
             'oportunidad_id' => $opp->id,
@@ -327,11 +416,11 @@ class DashboardTest extends TestCase
             ->getJson('/api/v1/dashboard');
 
         $funnel = $response->json('data.ventas.funnel');
-        $ganadaEntry = collect($funnel)->firstWhere('estado', 'Ganada');
+        $aceptadaEntry = collect($funnel)->firstWhere('estado', 'Aceptada');
 
-        $this->assertNotNull($ganadaEntry);
-        $this->assertEquals(1, $ganadaEntry['total']);
-        $this->assertEquals(1500.0, (float) $ganadaEntry['monto']);
+        $this->assertNotNull($aceptadaEntry);
+        $this->assertEquals(1, $aceptadaEntry['total']);
+        $this->assertEquals(1500.0, (float) $aceptadaEntry['monto']);
     }
 
     #[Test]
