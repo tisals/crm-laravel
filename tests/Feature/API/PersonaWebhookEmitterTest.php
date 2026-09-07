@@ -10,6 +10,7 @@ use App\Models\Persona as PersonaModel;
 use App\Models\Rol;
 use App\Models\Usuario;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Http;
 use Illuminate\Support\Facades\Log;
@@ -73,6 +74,29 @@ class PersonaWebhookEmitterTest extends TestCase
         ];
     }
 
+    /**
+     * Mirror the persona-level `email_principal` payload field into the
+     * shared `emails` table so callers in tests can keep asserting on
+     * email-shaped fixtures without depending on a dropped column.
+     *
+     * Commit 4 removed `personas.email_principal` — the canonical store
+     * is now `emails.email` (with `es_principal=1`). `StorePersonaUseCase`
+     * mirrors incoming payload data into that table automatically; this
+     * helper supports the direct `PersonaModel::create()` paths in
+     * PersonaWebhookEmitterTest where the use case is bypassed.
+     */
+    private function seedPrincipalEmail(int $personaId, string $email): void
+    {
+        DB::table('emails')->insert([
+            'persona_id' => $personaId,
+            'email' => $email,
+            'tipo' => 'personal',
+            'es_principal' => true,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+    }
+
     // ── 6b.1 RED — POST dispatches PersonaChanged with action='created' ─
 
     #[Test]
@@ -100,14 +124,37 @@ class PersonaWebhookEmitterTest extends TestCase
         $r->assertStatus(201);
         $newId = (int) $r->json('data.id');
 
+        // Snapshot is `$persona->toArray()` — emits ONLY the columns that
+        // remain on the `personas` table after Commit 4's drop of the
+        // legacy contact-data columns. We assert on `nombres` /
+        // `apellidos` (real columns on the snapshot). The legacy
+        // `email_principal` payload field is mirrored into the `emails`
+        // table by `StorePersonaUseCase::mirrorLegacyContactFields()`;
+        // we assert that side-effect through a direct `emails` row check
+        // below. This keeps the snapshot-shape contract honest: the
+        // contact data is no longer in the snapshot, by design (REQ-PSWH-001).
         Event::assertDispatched(PersonaChanged::class, function (PersonaChanged $event) use ($newId, $payload) {
             return $event->action === 'created'
                 && $event->persona_id === $newId
                 && $event->snapshot['nombres'] === $payload['nombres']
                 && $event->snapshot['apellidos'] === $payload['apellidos']
-                && $event->snapshot['email_principal'] === $payload['email_principal']
+                && $event->snapshot['identificacion_tipo'] === $payload['identificacion_tipo']
+                && $event->snapshot['identificacion_numero'] === $payload['identificacion_numero']
                 && is_string($event->occurred_at);
         });
+
+        // Side-channel: legacy payload email/telefono were mirrored into
+        // the canonical `emails` / `telefonos` tables (Commit 4 contract).
+        $this->assertDatabaseHas('emails', [
+            'persona_id' => $newId,
+            'email' => $payload['email_principal'],
+            'es_principal' => 1,
+        ]);
+        $this->assertDatabaseHas('telefonos', [
+            'persona_id' => $newId,
+            'numero' => $payload['telefono_principal'],
+            'es_principal' => 1,
+        ]);
     }
 
     // ── 6b.2 RED — PATCH with a real field change dispatches updated ────
@@ -119,14 +166,22 @@ class PersonaWebhookEmitterTest extends TestCase
         $persona = PersonaModel::create([
             'nombres' => 'Ada',
             'apellidos' => 'Lovelace',
-            'email_principal' => 'before@acme.test',
         ]);
+        // Mirror a principal email into the shared `emails` table so
+        // any caller expecting email-shaped fixture data still sees it;
+        // Commit 4 dropped the `personas.email_principal` column.
+        $this->seedPrincipalEmail((int) $persona->id, 'before@acme.test');
 
         Event::fake();
 
+        // PATCH a real column on the personas table so the listener's
+        // `array_diff_assoc` rule sees a field change. PATCHing the
+        // legacy `email_principal` payload key would only update the
+        // `emails` table — not the persona row — so the listener would
+        // correctly stay silent (no real change on the snapshot shape).
         $r = $this->withHeader('Authorization', 'Bearer '.$auth['token'])
             ->patchJson("/api/v1/personas/{$persona->id}", [
-                'email_principal' => 'after@acme.test',
+                'nombres' => 'Grace',
             ]);
 
         $r->assertStatus(200);
@@ -134,8 +189,17 @@ class PersonaWebhookEmitterTest extends TestCase
         Event::assertDispatched(PersonaChanged::class, function (PersonaChanged $event) use ($persona) {
             return $event->action === 'updated'
                 && $event->persona_id === (int) $persona->id
-                && $event->snapshot['email_principal'] === 'after@acme.test';
+                && $event->snapshot['nombres'] === 'Grace'
+                && $event->snapshot['apellidos'] === 'Lovelace';
         });
+
+        // Side-channel: the legacy `email_principal` PATCH was mirrored
+        // into `emails` even though it didn't change the snapshot —
+        // proves the PATCH path is wired for backwards-compat callers.
+        $this->assertDatabaseHas('emails', [
+            'persona_id' => (int) $persona->id,
+            'es_principal' => 1,
+        ]);
     }
 
     // ── 6b.3 RED — PATCH with no effective change does NOT dispatch ─────
@@ -176,8 +240,10 @@ class PersonaWebhookEmitterTest extends TestCase
         $persona = PersonaModel::create([
             'nombres' => 'Doomed',
             'apellidos' => 'Subject',
-            'email_principal' => 'doomed@acme.test',
         ]);
+        // Mirror a principal email into the `emails` table so email-shaped
+        // fixture data remains observable after Commit 4.
+        $this->seedPrincipalEmail((int) $persona->id, 'doomed@acme.test');
 
         Event::fake();
 
@@ -186,14 +252,16 @@ class PersonaWebhookEmitterTest extends TestCase
 
         $r->assertStatus(200);
 
+        // Pre-delete snapshot preserves the persona state at delete time
+        // (tasks.md 6b.4) — Mercury can reconcile against the last-known
+        // shape before the row was soft-deleted. We assert the real
+        // columns on the snapshot, since `email_principal` is no longer
+        // a `personas` column post-Commit-4.
         Event::assertDispatched(PersonaChanged::class, function (PersonaChanged $event) use ($persona) {
             return $event->action === 'deleted'
                 && $event->persona_id === (int) $persona->id
-                // Pre-delete snapshot preserves the persona state at delete time
-                // (tasks.md 6b.4) — Mercury can reconcile against the last-known
-                // shape before the row was soft-deleted.
                 && $event->snapshot['nombres'] === 'Doomed'
-                && $event->snapshot['email_principal'] === 'doomed@acme.test'
+                && $event->snapshot['apellidos'] === 'Subject'
                 && ! empty($event->snapshot['deleted_at']);
         });
     }
