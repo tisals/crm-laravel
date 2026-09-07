@@ -6,6 +6,7 @@ use App\Models\App;
 use App\Models\AppEntidad;
 use App\Models\Entidad;
 use Illuminate\Database\Seeder;
+use Illuminate\Support\Facades\DB;
 
 /**
  * PR-D (Phase 2): bind SAIlus Agent as an `apps` row + 5 `app_entidad`
@@ -70,9 +71,31 @@ class SailusAgentSeeder extends Seeder
                 [
                     'tipo_persona' => 'Juridica',
                     'nombre' => $entry['nombre'],
-                    'estado' => 'Propia',
                 ]
             );
+
+            // Commit 5.5 dropped `entidad.estado`; the canonical brand
+            // state ("Propia") lives on the `entidad_relacion` pivot.
+            // Stamp the pivot only on first-create — re-running the
+            // seeder must not touch existing pivot rows.
+            $pivotExists = DB::table('entidad_relacion')
+                ->where('entidad_id', $brandEntidad->id)
+                ->where('tipo_relacion', 'propia')
+                ->exists();
+            if (! $pivotExists) {
+                $now = now();
+                DB::table('entidad_relacion')->insert([
+                    'entidad_id' => $brandEntidad->id,
+                    'tipo_relacion' => 'propia',
+                    'effective_from' => $now->toDateString(),
+                    'effective_to' => null,
+                    'frecuencia' => 'unica',
+                    'recurrencia_cada_meses' => null,
+                    'vigencia_meses' => null,
+                    'created_at' => $now,
+                    'updated_at' => $now,
+                ]);
+            }
 
             AppEntidad::updateOrCreate(
                 [

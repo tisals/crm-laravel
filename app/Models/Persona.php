@@ -42,6 +42,30 @@ class Persona extends Model
     }
 
     /**
+     * Backwards-compat accessor. Commit 1 dropped `personas.tipo_persona`
+     * — the canonical type lives on `entidad.tipo_persona` for the
+     * entidad the persona is bound to (via `entidad_persona` pivot or
+     * the legacy `personas.entidad_id` FK). When the persona has no
+     * bound entidad we default to 'Natural' (the persona-natural
+     * inversion in `StorePersonaUseCase` always pairs the new persona
+     * with a `Juridica`-type `entidad`).
+     */
+    public function getTipoPersonaAttribute(): string
+    {
+        // Prefer the bound entidad's `tipo_persona` (the canonical
+        // source). Fall back to the persona's `entidad_id` FK for
+        // legacy single-tenant rows.
+        if ($this->entidades->isNotEmpty()) {
+            return $this->entidades->first()->tipo_persona ?? 'Natural';
+        }
+        if ($this->entidad) {
+            return $this->entidad->tipo_persona ?? 'Natural';
+        }
+
+        return 'Natural';
+    }
+
+    /**
      * PR-A (legacy): each persona optionally belongs to an entidad.
      * nullOnDelete on the FK constraint means deleting the entidad
      * leaves the persona row with `entidad_id = NULL` (audit trail

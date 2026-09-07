@@ -94,7 +94,9 @@ class PersonaNaturalCreatesEntidadTest extends TestCase
         $this->assertSame('12345', $entidad->identificacion);
         $this->assertSame('Juan Pérez', $entidad->nombre);
         $this->assertNull($entidad->nombre_comercial);
-        $this->assertSame('Activo', $entidad->estado);
+        // Commit 5.5 dropped `entidad.estado`; the canonical active
+        // state is derived from `entidad_relacion` (open pivot row).
+        $this->assertSame('activo', $entidad->estado);
 
         // The persona row points at the new entidad.
         $persona = PersonaModel::query()->where('id', $newPersonaId)->first();
