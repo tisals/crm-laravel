@@ -8,6 +8,7 @@ use App\Models\Producto;
 use App\Models\Rol;
 use App\Models\Usuario;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
@@ -58,13 +59,27 @@ class SecurityDashboardTest extends TestCase
         Producto::create(['nombre' => 'Producto A', 'linea_negocio' => 'TI', 'iva' => 19, 'estado' => 'Activo']);
         Producto::create(['nombre' => 'Producto B', 'linea_negocio' => 'Consultoría', 'iva' => 19, 'estado' => 'Activo']);
 
-        // Create Propia brand
-        Entidad::create([
+// Create Propia brand. Commit 5.5 dropped `entidad.estado`;
+        // the canonical "Propia" state lives on the `entidad_relacion`
+        // pivot as a `tipo_relacion='propia'` row with `effective_to IS NULL`.
+        $tecnoinnsoft = Entidad::create([
             'nombre' => 'Tecnoinnsoft',
-            'estado' => 'Propia',
             'identificacion' => '900123456-7',
             'tipo_identificacion' => 'NIT',
-            'tipo_persona' => 'Jurídica',
+            'tipo_persona' => 'Juridica',
+        ]);
+
+        $now = now();
+        DB::table('entidad_relacion')->insert([
+            'entidad_id' => $tecnoinnsoft->id,
+            'tipo_relacion' => 'propia',
+            'effective_from' => $now->toDateString(),
+            'effective_to' => null,
+            'frecuencia' => 'unica',
+            'recurrencia_cada_meses' => null,
+            'vigencia_meses' => null,
+            'created_at' => $now,
+            'updated_at' => $now,
         ]);
 
         $response = $this->withHeader('Authorization', 'Bearer '.$token)

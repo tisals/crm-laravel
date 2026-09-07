@@ -24,7 +24,16 @@ class GetSecurityDashboardUseCase
         $totalUsuarios = Usuario::count();
         $usuariosActivos = Usuario::where('estado', 'Activo')->count();
         $totalProductos = Producto::count();
-        $totalMarcas = Entidad::where('estado', 'Propia')->count();
+        // Commit 5.5 dropped `entidad.estado`. The "Propia" brand-state
+        // now lives on `entidad_relacion` (open pivot row with
+        // tipo_relacion='propia'). We count distinct entities to avoid
+        // double-counting when an entidad has multiple propia rows over
+        // time (only the currently-open one counts).
+        $totalMarcas = DB::table('entidad_relacion')
+            ->where('tipo_relacion', 'propia')
+            ->whereNull('effective_to')
+            ->distinct()
+            ->count('entidad_id');
 
         return [
             'total_usuarios' => (int) $totalUsuarios,
