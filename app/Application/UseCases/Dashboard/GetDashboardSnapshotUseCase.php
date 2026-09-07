@@ -74,7 +74,7 @@ class GetDashboardSnapshotUseCase
 
     private function resolveComercialId(?int $comercialId, ?Usuario $authUser): ?int
     {
-        if ($authUser && $authUser->rol?->nombre === 'Comercial') {
+        if ($authUser && in_array($authUser->rol?->nombre, ['Comercial', 'Ventas'], true)) {
             return $authUser->id;
         }
 

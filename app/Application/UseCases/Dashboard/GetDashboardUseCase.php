@@ -50,12 +50,13 @@ class GetDashboardUseCase
     /**
      * Determine the effective comercial ID based on role and explicit parameter.
      *
-     * - Ventas role: always auto-filtered to their own entities (ignores ?comercial_id).
+     * - Ventas/Comercial role: always auto-filtered to their own entities
+     *   (ignores ?comercial_id).
      * - Super admin (Admin) or others: uses ?comercial_id if provided.
      */
     private function resolveComercialId(?int $comercialId, ?Usuario $authUser): ?int
     {
-        if ($authUser && $authUser->rol?->nombre === 'Comercial') {
+        if ($authUser && in_array($authUser->rol?->nombre, ['Comercial', 'Ventas'], true)) {
             return $authUser->id;
         }
 
@@ -86,9 +87,11 @@ class GetDashboardUseCase
         // Filter leads (contactos) by commercial if specified.
         // Per commit fe99f70: pivot is `entidad_persona` (keyed on persona_id);
         // the link user → entidad now resolves via `usuarios.persona_id`.
+        // Also: `contacto.entidad_id` was DROPPED in Commit 4 — contact↔entity
+        // binding now goes through `contacto.persona_id` → entidad_persona.
         if ($comercialId) {
-            $leadsQuery->whereIn('entidad_id', function ($q) use ($comercialId) {
-                $q->select('ep.entidad_id')
+            $leadsQuery->whereIn('persona_id', function ($q) use ($comercialId) {
+                $q->select('ep.persona_id')
                     ->from('entidad_persona as ep')
                     ->join('usuarios as u', 'u.persona_id', '=', 'ep.persona_id')
                     ->where('u.id', $comercialId);
@@ -232,16 +235,24 @@ class GetDashboardUseCase
             $ventasPorMes[$this->mesNombre($m)] = (float) ($q->sum('detalle_oportunidad.vr_total') ?: 0);
         }
 
-        // --- LTV Contratado: valor total comprometido por cliente ---
-        // Para cada cliente: suma vr_total de todas sus oportunidades ganadas.
-        // frecuencia y duracion_meses son metadatos para flujo de caja,
-        // pero el LTV contratado es siempre el valor total del compromiso.
-        $clientesLtv = (clone $ventasQuery)
-            ->select('oportunidad.entidad_id', DB::raw('SUM(detalle_oportunidad.vr_total) as total_cliente'))
-            ->groupBy('oportunidad.entidad_id')
-            ->get()
-            ->pluck('total_cliente')
-            ->map(fn ($v) => (float) $v);
+        // --- LTV = average monthly billing per client ---
+        // Para cada cliente: avg(vr_total mensual) = SUM(vr_total) / distinct months
+        // with won opportunities. Then LTV = avg across clients.
+        $monthlyBilling = (clone $ventasQuery)
+            ->select(
+                'oportunidad.entidad_id',
+                DB::raw('YEAR(oportunidad.fecha) as yr'),
+                DB::raw('MONTH(oportunidad.fecha) as mo'),
+                DB::raw('SUM(detalle_oportunidad.vr_total) as monthly_sum'),
+            )
+            ->groupBy('oportunidad.entidad_id', 'yr', 'mo')
+            ->get();
+
+        $clientesLtv = $monthlyBilling
+            ->groupBy('entidad_id')
+            ->map(fn ($rows) => (float) $rows->avg('monthly_sum'))
+            ->values();
+
         $ltv = $clientesLtv->count() > 0
             ? round($clientesLtv->avg(), 2)
             : 0.0;
@@ -265,7 +276,7 @@ class GetDashboardUseCase
             ->toArray();
 
         return [
-            'ventas_nuevas_mes' => $ventasMes,
+            'ventas_mes' => $ventasMes,
             'ventas_por_mes' => $ventasPorMes,
             'ltv' => $ltv,
             'funnel' => $funnel,
