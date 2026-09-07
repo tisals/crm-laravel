@@ -14,6 +14,7 @@ use App\Models\Servicio;
 use App\Models\Usuario;
 use Database\Seeders\DatabaseSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Mail;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
@@ -171,22 +172,39 @@ class LicenseIntegrationTest extends TestCase
     #[Test]
     public function license_validate_returns_valid_license_details()
     {
-        // GIVEN a service with an activation token
+        // GIVEN a service with an activation token. Commit fe99f70
+        // dropped `contacto.entidad_id` — the contacto ↔ entidad
+        // binding now goes through `entidad_persona` keyed on the
+        // contacto's persona_id. Create the persona + pivot row
+        // explicitly so ValidateLicenseUseCase's `whereHas('persona
+        // .entidades')` resolves the contacto.
         $entidad = Entidad::create([
             'tipo_persona' => 'Juridica',
             'tipo_id' => 'NIT',
             'identificacion' => 'NIT-123',
             'nombre' => 'Test Org',
-            'estado' => 'Activo',
+        ]);
+
+        $persona = \App\Models\Persona::create([
+            'nombres' => 'Jane',
+            'apellidos' => 'Doe',
         ]);
 
         $contacto = Contacto::create([
-            'entidad_id' => $entidad->id,
+            'persona_id' => $persona->id,
             'nombres' => 'Jane',
             'apellidos' => 'Doe',
             'email_contacto' => 'jane@doe.com',
             'rol' => 'Contacto WP',
             'estado' => 'Activo',
+        ]);
+
+        DB::table('entidad_persona')->insert([
+            'persona_id' => $persona->id,
+            'entidad_id' => $entidad->id,
+            'categoria' => 'asignacion',
+            'created_at' => now(),
+            'updated_at' => now(),
         ]);
 
         $servicio = Servicio::create([
@@ -224,21 +242,37 @@ class LicenseIntegrationTest extends TestCase
     #[Test]
     public function license_validate_returns_expired_status_if_past_expiry()
     {
+        // Same setup pattern as `license_validate_returns_valid_*`:
+        // Commit fe99f70 requires `entidad_persona` pivot + persona_id
+        // on the contacto so ValidateLicenseUseCase can resolve the
+        // username → contacto chain.
         $entidad = Entidad::create([
             'tipo_persona' => 'Juridica',
             'tipo_id' => 'NIT',
             'identificacion' => 'NIT-1234',
             'nombre' => 'Test Org 2',
-            'estado' => 'Activo',
+        ]);
+
+        $persona = \App\Models\Persona::create([
+            'nombres' => 'Jane',
+            'apellidos' => 'Doe',
         ]);
 
         $contacto = Contacto::create([
-            'entidad_id' => $entidad->id,
+            'persona_id' => $persona->id,
             'nombres' => 'Jane',
             'apellidos' => 'Doe',
             'email_contacto' => 'jane@doe.com',
             'rol' => 'Contacto WP',
             'estado' => 'Activo',
+        ]);
+
+        DB::table('entidad_persona')->insert([
+            'persona_id' => $persona->id,
+            'entidad_id' => $entidad->id,
+            'categoria' => 'asignacion',
+            'created_at' => now(),
+            'updated_at' => now(),
         ]);
 
         $servicio = Servicio::create([
