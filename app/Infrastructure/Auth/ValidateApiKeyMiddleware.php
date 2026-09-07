@@ -34,10 +34,22 @@ class ValidateApiKeyMiddleware
             ], 401);
         }
 
-        // Extraer dominio del Origin/Referer para validación adicional
+        // Extraer dominio del Origin/Referer para validación adicional.
+        // Pre-Commit 5.5 the lookup went through `entidad.dominio` —
+        // that column was dropped in favour of `presencia_online.url`
+        // (typed as `tipo='web'`). The Entidad model
+        // `dominio` accessor still resolves the value via the canonical
+        // presencia_online row, so `Entidad::where` against the accessor
+        // here would translate to a sub-query — for the auth path we
+        // simply resolve the entidad through `presencia_online` directly.
         $originDomain = $this->extractDomain($request);
         if ($originDomain) {
-            $entidad = Entidad::where('dominio', $apiKey)->first();
+            $entidad = \Illuminate\Support\Facades\DB::table('presencia_online as po')
+                ->join('entidad as e', 'e.id', '=', 'po.entidad_id')
+                ->where('po.url', $apiKey)
+                ->where('po.tipo', 'web')
+                ->select('e.*')
+                ->first();
             if ($entidad && ! $entidad->isDomainAllowed($originDomain)) {
                 return response()->json([
                     'valid' => false,

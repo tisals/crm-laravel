@@ -4,6 +4,7 @@ namespace App\Application\UseCases;
 
 use App\Models\Entidad;
 use Illuminate\Support\Facades\Cache;
+use Illuminate\Support\Facades\DB;
 
 class ValidateApiKeyUseCase
 {
@@ -19,6 +20,13 @@ class ValidateApiKeyUseCase
      * DB lookup. Cache invalidation happens automatically via TTL; if you need
      * to invalidate early (e.g. rotating keys), call Cache::forget() with the
      * same prefix.
+     *
+     * Commit 5.5 dropped `entidad.dominio` and `entidad.estado`. The
+     * API-key lookup now resolves through:
+     *   - `presencia_online.url`  (the canonical home for the legacy
+     *      `dominio` value, typed as `tipo='web'` / `plataforma='otro'`),
+     *   - `entidad_relacion.effective_to IS NULL` (the canonical "active"
+     *      business-state pivot row that replaced `entidad.estado`).
      */
     public function execute(string $apiKey): ?array
     {
@@ -29,9 +37,20 @@ class ValidateApiKeyUseCase
             return $cached;
         }
 
-        $entidad = Entidad::where('dominio', $apiKey)
-            ->where('estado', 'Activo')
-            ->first();
+        $entidadId = DB::table('presencia_online as po')
+            ->join('entidad_relacion as er', function ($join) {
+                $join->on('er.entidad_id', '=', 'po.entidad_id')
+                    ->whereNull('er.effective_to');
+            })
+            ->where('po.url', $apiKey)
+            ->where('po.tipo', 'web')
+            ->value('po.entidad_id');
+
+        if (! $entidadId) {
+            return null;
+        }
+
+        $entidad = Entidad::find($entidadId);
 
         if (! $entidad) {
             return null;
