@@ -62,7 +62,19 @@ class StorePersonaUseCase
         $persona = DB::transaction(function () use ($data) {
             $payload = $this->maybeCreateImpliedEntity($data);
 
-            return $this->repository->create($payload);
+            $created = $this->repository->create($payload);
+
+            // Commit 4 dropped `personas.email_principal`,
+            // `personas.telefono_principal`, `personas.direccion`,
+            // `personas.ciudad`, `personas.pais`. The request still
+            // accepts these legacy fields for backwards compatibility;
+            // mirror them into the shared tables so the response and
+            // downstream readers see them. The validator already
+            // confirms the email is unique per entidad; the persona's
+            // inversion `entidad_id` (if any) is the scope.
+            $this->mirrorLegacyContactFields($created, $payload);
+
+            return $created;
         });
 
         // Post-commit dispatch: the create succeeded, the row is visible.
@@ -76,6 +88,47 @@ class StorePersonaUseCase
         ));
 
         return $persona;
+    }
+
+    /**
+     * Mirror the persona-level `email_principal` / `telefono_principal`
+     * payload fields into the shared `emails` / `telefonos` tables.
+     *
+     * Commit 4 dropped the legacy columns; `PersonaStoreRequest` still
+     * accepts the legacy keys (with validations) so existing API
+     * callers do not break. This helper keeps the data alive by
+     * writing it through the canonical Commit-3 schema. The `direccion`
+     * field is mirrored inside `createEntidadForNaturalPersona()`
+     * because it carries the inversion `entidad_id`; once the request
+     * migrates to `POST /api/v1/direcciones` this fallback can be
+     * deleted from both paths.
+     */
+    private function mirrorLegacyContactFields(mixed $persona, array $payload): void
+    {
+        $personaId = (int) $persona->id;
+        $now = now();
+
+        if (! empty($payload['email_principal'])) {
+            DB::table('emails')->insert([
+                'persona_id' => $personaId,
+                'email' => (string) $payload['email_principal'],
+                'tipo' => 'personal',
+                'es_principal' => true,
+                'created_at' => $now,
+                'updated_at' => $now,
+            ]);
+        }
+
+        if (! empty($payload['telefono_principal'])) {
+            DB::table('telefonos')->insert([
+                'persona_id' => $personaId,
+                'numero' => (string) $payload['telefono_principal'],
+                'tipo' => 'movil',
+                'es_principal' => true,
+                'created_at' => $now,
+                'updated_at' => $now,
+            ]);
+        }
     }
 
     /**
@@ -121,7 +174,12 @@ class StorePersonaUseCase
      *                       falling back to just `nombres` when apellidos
      *                       is null (juridica personas don't have surnames)
      *   - nombre_comercial, dominio, email_contacto ← NULL
-     *   - estado         ← 'Activo'
+     *
+     * Commit 5.5 dropped `entidad.estado`; business state now lives on
+     * the `entidad_relacion` pivot. After creating the entidad row we
+     * stamp a `cliente` pivot row with `effective_to = NULL` so
+     * `Entidad::getEstadoAttribute()` resolves to 'activo' (the value
+     * callers used to read from the legacy `'Activo'` default).
      *
      * Commit 4 dropped `entidad.direccion` and `entidad.ciudad_cod` —
      * those fields now live in the shared `direcciones` table, which
@@ -141,15 +199,32 @@ class StorePersonaUseCase
                 : $nombres
         );
 
+        $now = now();
         $entidadId = DB::table('entidad')->insertGetId([
             'tipo_persona' => 'Natural',
             'tipo_id' => $persona['identificacion_tipo'] ?? null,
             'identificacion' => $persona['identificacion_numero'] ?? null,
             'nombre' => $nombreCompleto,
             'nombre_comercial' => null,
-            'estado' => 'Activo',
-            'created_at' => now(),
-            'updated_at' => now(),
+            'created_at' => $now,
+            'updated_at' => $now,
+        ]);
+
+        // Commit 5.5: stamp the business-state pivot row. Without an
+        // open `entidad_relacion` row the entity would resolve as
+        // 'inactivo' via `getEstadoAttribute()`, which breaks the
+        // inversion contract (a Natural persona implicitly has an
+        // active entidad, not a paused one).
+        DB::table('entidad_relacion')->insert([
+            'entidad_id' => (int) $entidadId,
+            'tipo_relacion' => 'cliente',
+            'effective_from' => $now,
+            'effective_to' => null,
+            'frecuencia' => 'unica',
+            'recurrencia_cada_meses' => null,
+            'vigencia_meses' => null,
+            'created_at' => $now,
+            'updated_at' => $now,
         ]);
 
         // Mirror any persona-level `direccion` value into a new
@@ -164,8 +239,8 @@ class StorePersonaUseCase
                 'direccion_principal' => (string) $persona['direccion'],
                 'tipo' => 'oficina',
                 'es_principal' => true,
-                'created_at' => now(),
-                'updated_at' => now(),
+                'created_at' => $now,
+                'updated_at' => $now,
             ]);
         }
 

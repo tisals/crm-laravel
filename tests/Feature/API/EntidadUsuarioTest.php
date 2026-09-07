@@ -58,7 +58,6 @@ class EntidadUsuarioTest extends TestCase
         // Per migration 000003: each usuario is backed by a persona.
         // (`tipo_persona` ENUM was dropped in migration 2026_08_29_000001.)
         $persona = \App\Models\Persona::create([
-            'email_principal' => $email,
             'nombres' => $rolNombre,
         ]);
 
@@ -67,7 +66,6 @@ class EntidadUsuarioTest extends TestCase
             'email' => $email,
             'password_hash' => bcrypt('password123'),
             'rol_id' => $rol->id,
-            'estado' => 'Activo',
             'persona_id' => $persona->id,
         ]);
 

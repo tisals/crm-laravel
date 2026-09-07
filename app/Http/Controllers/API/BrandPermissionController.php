@@ -20,7 +20,7 @@ class BrandPermissionController extends Controller
     {
         $userId = (int) $id;
 
-        $usuario = Usuario::with('entidades')->find($userId);
+        $usuario = Usuario::find($userId);
 
         if (! $usuario) {
             return response()->json([
@@ -30,12 +30,20 @@ class BrandPermissionController extends Controller
             ], 404);
         }
 
-        // Filtrar entidades con estado 'Propia' (marcas internas)
+        // Filter the user's entidades to those with an open `propia`
+        // pivot row. Commit 5.5 dropped `entidad.estado`; the
+        // `propia` filter now goes through `entidad_relacion` instead
+        // of a column on the entidad row.
         $brands = $usuario->entidades()
-            ->whereIn('entidad.estado', ['Propia', 'Interna'])
+            ->whereIn('entidad.id', function ($q) {
+                $q->select('entidad_id')
+                    ->from('entidad_relacion')
+                    ->whereIn('tipo_relacion', ['propia', 'interna'])
+                    ->whereNull('effective_to');
+            })
             ->get();
 
-        // Usar el dominio como brand_key
+        // `dominio` is read via the Entidad accessor (presencia_online).
         $brandPermissions = $brands
             ->pluck('dominio')
             ->filter()

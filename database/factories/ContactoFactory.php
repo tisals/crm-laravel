@@ -95,10 +95,22 @@ class ContactoFactory extends Factory
                 }
 
                 if (! $contacto->persona_id) {
-                    $persona = Persona::factory()->create([
-                        'email_principal' => $contacto->email_contacto,
-                    ]);
+                    // Commit 4 dropped `personas.email_principal`. Create
+                    // the persona row without it; the email lives in
+                    // the shared `emails` table, inserted below.
+                    $persona = Persona::factory()->create();
                     $contacto->update(['persona_id' => $persona->id]);
+
+                    if (! empty($contacto->email_contacto)) {
+                        DB::table('emails')->insert([
+                            'persona_id' => $persona->id,
+                            'email' => $contacto->email_contacto,
+                            'tipo' => 'personal',
+                            'es_principal' => true,
+                            'created_at' => now(),
+                            'updated_at' => now(),
+                        ]);
+                    }
                 }
 
                 DB::table('entidad_persona')->insertOrIgnore([

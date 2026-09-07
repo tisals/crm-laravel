@@ -12,7 +12,10 @@ class OportunidadObserver
     /**
      * Handle Oportunidad created event.
      * If created directly on the 'ACEPTADA' stage (the canonical equivalent of
-     * the legacy 'Ganada' state), set cliente_desde on the related entity.
+     * the legacy 'Ganada' state), open a `cliente` pivot row on the related
+     * entity. Commit 5.5 replaced the legacy `entidad.cliente_desde` column
+     * with the `entidad_relacion` pivot; `Entidad::markAsCliente()` keeps
+     * the original "stamp on first win only" semantics.
      */
     public function created(Oportunidad $oportunidad): void
     {
@@ -20,9 +23,8 @@ class OportunidadObserver
             ?? PipelineEtapa::find($oportunidad->pipeline_etapa_id)?->codigo;
 
         if ($etapaCodigo === 'ACEPTADA') {
-            Entidad::where('id', $oportunidad->entidad_id)
-                ->whereNull('cliente_desde')
-                ->update(['cliente_desde' => now()]);
+            $entidad = Entidad::find($oportunidad->entidad_id);
+            $entidad?->markAsCliente();
         }
     }
 
@@ -43,9 +45,8 @@ class OportunidadObserver
         $newEtapaCodigo = PipelineEtapa::find($newEtapaId)?->codigo;
 
         if ($newEtapaCodigo === 'ACEPTADA' && $oldEtapaCodigo !== 'ACEPTADA') {
-            Entidad::where('id', $oportunidad->entidad_id)
-                ->whereNull('cliente_desde')
-                ->update(['cliente_desde' => now()]);
+            $entidad = Entidad::find($oportunidad->entidad_id);
+            $entidad?->markAsCliente();
         } elseif ($oldEtapaCodigo === 'ACEPTADA' && $newEtapaCodigo !== 'ACEPTADA') {
             $hasOtherWon = Oportunidad::where('entidad_id', $oportunidad->entidad_id)
                 ->whereHas('pipelineEtapa', fn ($q) => $q->where('codigo', 'ACEPTADA'))
@@ -53,11 +54,13 @@ class OportunidadObserver
                 ->exists();
 
             if (! $hasOtherWon) {
-                Entidad::where('id', $oportunidad->entidad_id)
-                    ->update([
-                        'cliente_desde' => null,
-                        'estado' => 'Activo',
-                    ]);
+                // No other won opps — close the `cliente` pivot row.
+                // Pre-Commit 5.5 this cleared `entidad.cliente_desde` and
+                // flipped `entidad.estado` back to 'Activo'. Commit 5.5
+                // removes the column; the closing pivot row carries the
+                // same semantic ("the entity is no longer a cliente").
+                $entidad = Entidad::find($oportunidad->entidad_id);
+                $entidad?->clearCliente();
             }
         }
 

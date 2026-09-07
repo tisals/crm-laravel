@@ -29,9 +29,14 @@ class CreateOportunidad
                 ->where('nombre', 'Borrador')
                 ->first();
 
-            // Resolve next sequence code GC-...
+            // Resolve next sequence code GC-01-YYYY-NNN. `getNextCodigo()`
+            // takes (year, semester); compute them from `now()` so a
+            // `Carbon::setTestNow()` override is honored.
             $repo = new EloquentOportunidadRepository;
-            $codigo = $repo->getNextCodigo();
+            $now = now();
+            $year = (int) $now->format('Y');
+            $semester = (int) $now->format('n') <= 6 ? 1 : 2;
+            $codigo = $repo->getNextCodigo($year, $semester);
 
             $oportunidad = Oportunidad::create([
                 'codigo' => $codigo,

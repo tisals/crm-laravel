@@ -66,7 +66,12 @@ class OportunidadGanarTest extends TestCase
 
         $updateResponse->assertStatus(200)
             ->assertJsonPath('success', true)
-            ->assertJsonPath('data.estado', 'Ganada');
+            // `data.estado` mirrors the pipeline etapa name (e.g., 'Aceptada');
+            // the actual business state is in `estado_registro`. Per
+            // OportunidadResource, `estado` was the etapa name BEFORE
+            // Commit 5.5 and remains the surface for backwards compat.
+            ->assertJsonPath('data.estado_registro', 'Ganada')
+            ->assertJsonPath('data.estado', 'Aceptada');
 
         // Verify Servicio was auto-created
         $this->assertDatabaseHas('servicios', [

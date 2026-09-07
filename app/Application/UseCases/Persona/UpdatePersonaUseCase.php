@@ -60,7 +60,23 @@ class UpdatePersonaUseCase
 
         $old = $this->projectForComparison($existing);
 
-        $updated = DB::transaction(fn () => $this->repository->update($id, $data));
+        $updated = DB::transaction(function () use ($id, $data) {
+            $persona = $this->repository->update($id, $data);
+
+            // Commit 4 dropped `personas.email_principal`,
+            // `personas.telefono_principal`, `personas.direccion`. The
+            // PATCH endpoint still accepts these keys for backwards
+            // compatibility (see `PersonaUpdateRequest`); mirror them
+            // into the shared tables so the response and downstream
+            // readers see the update. Only the keys actually present in
+            // the payload are mirrored (`validated()` already filters
+            // them).
+            if ($persona !== null) {
+                $this->mirrorLegacyContactFields($id, $data);
+            }
+
+            return $persona;
+        });
 
         if (! $updated) {
             return null;
@@ -78,6 +94,91 @@ class UpdatePersonaUseCase
         }
 
         return $updated;
+    }
+
+    /**
+     * Mirror the persona-level `email_principal` / `telefono_principal`
+     * payload fields into the shared `emails` / `telefonos` tables on
+     * UPDATE. The legacy columns were dropped by Commit 4; this helper
+     * keeps the data alive so PATCH callers continue to work.
+     *
+     * Strategy: when the request supplies a non-empty value, UPSERT the
+     * primary row (the one with `es_principal = true`) on the matching
+     * table. We never delete the persona's other rows — the caller may
+     * have manually added `emails` / `telefonos` through their own REST
+     * endpoints and we should not surprise them.
+     */
+    private function mirrorLegacyContactFields(int $personaId, array $data): void
+    {
+        $now = now();
+
+        if (array_key_exists('email_principal', $data)) {
+            $value = $data['email_principal'];
+            if ($value === null || $value === '') {
+                // Caller cleared the email. We don't delete the row
+                // here (out of scope) but we flip `es_principal` to
+                // false so the resource reads null until the caller
+                // explicitly removes the row.
+                DB::table('emails')
+                    ->where('persona_id', $personaId)
+                    ->where('es_principal', true)
+                    ->update(['es_principal' => false, 'updated_at' => $now]);
+            } else {
+                $existing = DB::table('emails')
+                    ->where('persona_id', $personaId)
+                    ->where('es_principal', true)
+                    ->first();
+                if ($existing) {
+                    DB::table('emails')
+                        ->where('id', $existing->id)
+                        ->update([
+                            'email' => (string) $value,
+                            'updated_at' => $now,
+                        ]);
+                } else {
+                    DB::table('emails')->insert([
+                        'persona_id' => $personaId,
+                        'email' => (string) $value,
+                        'tipo' => 'personal',
+                        'es_principal' => true,
+                        'created_at' => $now,
+                        'updated_at' => $now,
+                    ]);
+                }
+            }
+        }
+
+        if (array_key_exists('telefono_principal', $data)) {
+            $value = $data['telefono_principal'];
+            if ($value === null || $value === '') {
+                DB::table('telefonos')
+                    ->where('persona_id', $personaId)
+                    ->where('es_principal', true)
+                    ->update(['es_principal' => false, 'updated_at' => $now]);
+            } else {
+                $existing = DB::table('telefonos')
+                    ->where('persona_id', $personaId)
+                    ->where('es_principal', true)
+                    ->first();
+                if ($existing) {
+                    DB::table('telefonos')
+                        ->where('id', $existing->id)
+                        ->update([
+                            'numero' => (string) $value,
+                            'updated_at' => $now,
+                        ]);
+                } else {
+                    DB::table('telefonos')->insert([
+                        'persona_id' => $personaId,
+                        'numero' => (string) $value,
+                        'tipo' => 'movil',
+                        'es_principal' => true,
+                        'created_at' => $now,
+                        'updated_at' => $now,
+                    ]);
+                }
+            }
+        }
     }
 
     /**

@@ -49,6 +49,11 @@ class Usuario extends Authenticatable
      * cliente o de Proveedor." — every auth-credential row represents a
      * natural person, so we backfill the persona from `usuarios.email`.
      *
+     * Commit 4 dropped `personas.email_principal`. The dedup lookup
+     * now reads from the shared `emails` table, and the backfilled
+     * persona row ships without an `email_principal` column — the
+     * matching `emails` row is inserted right after.
+     *
      * Skipped when:
      *   - `persona_id` is already set (caller-supplied)
      *   - the model is being updated (not created)
@@ -67,16 +72,23 @@ class Usuario extends Authenticatable
                 return;
             }
 
-            // Match an existing persona first (idempotent, mirrors the
-            // backfill in migration 000003).
-            $personaId = DB::table('personas')
-                ->where('email_principal', $usuario->email)
-                ->value('id');
+            // Match an existing persona by their primary email row.
+            $personaId = DB::table('emails')
+                ->where('email', $usuario->email)
+                ->value('persona_id');
 
             if (! $personaId) {
                 $personaId = DB::table('personas')->insertGetId([
                     'nombres' => $usuario->nombre ?: $usuario->email,
-                    'email_principal' => $usuario->email,
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+
+                DB::table('emails')->insert([
+                    'persona_id' => (int) $personaId,
+                    'email' => $usuario->email,
+                    'tipo' => 'personal',
+                    'es_principal' => true,
                     'created_at' => now(),
                     'updated_at' => now(),
                 ]);
@@ -121,9 +133,13 @@ class Usuario extends Authenticatable
             Entidad::class,
             \App\Models\EntidadPersona::class,
             'persona_id',  // FK on entidad_persona -> personas.id (== usuarios.persona_id)
-            'entidad_id',  // FK on entidad -> entidad_persona.entidad_id
+            'id',          // FK on entidad (the FINAL table) -> entidad_persona.entidad_id. The previous
+                           //   value `'entidad_id'` is wrong: it told Laravel to join on `entidad.entidad_id`,
+                           //   which doesn't exist (entidad's PK is `id`). The eager-load SQL was
+                           //   `inner join entidad_persona on entidad_persona.entidad_id = entidad.entidad_id`,
+                           //   which MariaDB rejects with SQLSTATE[42S22].
             'persona_id',  // local key on usuarios
-            'entidad_id'   // local key on entidad_persona
+            'entidad_id'   // local key on entidad_persona (the THROUGH table)
         );
     }
 }

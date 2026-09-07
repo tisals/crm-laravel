@@ -65,7 +65,6 @@ class BulkMoveOportunidadesTest extends TestCase
             'email' => 'admin@test.com',
             'password_hash' => bcrypt('password123'),
             'rol_id' => $rol->id,
-            'estado' => 'Activo',
         ]);
 
         $token = $usuario->createToken('test-token')->plainTextToken;
@@ -84,7 +83,6 @@ class BulkMoveOportunidadesTest extends TestCase
             'tipo_persona' => 'Natural',
             'nombre' => 'Test Entity',
             'identificacion' => 'ID-'.rand(100000, 999999),
-            'estado' => 'Activo',
             'created_at' => now(),
             'updated_at' => now(),
         ]);
@@ -98,7 +96,6 @@ class BulkMoveOportunidadesTest extends TestCase
             'pipeline_id' => $this->pipeline->id,
             'pipeline_etapa_id' => $etapaId,
             'fecha' => now()->format('Y-m-d'),
-            'estado' => 'Activa',
             'created_at' => now(),
             'updated_at' => now(),
         ]);
@@ -185,7 +182,6 @@ class BulkMoveOportunidadesTest extends TestCase
             'email' => 'restricted@test.com',
             'password_hash' => bcrypt('password123'),
             'rol_id' => $rol->id,
-            'estado' => 'Activo',
         ]);
 
         $token = $usuario->createToken('test-token')->plainTextToken;

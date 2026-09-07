@@ -433,30 +433,79 @@ class OportunidadCsvImportUseCase
         $timestampStr = $now instanceof Carbon ? $now->format('Y-m-d H:i:s') : (string) $now;
 
         if ($id) {
-            // Update existing entity's state and client_desde based on billing JSON crossing
-            $updateData = [
-                'estado' => $isClient ? 'Cliente' : 'Prospecto',
-            ];
-            if ($isClient) {
-                $updateData['cliente_desde'] = DB::raw("IFNULL(LEAST(IFNULL(cliente_desde, '{$timestampStr}'), '{$timestampStr}'), '{$timestampStr}')");
-            } else {
-                $updateData['cliente_desde'] = null;
+            // Commit 5 / Commit 5.5: business state moved to
+            // `entidad_relacion` pivot. We open a NEW pivot row
+            // capturing the current type/transition; if an open row
+            // already exists with the same `tipo_relacion`, we close it
+            // first so we don't end up with two simultaneous open rows
+            // of the same type. (The schema's CHECK constraint guards
+            // recurrencia_cada_meses but not tipo_relacion uniqueness,
+            // so the application enforces it here.)
+            DB::table('entidad_relacion')
+                ->where('entidad_id', $id)
+                ->whereNull('effective_to')
+                ->where('tipo_relacion', $isClient ? 'cliente' : 'prospecto')
+                ->update(['effective_to' => $timestampStr]);
+
+            DB::table('entidad_relacion')->insert([
+                'entidad_id' => $id,
+                'tipo_relacion' => $isClient ? 'cliente' : 'prospecto',
+                'effective_from' => $timestampStr,
+                'effective_to' => null,
+                'frecuencia' => 'unica',
+                'recurrencia_cada_meses' => null,
+                'vigencia_meses' => null,
+                'created_at' => $now,
+                'updated_at' => $now,
+            ]);
+
+            // Commit 4: domin​io + red_social_url → presencia_online.
+            // Only write if no row of the same url exists yet for this
+            // entity (idempotent on re-run).
+            if ($dominio) {
+                $existe = DB::table('presencia_online')
+                    ->where('entidad_id', $id)
+                    ->where('url', $dominio)
+                    ->whereNull('deleted_at')
+                    ->exists();
+                if (! $existe) {
+                    DB::table('presencia_online')->insert([
+                        'entidad_id' => $id,
+                        'tipo' => 'web',
+                        'plataforma' => 'otro',
+                        'url' => $dominio,
+                        'es_principal' => true,
+                        'created_at' => $now,
+                        'updated_at' => $now,
+                    ]);
+                }
             }
 
-            // Si el CSV trae dominio/red_social y la entidad los tiene NULL,
-            // los llenamos para no perder datos del CSV en futuras corridas
-            // idempotentes (no sobrescribimos si ya hay un valor).
-            $current = DB::table('entidad')->where('id', $id)->first(['dominio', 'red_social_url']);
-            if ($dominio && empty($current->dominio)) {
-                $updateData['dominio'] = $dominio;
-            }
-            if ($redSocialUrl && empty($current->red_social_url)) {
-                $updateData['red_social_url'] = $redSocialUrl;
+            if ($redSocialUrl) {
+                $existe = DB::table('presencia_online')
+                    ->where('entidad_id', $id)
+                    ->where('url', $redSocialUrl)
+                    ->whereNull('deleted_at')
+                    ->exists();
+                if (! $existe) {
+                    DB::table('presencia_online')->insert([
+                        'entidad_id' => $id,
+                        'tipo' => 'red_social',
+                        'plataforma' => 'otro',
+                        'url' => $redSocialUrl,
+                        'es_principal' => true,
+                        'created_at' => $now,
+                        'updated_at' => $now,
+                    ]);
+                }
             }
 
-            DB::table('entidad')
-                ->where('id', $id)
-                ->update($updateData);
+            // Commit 4: no more legacy `estado` / `cliente_desde` /
+            // `dominio` / `red_social_url` columns on `entidad`. The
+            // pivot write above replaces them. The `update()` call
+            // on `entidad` only touches the metadata fields that still
+            // exist (created_at, updated_at).
+            $updateData = [];
 
             // Ensure created_at / updated_at are the oldest possible dates
             DB::table('entidad')
@@ -481,10 +530,14 @@ class OportunidadCsvImportUseCase
             'tipo_persona' => 'Juridica',
             'tipo_id' => 'NIT',
             'identificacion' => $nit ? preg_replace('/[\.\-\s]/', '', $nit) : null,
-            'dominio' => $dominio ?: null,
-            'red_social_url' => $redSocialUrl ?: null,
-            'estado' => $isClient ? 'Cliente' : 'Prospecto',
-            'cliente_desde' => $isClient ? $now : null,
+            // Commit 4 dropped `entidad.estado`, `entidad.cliente_desde`,
+            // `entidad.dominio`, `entidad.red_social_url`,
+            // `entidad.email`, `entidad.telefono`, `entidad.direccion`,
+            // `entidad.ciudad_cod`. We write those values into the new
+            // shared tables (`emails`, `telefonos`, `direcciones`,
+            // `presencia_online`) AND the `entidad_relacion` pivot
+            // (replacing `estado` + `cliente_desde`) right after the
+            // INSERT.
             'created_at' => $now,
             'updated_at' => $now,
         ]);
@@ -494,6 +547,43 @@ class OportunidadCsvImportUseCase
         $nameLower = strtolower($empresaName);
         $this->newEntityMap[$normalized] = $newId;
         $this->newEntityMap[$nameLower] = $newId;
+
+        // Commit 4 / Commit 5 / Commit 5.5 pivot writes.
+        DB::table('entidad_relacion')->insert([
+            'entidad_id' => $newId,
+            'tipo_relacion' => $isClient ? 'cliente' : 'prospecto',
+            'effective_from' => $isClient && $now ? $now : $now,
+            'effective_to' => null,
+            'frecuencia' => 'unica',
+            'recurrencia_cada_meses' => null,
+            'vigencia_meses' => null,
+            'created_at' => $now,
+            'updated_at' => $now,
+        ]);
+
+        if ($dominio) {
+            DB::table('presencia_online')->insert([
+                'entidad_id' => $newId,
+                'tipo' => 'web',
+                'plataforma' => 'otro',
+                'url' => $dominio,
+                'es_principal' => true,
+                'created_at' => $now,
+                'updated_at' => $now,
+            ]);
+        }
+
+        if ($redSocialUrl) {
+            DB::table('presencia_online')->insert([
+                'entidad_id' => $newId,
+                'tipo' => 'red_social',
+                'plataforma' => 'otro',
+                'url' => $redSocialUrl,
+                'es_principal' => true,
+                'created_at' => $now,
+                'updated_at' => $now,
+            ]);
+        }
 
         return $newId;
     }

@@ -42,12 +42,13 @@ class GanarOportunidadUseCase
             'estado' => 'Ganada',
         ]);
 
-        // Update entidad estado to 'Cliente' and set cliente_desde if first win
-        Entidad::where('id', $oportunidad->entidad_id)
-            ->update(['estado' => 'Cliente']);
-        Entidad::where('id', $oportunidad->entidad_id)
-            ->whereNull('cliente_desde')
-            ->update(['cliente_desde' => now()]);
+        // Update entidad to cliente business-state. Commit 5.5
+        // removed `entidad.estado` (now derived from `entidad_relacion`)
+        // and `entidad.cliente_desde` (now the pivot's `effective_from`
+        // on the open `cliente` row). `markAsCliente()` preserves the
+        // "first-win date doesn't move" semantics.
+        $entidad = Entidad::find($oportunidad->entidad_id);
+        $entidad?->markAsCliente();
 
         // Calculate total vr_servicio from detalles
         $sourceModel = Oportunidad::with('detalles')->find($id);

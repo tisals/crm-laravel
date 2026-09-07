@@ -121,15 +121,24 @@ class BackfillEntidadRelacionTest extends TestCase
     }
 
     #[Test]
-    public function cliente_uppercase_becomes_cliente_with_cliente_desde(): void
+    public function cliente_uppercase_becomes_cliente(): void
     {
+        // Post-Commit 5.5 the test seeds pivot rows directly (no
+        // legacy `cliente_desde` is available). The backfill's only
+        // remaining behavior is the idempotency guard — running
+        // `runBackfillInserts()` a second time does NOT create
+        // duplicate rows for the same entity.
         $ent = DB::table('entidad')->where('nombre', 'Cliente Customer')->first();
-        $row = DB::table('entidad_relacion')->where('entidad_id', $ent->id)->first();
+        $rowsBefore = DB::table('entidad_relacion')->where('entidad_id', $ent->id)->count();
+        $this->assertSame(1, $rowsBefore);
 
-        $this->assertNotNull($row);
+        $this->runBackfillInserts();
+
+        $rowsAfter = DB::table('entidad_relacion')->where('entidad_id', $ent->id)->count();
+        $this->assertSame(1, $rowsAfter, 'backfill is idempotent on re-run');
+
+        $row = DB::table('entidad_relacion')->where('entidad_id', $ent->id)->first();
         $this->assertSame('cliente', $row->tipo_relacion);
-        // effective_from should be the cliente_desde value (2024-01-15).
-        $this->assertEquals('2024-01-15', substr((string) $row->effective_from, 0, 10));
         $this->assertNull($row->effective_to);
     }
 
@@ -141,7 +150,7 @@ class BackfillEntidadRelacionTest extends TestCase
 
         $this->assertNotNull($row);
         $this->assertSame('cliente', $row->tipo_relacion);
-        $this->assertEquals('2023-06-01', substr((string) $row->effective_from, 0, 10));
+        $this->assertNull($row->effective_to);
     }
 
     #[Test]

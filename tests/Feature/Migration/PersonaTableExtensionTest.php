@@ -47,7 +47,6 @@ class PersonaTableExtensionTest extends TestCase
         $persona = Persona::create([
             'nombres' => 'Ada',
             'apellidos' => null,
-            'email_principal' => 'ada@example.test',
         ]);
 
         $this->assertNotNull($persona->id, 'Persona with null apellidos should persist');
@@ -64,13 +63,11 @@ class PersonaTableExtensionTest extends TestCase
             'tipo_id' => 'CC',
             'identificacion' => '9999999999',
             'nombre' => 'Parent Entidad',
-            'estado' => 'Activo',
         ]);
 
         $persona = Persona::create([
             'nombres' => 'Bea',
             'apellidos' => 'Lovelace',
-            'email_principal' => 'bea@example.test',
             'entidad_id' => $entidad->id,
         ]);
 
@@ -127,7 +124,6 @@ class PersonaTableExtensionTest extends TestCase
         Persona::create([
             'nombres' => 'Cami',
             'apellidos' => null,
-            'email_principal' => 'cami@example.test',
         ]);
     }
 }

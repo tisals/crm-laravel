@@ -52,7 +52,6 @@ class PersonaRoleRelationsTest extends TestCase
             'entidad_id' => $entidad->id,
             'nombres' => 'Ada',
             'apellidos' => 'Lovelace',
-            'estado' => 'Activo',
             'score' => 0,
         ]);
 
@@ -120,7 +119,6 @@ class PersonaRoleRelationsTest extends TestCase
                 'entidad_id' => $entidad->id,
                 'nombres' => 'Existing One',
                 'apellidos' => 'A',
-                'estado' => 'Activo',
                 'score' => 0,
                 'created_at' => $now,
                 'updated_at' => $now,
@@ -129,7 +127,6 @@ class PersonaRoleRelationsTest extends TestCase
                 'entidad_id' => $entidad->id,
                 'nombres' => 'Existing Two',
                 'apellidos' => 'B',
-                'estado' => 'Activo',
                 'score' => 0,
                 'created_at' => $now,
                 'updated_at' => $now,
@@ -138,7 +135,6 @@ class PersonaRoleRelationsTest extends TestCase
                 'entidad_id' => $entidad->id,
                 'nombres' => 'Existing Three',
                 'apellidos' => 'C',
-                'estado' => 'Activo',
                 'score' => 0,
                 'created_at' => $now,
                 'updated_at' => $now,
@@ -214,7 +210,6 @@ class PersonaRoleRelationsTest extends TestCase
             'nombres' => 'First',
             'apellidos' => 'Colab',
             'persona_id' => $persona->id,
-            'estado' => 'Activo',
         ]);
 
         // Second colaborador with the SAME persona_id: must throw.
@@ -224,7 +219,6 @@ class PersonaRoleRelationsTest extends TestCase
             'nombres' => 'Second',
             'apellidos' => 'Colab',
             'persona_id' => $persona->id,
-            'estado' => 'Activo',
         ]);
     }
 
@@ -243,7 +237,6 @@ class PersonaRoleRelationsTest extends TestCase
             'identificacion' => 'PROV-'.uniqid(),
             'nombres' => 'Vendor',
             'apellidos' => 'X',
-            'estado' => 'Activo',
         ]);
 
         $row = DB::table('proveedores')->where('nombres', 'Vendor')->first();
@@ -288,7 +281,6 @@ class PersonaRoleRelationsTest extends TestCase
             'nombres' => 'Vendor A',
             'apellidos' => 'A',
             'persona_id' => $persona->id,
-            'estado' => 'Activo',
         ]);
 
         Proveedor::create([
@@ -296,7 +288,6 @@ class PersonaRoleRelationsTest extends TestCase
             'nombres' => 'Vendor B',
             'apellidos' => 'B',
             'persona_id' => $persona->id,
-            'estado' => 'Activo',
         ]);
 
         $this->assertSame(
@@ -318,7 +309,6 @@ class PersonaRoleRelationsTest extends TestCase
             'nombres' => 'Will Orphan',
             'apellidos' => 'C',
             'persona_id' => $persona->id,
-            'estado' => 'Activo',
             'score' => 0,
         ]);
 
@@ -346,7 +336,6 @@ class PersonaRoleRelationsTest extends TestCase
             'nombres' => 'Will',
             'apellidos' => 'Orphan',
             'persona_id' => $persona->id,
-            'estado' => 'Activo',
         ]);
 
         $this->assertSame((int) $persona->id, (int) $colaborador->fresh()->persona_id);
@@ -370,7 +359,6 @@ class PersonaRoleRelationsTest extends TestCase
             'nombres' => 'Will',
             'apellidos' => 'Orphan',
             'persona_id' => $persona->id,
-            'estado' => 'Activo',
         ]);
 
         $this->assertSame((int) $persona->id, (int) $proveedor->fresh()->persona_id);
@@ -439,7 +427,6 @@ class PersonaRoleRelationsTest extends TestCase
             'entidad_id' => $entidad->id,
             'nombres' => 'After Rollback',
             'apellidos' => 'Smoke',
-            'estado' => 'Activo',
             'score' => 0,
         ]);
         $this->assertSame(
@@ -467,7 +454,6 @@ class PersonaRoleRelationsTest extends TestCase
             'nombres' => 'Rel',
             'apellidos' => 'Test',
             'persona_id' => $persona->id,
-            'estado' => 'Activo',
             'score' => 0,
         ]);
 
@@ -493,7 +479,6 @@ class PersonaRoleRelationsTest extends TestCase
             'nombres' => 'Rel',
             'apellidos' => 'Colab',
             'persona_id' => $persona->id,
-            'estado' => 'Activo',
         ]);
 
         $reloaded = Colaborador::find($colaborador->id);
@@ -518,7 +503,6 @@ class PersonaRoleRelationsTest extends TestCase
             'nombres' => 'Rel',
             'apellidos' => 'Vendor',
             'persona_id' => $persona->id,
-            'estado' => 'Activo',
         ]);
 
         $reloaded = Proveedor::find($proveedor->id);
@@ -542,7 +526,6 @@ class PersonaRoleRelationsTest extends TestCase
             'tipo_persona' => 'Juridica',
             'nombre' => 'Test Entity',
             'identificacion' => 'TEST-'.uniqid(),
-            'estado' => 'Activo',
         ], $overrides));
     }
 
@@ -551,7 +534,6 @@ class PersonaRoleRelationsTest extends TestCase
         return Persona::create(array_merge([
             'nombres' => 'Persona',
             'apellidos' => 'Test',
-            'email_principal' => 'persona-'.uniqid().'@example.test',
         ], $overrides));
     }
 }

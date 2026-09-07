@@ -45,28 +45,51 @@ class WebhookPurchaseUseCase
                 $nombres = $nameParts[0];
                 $apellidos = $nameParts[1] ?? '';
 
-                // Create Entidad (Organization)
+                // Create Entidad (Organization). Commit 5.5 dropped
+                // `entidad.estado`; the prospecto state now lives on
+                // `entidad_relacion` and is stamped right after.
+                $now = now();
                 $entidad = Entidad::create([
                     'tipo_persona' => 'Juridica',
                     'tipo_id' => 'NIT',
                     'identificacion' => 'PEND-'.strtoupper(substr(md5(uniqid()), 0, 8)),
                     'nombre' => $customerName.' Org',
                     'nombre_comercial' => $customerName.' Org',
-                    'estado' => 'Prospecto',
                 ]);
-
                 $entidadId = $entidad->id;
+
+                DB::table('entidad_relacion')->insert([
+                    'entidad_id' => $entidadId,
+                    'tipo_relacion' => 'prospecto',
+                    'effective_from' => $now->toDateString(),
+                    'effective_to' => null,
+                    'frecuencia' => 'unica',
+                    'recurrencia_cada_meses' => null,
+                    'vigencia_meses' => null,
+                    'created_at' => $now,
+                    'updated_at' => $now,
+                ]);
 
                 // Per commit fe99f70: contacto.entidad_id was dropped.
                 // We create the persona, link it to the entidad via the
                 // pivot, and stamp the contacto with the persona_id.
+                // Commit 4 dropped `personas.email_principal` (now lives
+                // on the shared `emails` table) and Commit 1 dropped
+                // `personas.tipo_persona`.
                 $personaId = DB::table('personas')->insertGetId([
                     'nombres' => $nombres,
                     'apellidos' => $apellidos,
-                    'email_principal' => $customerEmail,
-                    'tipo_persona' => 'Natural',
-                    'created_at' => now(),
-                    'updated_at' => now(),
+                    'created_at' => $now,
+                    'updated_at' => $now,
+                ]);
+
+                DB::table('emails')->insert([
+                    'persona_id' => $personaId,
+                    'email' => $customerEmail,
+                    'tipo' => 'personal',
+                    'es_principal' => true,
+                    'created_at' => $now,
+                    'updated_at' => $now,
                 ]);
 
                 // Create Contacto
@@ -83,8 +106,8 @@ class WebhookPurchaseUseCase
                     'persona_id' => $personaId,
                     'entidad_id' => $entidadId,
                     'categoria' => 'asignacion',
-                    'created_at' => now(),
-                    'updated_at' => now(),
+                    'created_at' => $now,
+                    'updated_at' => $now,
                 ]);
 
                 $contactoId = $newContacto->id;

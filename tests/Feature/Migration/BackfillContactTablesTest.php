@@ -63,7 +63,6 @@ class BackfillContactTablesTest extends TestCase
             'tipo_persona' => 'Juridica',
             'nombre' => 'Test Corp',
             'identificacion' => 'TEST-'.uniqid(),
-            'estado' => 'Activo',
             'created_at' => now(),
             'updated_at' => now(),
         ]);

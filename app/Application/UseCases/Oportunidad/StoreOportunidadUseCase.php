@@ -31,11 +31,14 @@ class StoreOportunidadUseCase
 
             $oportunidad = $this->repository->create($data);
 
-            // If created directly as Ganada, set cliente_desde
+            // If created directly as Ganada, open a `cliente` pivot row
+            // on the related entity. Commit 5.5 removed the legacy
+            // `entidad.cliente_desde` column; the pivot row carries the
+            // same semantic (first-win date). `Entidad::markAsCliente()`
+            // is idempotent — a pre-existing open pivot row is preserved.
             if (isset($data['estado']) && $data['estado'] === 'Ganada') {
-                Entidad::where('id', $oportunidad->entidad_id)
-                    ->whereNull('cliente_desde')
-                    ->update(['cliente_desde' => now()]);
+                $entidad = Entidad::find($oportunidad->entidad_id);
+                $entidad?->markAsCliente();
             }
 
             return $oportunidad;

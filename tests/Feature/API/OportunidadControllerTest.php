@@ -292,7 +292,10 @@ class OportunidadControllerTest extends TestCase
 
         $updateResponse->assertStatus(200)
             ->assertJsonPath('success', true)
-            ->assertJsonPath('data.estado', 'Ganada');
+            // `data.estado` mirrors the pipeline etapa name (post-Commit 5.5);
+            // the actual business state is in `estado_registro`.
+            ->assertJsonPath('data.estado_registro', 'Ganada')
+            ->assertJsonPath('data.estado', 'Aceptada');
     }
 
     #[Test]

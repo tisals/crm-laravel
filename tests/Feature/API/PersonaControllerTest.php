@@ -149,12 +149,33 @@ class PersonaControllerTest extends TestCase
             'tipo_persona' => 'Juridica',
             'nombre' => 'Acme',
             'identificacion' => 'ACME-DUP-'.uniqid(),
-            'estado' => 'Activo',
         ]);
-        PersonaModel::create([
+        $existing = PersonaModel::create([
             'nombres' => 'Existing',
-            'email_principal' => 'shared@acme.test',
             'entidad_id' => $entidad->id,
+        ]);
+        // Commit 4 dropped `personas.email_principal`; the canonical
+        // email row lives in the shared `emails` table. Insert it
+        // directly so the validator's uniqueness check has a row to
+        // collide against.
+        DB::table('emails')->insert([
+            'persona_id' => $existing->id,
+            'email' => 'shared@acme.test',
+            'tipo' => 'personal',
+            'es_principal' => true,
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
+        // The validator's uniqueness check scopes to the `entidad_id`
+        // via `entidad_persona` pivot. Without this row the existing
+        // email does not register as in-entidad and the duplicate
+        // guard silently passes.
+        DB::table('entidad_persona')->insertOrIgnore([
+            'persona_id' => $existing->id,
+            'entidad_id' => $entidad->id,
+            'categoria' => 'asignacion',
+            'created_at' => now(),
+            'updated_at' => now(),
         ]);
 
         $r = $this->withHeader('Authorization', 'Bearer '.$auth['token'])
@@ -263,13 +284,21 @@ class PersonaControllerTest extends TestCase
             'tipo_persona' => 'Juridica',
             'nombre' => 'Acme',
             'identificacion' => 'ACME-PATCH-'.uniqid(),
-            'estado' => 'Activo',
         ]);
         $persona = PersonaModel::create([
             'nombres' => 'Ada',
             'apellidos' => 'Lovelace',
-            'email_principal' => 'before@acme.test',
             'entidad_id' => $entidad->id,
+        ]);
+        // Commit 4 dropped `personas.email_principal`; the canonical
+        // email row lives in the shared `emails` table.
+        DB::table('emails')->insert([
+            'persona_id' => $persona->id,
+            'email' => 'before@acme.test',
+            'tipo' => 'personal',
+            'es_principal' => true,
+            'created_at' => now(),
+            'updated_at' => now(),
         ]);
 
         // Only `email_principal` is sent — `nombres`/`apellidos` must NOT

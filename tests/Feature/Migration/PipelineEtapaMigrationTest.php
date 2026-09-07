@@ -210,7 +210,6 @@ class PipelineEtapaMigrationTest extends TestCase
             'tipo_persona' => 'Natural',
             'nombre' => 'Migration Test Entity',
             'identificacion' => 'ID-'.rand(100000, 999999),
-            'estado' => 'Activo',
             'created_at' => now(),
             'updated_at' => now(),
         ]);
@@ -222,7 +221,6 @@ class PipelineEtapaMigrationTest extends TestCase
             'codigo' => 'MIG-TEST-'.rand(10000, 99999),
             'entidad_id' => $this->createEntidad(),
             'fecha' => now()->format('Y-m-d'),
-            'estado' => $estado,
             'pipeline_etapa_id' => $pipelineEtapaId,
             'created_at' => now(),
             'updated_at' => now(),

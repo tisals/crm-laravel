@@ -5,7 +5,6 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\SoftDeletes;
 
 /**
  * Commit 5 — `entidad_relacion` pivot.
@@ -17,13 +16,18 @@ use Illuminate\Database\Eloquent\SoftDeletes;
  * (was a prospect, became a cliente, etc.).
  *
  * The pivot is the canonical source of truth for `cliente` /
- * `prospecto` / `propia` / `proveedor` going forward. The legacy
- * `entidad.estado` column stays in place (Commit 5 keeps it
- * deprecated per the option-2 contract) for one migration cycle.
+ * `prospecto` / `propia` / `proveedor` going forward. Commit 5.5
+ * dropped `entidad.estado`; this pivot's `effective_to IS NULL` is
+ * the canonical "is currently in this state" check (see
+ * `Entidad::getEstadoAttribute()`).
+ *
+ * No `SoftDeletes` trait: the table has no `deleted_at` column.
+ * Historical rows that close out a prior state set `effective_to`;
+ * a fresh row re-opens the state with a new `effective_from`.
  */
 class EntidadRelacion extends Model
 {
-    use HasFactory, SoftDeletes;
+    use HasFactory;
 
     protected $table = 'entidad_relacion';
 

@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Modules\CRM\Models\Oportunidad;
 
@@ -191,12 +192,23 @@ class Entidad extends Model
      * row. Returns the first `Direccion` row that has a non-null
      * `ciudad_codigo`, or null if no addresses carry one yet.
      */
-    public function ciudad(): ?Direccion
+    /**
+     * Ciudad (municipality) this entidad is registered in. The legacy
+     * `entidad.ciudad_cod` FK column was dropped in Commit 4; the
+     * ciudad code now lives on the entidad's primary `direcciones`
+     * `ciudad_codigo`, or null if no addresses carry one yet.
+     *
+     * Implemented as a `HasOne` so eager-loading via `with('ciudad')`
+     * works (e.g. `EloquentEntidadRepository::mapToEntity()`).
+     * The `orderByDesc('es_principal')` + `whereNotNull('ciudad_codigo')`
+     * keeps the previous behavior: pick the principal direccion that
+     * carries a ciudad code.
+     */
+    public function ciudad(): HasOne
     {
-        return $this->direcciones()
+        return $this->hasOne(Direccion::class, 'entidad_id')
             ->whereNotNull('ciudad_codigo')
-            ->orderByDesc('es_principal')
-            ->first();
+            ->orderByDesc('es_principal');
     }
 
     // ── Commit 3 shared contact relations ──────────────────────────────
@@ -312,5 +324,64 @@ class Entidad extends Model
             ->exists();
 
         return $hasOpenRelation ? 'activo' : 'inactivo';
+    }
+
+    /**
+     * Commit 5.5 helper: open (or preserve) a `cliente` pivot row for
+     * this entity. The original `entidad.cliente_desde` semantics —
+     * "stamp the date the entity became a client, only if not already
+     * set" — are preserved by checking for an open pivot row first.
+     *
+     * @param  \Illuminate\Support\Carbon|string|null  $from  the `effective_from`
+     *         value to stamp on a NEW pivot row. Existing open rows are
+     *         left untouched (their `effective_from` is the historical
+     *         "first-win date" and must not move).
+     */
+    public function markAsCliente($from = null): void
+    {
+        $now = now();
+        $effectiveFrom = $from !== null
+            ? ($from instanceof \Illuminate\Support\Carbon ? $from->toDateTimeString() : (string) $from)
+            : $now->toDateTimeString();
+
+        $hasOpen = $this->relaciones()
+            ->where('tipo_relacion', 'cliente')
+            ->whereNull('effective_to')
+            ->exists();
+
+        if ($hasOpen) {
+            return;
+        }
+
+        \DB::table('entidad_relacion')->insert([
+            'entidad_id' => $this->id,
+            'tipo_relacion' => 'cliente',
+            'effective_from' => $effectiveFrom,
+            'effective_to' => null,
+            'frecuencia' => 'unica',
+            'recurrencia_cada_meses' => null,
+            'vigencia_meses' => null,
+            'created_at' => $now,
+            'updated_at' => $now,
+        ]);
+    }
+
+    /**
+     * Commit 5.5 helper: close the open `cliente` pivot row for this
+     * entity (no-op when there is no open cliente relation). Used when
+     * the entity's last won opportunity leaves the ACEPTADA stage and
+     * there are no other won opportunities to keep the cliente state.
+     */
+    public function clearCliente(): void
+    {
+        $now = now();
+        \DB::table('entidad_relacion')
+            ->where('entidad_id', $this->id)
+            ->where('tipo_relacion', 'cliente')
+            ->whereNull('effective_to')
+            ->update([
+                'effective_to' => $now->toDateTimeString(),
+                'updated_at' => $now,
+            ]);
     }
 }

@@ -36,14 +36,14 @@ class DocumentosTableTest extends TestCase
             'tipo_persona' => 'Juridica',
             'nombre' => 'Test Corp',
             'identificacion' => 'TEST-'.uniqid(),
-            'estado' => 'Activo',
+
             'created_at' => now(),
             'updated_at' => now(),
         ]);
 
         $rolId = DB::table('roles')->insertGetId([
             'nombre' => 'Admin',
-            'estado' => 'Activo',
+
             'created_at' => now(),
             'updated_at' => now(),
         ]);
@@ -57,7 +57,7 @@ class DocumentosTableTest extends TestCase
             'email' => 'admin@example.test',
             'password_hash' => bcrypt('password'),
             'rol_id' => $rolId,
-            'estado' => 'Activo',
+
             'created_at' => now(),
             'updated_at' => now(),
         ]);

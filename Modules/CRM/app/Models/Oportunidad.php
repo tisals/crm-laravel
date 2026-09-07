@@ -75,20 +75,28 @@ class Oportunidad extends Model
             }
 
             // 3. Resolve stage from stage name (only when 'estado' is being actively changed)
-            if ($oportunidad->isDirty('estado') && $oportunidad->estado && ! in_array($oportunidad->estado, ['Activa', 'Inactiva'])) {
+            //
+            // Distinguish terminal business states (Ganada/Perdida/Cancelada)
+            // from etapa names (Borrador/Aceptada/etc.). Terminal states are
+            // kept as-is on `oportunidad.estado` — the Ganar/Perdida
+            // workflows set them explicitly. Etapa names are resolved to
+            // their `pipeline_etapa_id` and `estado` is reset to 'Activa'
+            // (the canonical active state when the opp is just moving
+            // between stages).
+            if ($oportunidad->isDirty('estado')
+                && $oportunidad->estado
+                && ! in_array($oportunidad->estado, ['Activa', 'Inactiva', 'Ganada', 'Perdida', 'Cancelada'])
+            ) {
                 $etapa = PipelineEtapa::where('pipeline_id', $oportunidad->pipeline_id)
                     ->where('nombre', $oportunidad->estado)
                     ->first();
-                if (! $etapa) {
-                    // Graceful fallback: create stage on the fly (important for tests)
-                    $etapa = PipelineEtapa::create([
-                        'pipeline_id' => $oportunidad->pipeline_id,
-                        'nombre' => $oportunidad->estado,
-                        'orden' => 0,
-                    ]);
+                if ($etapa) {
+                    $oportunidad->pipeline_etapa_id = $etapa->id;
+                    $oportunidad->estado = 'Activa'; // Resolved an etapa → canonical active state
                 }
-                $oportunidad->pipeline_etapa_id = $etapa->id;
-                $oportunidad->estado = 'Activa'; // Change state to 'Activa'
+                // No matching etapa: leave estado as-is. The user might
+                // have set a custom estado we don't recognise; preserve
+                // their intent rather than silently rewriting to 'Activa'.
             }
 
             // 4. Default stage if none resolved

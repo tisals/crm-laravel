@@ -201,7 +201,6 @@ class SeguimientoFkSwapTest extends TestCase
             'entidad_id' => $entidad->id,
             'nombres' => 'SinBackfill',
             'apellidos' => 'X',
-            'estado' => 'Activo',
             'score' => 0,
             // persona_id intentionally omitted (NULL).
         ]);
@@ -216,7 +215,6 @@ class SeguimientoFkSwapTest extends TestCase
             'contacto_id' => $contactoSinPersona->id,
             'tipo' => 'Nota',
             'fecha' => '2026-08-28',
-            'estado' => 'Pendiente',
             'created_at' => now(),
             'updated_at' => now(),
         ]);
@@ -399,7 +397,6 @@ class SeguimientoFkSwapTest extends TestCase
                 'nombres' => "WithBackfill{$i}",
                 'apellidos' => "P{$i}",
                 'persona_id' => $persona->id,
-                'estado' => 'Activo',
                 'score' => 0,
             ]);
         }
@@ -412,7 +409,6 @@ class SeguimientoFkSwapTest extends TestCase
                 'contacto_id' => $contactos[$i]->id,
                 'tipo' => 'Nota',
                 'fecha' => '2026-08-28',
-                'estado' => 'Pendiente',
                 'created_at' => $now,
                 'updated_at' => $now,
             ];
@@ -424,7 +420,6 @@ class SeguimientoFkSwapTest extends TestCase
                 'contacto_id' => null,
                 'tipo' => 'Nota',
                 'fecha' => '2026-08-28',
-                'estado' => 'Pendiente',
                 'created_at' => $now,
                 'updated_at' => $now,
             ];
@@ -474,7 +469,6 @@ class SeguimientoFkSwapTest extends TestCase
             'tipo_persona' => 'Juridica',
             'nombre' => 'Test Entity',
             'identificacion' => 'TEST-'.uniqid(),
-            'estado' => 'Activo',
         ], $overrides));
     }
 
@@ -483,7 +477,6 @@ class SeguimientoFkSwapTest extends TestCase
         return Persona::create(array_merge([
             'nombres' => 'Persona',
             'apellidos' => 'Test',
-            'email_principal' => 'persona-'.uniqid().'@example.test',
         ], $overrides));
     }
 
@@ -507,7 +500,6 @@ class SeguimientoFkSwapTest extends TestCase
                 'nombres' => "Seed{$i}",
                 'apellidos' => "P{$i}",
                 'persona_id' => $persona->id,
-                'estado' => 'Activo',
                 'score' => 0,
             ]);
 
@@ -516,7 +508,6 @@ class SeguimientoFkSwapTest extends TestCase
                 'contacto_id' => $contacto->id,
                 'tipo' => 'Nota',
                 'fecha' => '2026-08-28',
-                'estado' => 'Pendiente',
                 'created_at' => $now,
                 'updated_at' => $now,
             ]);
@@ -551,7 +542,6 @@ class SeguimientoFkSwapTest extends TestCase
                 'nombres' => "Post{$i}",
                 'apellidos' => "P{$i}",
                 'persona_id' => $persona->id,
-                'estado' => 'Activo',
                 'score' => 0,
             ]);
 
@@ -560,7 +550,6 @@ class SeguimientoFkSwapTest extends TestCase
                 'persona_id' => $persona->id,
                 'tipo' => 'Nota',
                 'fecha' => '2026-08-28',
-                'estado' => 'Pendiente',
                 'created_at' => $now,
                 'updated_at' => $now,
             ]);

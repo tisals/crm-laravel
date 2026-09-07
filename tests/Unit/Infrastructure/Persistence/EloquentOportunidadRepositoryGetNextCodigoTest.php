@@ -46,7 +46,10 @@ class EloquentOportunidadRepositoryGetNextCodigoTest extends TestCase
 
         $entidad = Entidad::first();
         if (! $entidad) {
-            $entidad = Entidad::factory()->create(['ciudad_cod' => '05001']);
+            // Commit 4 dropped `entidad.ciudad_cod`. The factory no
+            // longer writes the column; the test only needs any
+            // entidad row to satisfy the FK.
+            $entidad = Entidad::factory()->create();
         }
 
         $pipelineId = DB::table('pipelines')->where('codigo', 'COTIZACION')->value('id');
@@ -55,6 +58,8 @@ class EloquentOportunidadRepositoryGetNextCodigoTest extends TestCase
             ->where('codigo', 'BORRADOR')
             ->value('id');
 
+        // `oportunidad.contacto_id` is still in the schema (PR-G only
+        // renamed it on `seguimiento`, not on `oportunidad`).
         DB::table('oportunidad')->insert([
             'codigo' => $codigo,
             'entidad_id' => $entidad->id,
@@ -144,7 +149,9 @@ class EloquentOportunidadRepositoryGetNextCodigoTest extends TestCase
         );
         $entidad = Entidad::first();
         if (! $entidad) {
-            $entidad = Entidad::factory()->create(['ciudad_cod' => '05001']);
+            // Commit 4 dropped `entidad.ciudad_cod`. The factory no
+            // longer writes the column.
+            $entidad = Entidad::factory()->create();
         }
 
         $pipelineId = DB::table('pipelines')->where('codigo', 'COTIZACION')->value('id');
@@ -157,7 +164,7 @@ class EloquentOportunidadRepositoryGetNextCodigoTest extends TestCase
             $first = $this->repository()->getNextCodigo(2026, 1);
             $this->assertSame('GC-01-2026-001', $first);
 
-            // Insert the first code so the next read sees it
+            // Insert the first code so the next read sees it.
             DB::table('oportunidad')->insert([
                 'codigo' => $first,
                 'entidad_id' => $entidad->id,

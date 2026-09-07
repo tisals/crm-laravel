@@ -107,7 +107,6 @@ class SchemaFoundationTest extends TestCase
             'started_at' => now(),
             'created_at' => now(),
             'updated_at' => now(),
-            'estado' => 'Activa',
         ];
 
         DB::table('bot_sessions')->insert($payload);
@@ -179,7 +178,6 @@ class SchemaFoundationTest extends TestCase
         $entidad = Entidad::create([
             'tipo_persona' => 'Natural',
             'nombre' => 'PR-B Test',
-            'estado' => 'Activo',
             'identificacion' => 'PR-B-001',
         ]);
 
@@ -187,7 +185,6 @@ class SchemaFoundationTest extends TestCase
             'entidad_id' => $entidad->id,
             'tipo' => 'Nota',
             'fecha' => '2026-08-01',
-            'estado' => 'Pendiente',
         ]);
 
         $reloaded = Seguimiento::find($seguimiento->id);
@@ -251,7 +248,6 @@ class SchemaFoundationTest extends TestCase
         $entidad = Entidad::create([
             'tipo_persona' => 'Natural',
             'nombre' => 'Parent',
-            'estado' => 'Activo',
             'identificacion' => 'PR-B-REL-001',
         ]);
 
@@ -276,7 +272,6 @@ class SchemaFoundationTest extends TestCase
         $persona = Persona::create([
             'nombres' => 'Bot',
             'apellidos' => 'Sessioner',
-            'email_principal' => 'bot-sessioner@example.test',
         ]);
 
         $session = BotSession::create([
@@ -303,7 +298,6 @@ class SchemaFoundationTest extends TestCase
         $entidad = Entidad::create([
             'tipo_persona' => 'Natural',
             'nombre' => 'Op Parent',
-            'estado' => 'Activo',
             'identificacion' => 'PR-B-REL-002',
         ]);
 
@@ -311,7 +305,6 @@ class SchemaFoundationTest extends TestCase
             'codigo' => 'OPP-BS-001',
             'entidad_id' => $entidad->id,
             'fecha' => '2026-08-01',
-            'estado' => 'Borrador',
         ]);
 
         $session = BotSession::create([
@@ -337,7 +330,6 @@ class SchemaFoundationTest extends TestCase
         $entidad = Entidad::create([
             'tipo_persona' => 'Natural',
             'nombre' => 'FK NullDelete',
-            'estado' => 'Activo',
             'identificacion' => 'PR-B-NULL-001',
         ]);
 
@@ -399,7 +391,6 @@ class SchemaFoundationTest extends TestCase
         $entidad = Entidad::create([
             'tipo_persona' => 'Natural',
             'nombre' => 'Cast Test',
-            'estado' => 'Activo',
             'identificacion' => 'PR-B-CAST-001',
         ]);
 
@@ -407,7 +398,6 @@ class SchemaFoundationTest extends TestCase
             'entidad_id' => $entidad->id,
             'tipo' => 'Nota',
             'fecha' => '2026-08-01',
-            'estado' => 'Pendiente',
             'bot_fact_type' => 'intencion_compra',
             'bot_confidence' => 0.85,
             'bot_source_profile' => 'setter-safe-health',
@@ -498,13 +488,11 @@ class SchemaFoundationTest extends TestCase
             'tipo_persona' => 'Juridica',
             'nombre' => 'PR-C Perfil Entidad',
             'identificacion' => 'PR-C-PERFIL-'.uniqid(),
-            'estado' => 'Activo',
         ]);
 
         DB::table('app_entidad')->insert([
             'app_id' => $app->id,
             'entidad_id' => $entidad->id,
-            'estado' => 'Activo',
             'fecha_contrato' => now()->toDateString(),
             'created_at' => now(),
             'updated_at' => now(),
@@ -541,13 +529,11 @@ class SchemaFoundationTest extends TestCase
             'tipo_persona' => 'Juridica',
             'nombre' => 'PR-C Unique Entidad',
             'identificacion' => 'PR-C-UNIQUE-'.uniqid(),
-            'estado' => 'Activo',
         ]);
 
         $payload = [
             'app_id' => $app->id,
             'entidad_id' => $entidad->id,
-            'estado' => 'Activo',
             'fecha_contrato' => now()->toDateString(),
             'created_at' => now(),
             'updated_at' => now(),

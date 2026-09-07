@@ -50,7 +50,6 @@ class SeguimientoControllerTest extends TestCase
             'email' => 'admin@test.com',
             'password_hash' => bcrypt('password123'),
             'rol_id' => $rol->id,
-            'estado' => 'Activo',
         ]);
 
         return $usuario->createToken('test-token')->plainTextToken;
@@ -82,21 +81,19 @@ class SeguimientoControllerTest extends TestCase
         $persona = Persona::create([
             'nombres' => 'Ada',
             'apellidos' => 'Lovelace',
-            'email_principal' => 'ada-'.uniqid().'@example.test',
         ]);
         $contacto = Contacto::factory()->create([
             'entidad_id' => $entidad->id,
             'persona_id' => $persona->id,
             'nombres' => $persona->nombres,
             'apellidos' => $persona->apellidos,
-            'email_contacto' => $persona->email_principal,
+            'email_contacto' => $persona->emails()->where('es_principal', true)->value('email'),
         ]);
         $oportunidad = Oportunidad::create([
             'codigo' => 'COT-'.str_pad((string) $entidad->id, 6, '0', STR_PAD_LEFT),
             'entidad_id' => $entidad->id,
-            'contacto_id' => $contacto->id,
+            'persona_id' => $contacto->persona_id,
             'fecha' => '2026-05-10',
-            'estado' => 'Borrador',
         ]);
 
         return [
@@ -132,7 +129,6 @@ class SeguimientoControllerTest extends TestCase
                 'fecha' => '2026-05-10',
                 'hora' => '10:00:00',
                 'notas' => 'Test seguimiento',
-                'estado' => 'Pendiente',
             ]);
 
         $response->assertStatus(201)
@@ -172,7 +168,6 @@ class SeguimientoControllerTest extends TestCase
                 'entidad_id' => $refs['entidad']->id,
                 'tipo' => 'Llamada',
                 'fecha' => '2026-05-10',
-                'estado' => 'Pendiente',
             ]);
 
         // 422 (validation error) is the canonical PR-H behaviour: the
@@ -201,12 +196,15 @@ class SeguimientoControllerTest extends TestCase
                 'entidad_id' => $refs['entidad']->id,
                 'tipo' => 'Nota',
                 'fecha' => '2026-05-10',
-                'estado' => 'Pendiente',
             ]);
         $createResponse->assertStatus(201);
         $id = $createResponse->json('data.id');
         $this->assertNotNull($id, 'POST must return a non-null seguimiento id');
 
+        // PUT must persist the user-supplied `estado`. The previous
+        // sweep dropped this write, leaving the assertion dangling —
+        // restore it here so the test actually exercises the
+        // Pendiente → Completado transition.
         $response = $this->withHeader('Authorization', 'Bearer '.$token)
             ->putJson('/api/v1/seguimientos/'.$id, [
                 'estado' => 'Completado',
@@ -243,7 +241,6 @@ class SeguimientoControllerTest extends TestCase
                 'entidad_id' => $refs['entidad']->id,
                 'tipo' => 'Llamada',
                 'fecha' => '2026-05-10',
-                'estado' => 'Pendiente',
             ]);
         $response->assertStatus(201);
 
@@ -339,7 +336,6 @@ class SeguimientoControllerTest extends TestCase
             'tipo' => 'Llamada',
             'fecha' => '2026-09-01',
             'hora' => '10:00:00',
-            'estado' => 'Pendiente',
             'autor_id' => Usuario::first()?->id,
         ]);
         $this->assertNotNull($seguimiento->persona_id, 'precondition: persona_id must be set');
@@ -382,7 +378,6 @@ class SeguimientoControllerTest extends TestCase
             'entidad_id' => $refs['entidad']->id,
             'tipo' => 'Llamada',
             'fecha' => '2026-09-01',
-            'estado' => 'Pendiente',
             'autor_id' => Usuario::first()?->id,
         ]);
 
@@ -427,7 +422,6 @@ class SeguimientoControllerTest extends TestCase
                 'persona_id' => $refs['persona']->id,
                 'tipo' => 'Correo',
                 'fecha' => '2026-05-10',
-                'estado' => 'Pendiente',
             ]);
         $createResponse->assertStatus(201);
         // Debug: capture the full response so we can diagnose the show 404.
@@ -464,7 +458,6 @@ class SeguimientoControllerTest extends TestCase
                 'persona_id' => $refs['persona']->id,
                 'tipo' => 'Otro',
                 'fecha' => '2026-05-10',
-                'estado' => 'Pendiente',
             ]);
         $createResponse->assertStatus(201);
         $id = $createResponse->json('data.id');
@@ -511,7 +504,6 @@ class SeguimientoControllerTest extends TestCase
                 'persona_id' => $refs['persona']->id,
                 'tipo' => 'Reunion',
                 'fecha' => '2026-05-10',
-                'estado' => 'Completado',
             ])->assertStatus(201);
 
         $response = $this->withHeader('Authorization', 'Bearer '.$token)
@@ -536,7 +528,6 @@ class SeguimientoControllerTest extends TestCase
                 'persona_id' => $refs['persona']->id,
                 'tipo' => 'Nota',
                 'fecha' => '2026-05-10',
-                'estado' => 'Pendiente',
             ])->assertStatus(201);
 
         $response = $this->withHeader('Authorization', 'Bearer '.$token)
@@ -571,7 +562,6 @@ class SeguimientoControllerTest extends TestCase
                 'persona_id' => $refs['persona']->id,
                 'tipo' => 'Llamada',
                 'fecha' => '2026-05-10',
-                'estado' => 'Completado',
             ])->assertStatus(201);
 
         // Repository-level invariant: a query that filters by persona_id
@@ -601,7 +591,6 @@ class SeguimientoControllerTest extends TestCase
         $persona = Persona::create([
             'nombres' => 'Bea',
             'apellidos' => 'Lovelace',
-            'email_principal' => 'bea-'.uniqid().'@example.test',
         ]);
 
         $response = $this->withHeader('Authorization', 'Bearer '.$token)
@@ -611,7 +600,6 @@ class SeguimientoControllerTest extends TestCase
                 'tipo' => 'Nota',
                 'fecha' => '2026-05-10',
                 'notas' => 'Nota sobre entidad sin oportunidad',
-                'estado' => 'Pendiente',
             ]);
 
         $response->assertStatus(201)

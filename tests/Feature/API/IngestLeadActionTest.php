@@ -36,10 +36,17 @@ class IngestLeadActionTest extends TestCase
         $action = new IngestLeadAction;
         $result = $action->execute($data);
 
-        // Assert entity got created
+        // Assert entity got created. Commit 5.5 dropped `entidad.estado`;
+        // the business state lives on `entidad_relacion` and is created
+        // by `ResolveOrCreateEntidad` as a `prospecto` pivot row when no
+        // match is found by domain.
         $this->assertDatabaseHas('entidad', [
             'nombre' => 'Red Queen Corp',
-            'estado' => 'Prospecto',
+        ]);
+        $this->assertDatabaseHas('entidad_relacion', [
+            'entidad_id' => $result['entidad']->id,
+            'tipo_relacion' => 'prospecto',
+            'effective_to' => null,
         ]);
 
         // Assert contact got created

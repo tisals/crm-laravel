@@ -39,7 +39,6 @@ class GetUserIdentityUseCaseTest extends TestCase
             'email' => 'test@x.com',
             'password_hash' => bcrypt('p'),
             'rol_id' => $rol->id,
-            'estado' => 'Activo',
         ]);
 
         $bundle = $this->useCase->execute($user->id);
@@ -72,11 +71,13 @@ class GetUserIdentityUseCaseTest extends TestCase
         ]);
 
         // User has access to BRP via entidad_persona (pivot keyed on
-        // usuarios.persona_id, NOT NULL FK added in migration 000003) + app_entidad
-        $entidad = \DB::table('entidad')->insertGetId([
-            'nombre' => 'Acme', 'identificacion' => '1', 'estado' => 'Activo', 'tipo_persona' => 'Juridica',
-            'created_at' => now(), 'updated_at' => now(),
-        ]);
+        // usuarios.persona_id, NOT NULL FK added in migration 000003) + app_entidad.
+        // Commit 5.5 dropped `entidad.estado` and `entidad.tipo_persona`;
+        // use the factory so the `entidad_relacion` pivot row is
+        // stamped automatically.
+        $entidad = \App\Models\Entidad::factory()->create([
+            'nombre' => 'Acme', 'identificacion' => '1',
+        ])->id;
         \DB::table('entidad_persona')->insert([
             'persona_id' => $user->persona_id, 'entidad_id' => $entidad, 'categoria' => 'asignacion',
             'created_at' => now(), 'updated_at' => now(),
@@ -118,10 +119,9 @@ class GetUserIdentityUseCaseTest extends TestCase
             'slug' => 'brp', 'nombre' => 'BRP', 'tipo' => 'internal', 'auth_type' => 'sanctum',
             'activo' => true, 'created_at' => now(), 'updated_at' => now(),
         ]);
-        $entidad = \DB::table('entidad')->insertGetId([
-            'nombre' => 'A', 'identificacion' => '1', 'estado' => 'Activo', 'tipo_persona' => 'Juridica',
-            'created_at' => now(), 'updated_at' => now(),
-        ]);
+        $entidad = \App\Models\Entidad::factory()->create([
+            'nombre' => 'A', 'identificacion' => '1',
+        ])->id;
         \DB::table('entidad_persona')->insert([
             'persona_id' => $user->persona_id, 'entidad_id' => $entidad, 'categoria' => 'asignacion',
             'created_at' => now(), 'updated_at' => now(),

@@ -48,7 +48,6 @@ class PipelineEtapaChangedDispatchTest extends TestCase
             'tipo_persona' => 'Natural',
             'nombre' => 'Test Entity',
             'identificacion' => 'TEST-'.rand(100000, 999999),
-            'estado' => 'Activo',
             'created_at' => now(),
             'updated_at' => now(),
         ]);
@@ -60,7 +59,6 @@ class PipelineEtapaChangedDispatchTest extends TestCase
             'pipeline_id' => $this->pipeline->id,
             'pipeline_etapa_id' => $this->etapa1->id,
             'fecha' => now()->format('Y-m-d'),
-            'estado' => 'Activa',
             'created_at' => now(),
             'updated_at' => now(),
         ], $overrides));

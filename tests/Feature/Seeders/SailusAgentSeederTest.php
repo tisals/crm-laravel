@@ -194,7 +194,6 @@ class SailusAgentSeederTest extends TestCase
         DB::table('app_entidad')->insert([
             'app_id' => $minerva->id,
             'entidad_id' => $unrelatedEntidadId,
-            'estado' => 'Activo',
             'fecha_contrato' => now()->toDateString(),
             'created_at' => now(),
             'updated_at' => now(),

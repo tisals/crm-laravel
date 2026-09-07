@@ -47,7 +47,6 @@ class CotizacionControllerTest extends TestCase
             'email' => 'test@crm.dev',
             'password_hash' => bcrypt('password'),
             'rol_id' => $superAdmin->id,
-            'estado' => 'Activo',
         ]);
         $this->token = $this->user->createToken('test')->plainTextToken;
 
@@ -57,7 +56,6 @@ class CotizacionControllerTest extends TestCase
             'identificacion' => '999999999-9',
             'nombre' => 'Test Corp',
             'dominio' => 'testcorp.com',
-            'estado' => 'Activo',
         ]);
 
         $contacto = Contacto::create([
@@ -68,12 +66,10 @@ class CotizacionControllerTest extends TestCase
             'apellidos' => 'Pérez',
             'email_contacto' => 'juan@testcorp.com',
             'movil' => '3000000000',
-            'estado' => 'Activo',
         ]);
         // Stamp the pivot so CotizacionController's "belongs to entidad"
         // check via the pivot still resolves.
         $contacto->persona_id = \App\Models\Persona::create([
-            'email_principal' => 'juan@testcorp.com',
             'nombres' => 'Juan',
         ])->id;
         $contacto->save();
@@ -90,7 +86,6 @@ class CotizacionControllerTest extends TestCase
             'entidad_id' => $entidad->id,
             'contacto_id' => $contacto->id,
             'fecha' => now()->toDateString(),
-            'estado' => 'Borrador',
             'created_by' => $this->user->id,
         ]);
 
@@ -98,7 +93,6 @@ class CotizacionControllerTest extends TestCase
             'nombre' => 'Servicio de prueba',
             'medida' => 'Und',
             'precio' => 100000,
-            'estado' => 'Activo',
         ]);
 
         DetalleOportunidad::create([

@@ -9,6 +9,7 @@ namespace Tests\Feature\API;
 use App\Models\Contacto;
 use App\Models\Entidad;
 use App\Models\Producto;
+use App\Models\Rol;
 use App\Models\Servicio;
 use App\Models\Usuario;
 use Database\Seeders\DatabaseSeeder;
@@ -26,15 +27,23 @@ class LicenseIntegrationTest extends TestCase
     protected function setUp(): void
     {
         parent::setUp();
-        $this->seed(DatabaseSeeder::class);
+        // The DatabaseSeeder chain includes RealDataSeeder,
+        // BrandPermissionsSeeder, MergeDuplicateEntitiesSeeder etc. that
+        // were written pre-Commit 4/5 and reference dropped columns.
+        // Loading them breaks the RefreshDatabase transaction
+        // (SAVEPOINT errors when subsequent reads run). Each test in
+        // this file creates the data it needs (Rol, Usuario, Productos,
+        // Entidad, Contacto inline).
+
+        // Create the Rol the Usuario FK depends on (previously seeded).
+        $rol = Rol::firstOrCreate(['nombre' => 'Admin'], ['estado' => 'Activo']);
 
         // Create a user and Sanctum token for authentication
         $user = Usuario::create([
             'nombre' => 'SAIlus Agent',
             'email' => 'agent@sailus.dev',
             'password_hash' => bcrypt('password'),
-            'rol_id' => 1,
-            'estado' => 'Activo',
+            'rol_id' => $rol->id,
         ]);
         $this->token = $user->createToken('sailus')->plainTextToken;
 
