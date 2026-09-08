@@ -66,12 +66,13 @@ class CrmWebhookSender
         $body = json_encode($payload);
         $secret = config("webhook.{$configPrefix}.secret");
 
-        // REQ-PSWH-004: the personas_snapshot secret MAY fall back to
-        // `webhook.outbound.secret` when the dedicated env var is unset.
-        // The fallback is scoped to the personas_snapshot prefix so other
-        // webhook sections (n8n_pipeline, etc.) are unaffected — those have
-        // their own secrets and a missing one is a real misconfiguration.
-        if ($secret === null && $configPrefix === 'personas_snapshot') {
+        // REQ-PSWH-004: the personas_snapshot and entidades_snapshot secrets
+        // MAY fall back to `webhook.outbound.secret` when the dedicated env
+        // var is unset. The fallback is scoped to those two CQRS-mirror
+        // prefixes so other webhook sections (n8n_pipeline, etc.) are
+        // unaffected — those have their own secrets and a missing one is a
+        // real misconfiguration.
+        if ($secret === null && in_array($configPrefix, ['personas_snapshot', 'entidades_snapshot'], true)) {
             $secret = config('webhook.outbound.secret');
         }
 

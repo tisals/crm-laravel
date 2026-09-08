@@ -50,7 +50,9 @@ use App\Infrastructure\Persistence\EloquentSeguimientoRepository;
 use App\Infrastructure\Persistence\EloquentServicioRepository;
 use App\Infrastructure\Persistence\EloquentUsuarioAppPermisoRepository;
 use App\Infrastructure\Persistence\EloquentUsuarioRepository;
+use App\Models\EntidadRelacion;
 use App\Models\Oportunidad;
+use App\Observers\EntidadRelacionObserver;
 use App\Observers\OportunidadObserver;
 use Illuminate\Cache\RateLimiting\Limit;
 use Illuminate\Support\Facades\RateLimiter;
@@ -94,6 +96,14 @@ class AppServiceProvider extends ServiceProvider
         // Register observers
         \Modules\CRM\Models\Oportunidad::observe(OportunidadObserver::class);
         Oportunidad::observe(OportunidadObserver::class);
+
+        // Commit 7 — observe pivot mutations on `entidad_relacion` so the
+        // Mercurio CQRS mirror (`mercurio_entidades_snapshot`) reflects
+        // `is_active` changes near-realtime. The observer is a no-op for
+        // raw `DB::table('entidad_relacion')` writes — those are exactly
+        // the inversion / seeder / factory paths that already emit their
+        // own `EntidadChanged` event.
+        EntidadRelacion::observe(EntidadRelacionObserver::class);
 
         // Rate Limiting para API
         // Por defecto: 60 requests/minuto por token/API key

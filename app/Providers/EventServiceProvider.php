@@ -2,11 +2,13 @@
 
 namespace App\Providers;
 
+use App\Domain\Events\EntidadChanged;
 use App\Domain\Events\PersonaChanged;
 use App\Events\ContactUpdated;
 use App\Events\OrganizationCreated;
 use App\Events\PaymentCompleted;
 use App\Events\PipelineEtapaChanged;
+use App\Infrastructure\Webhook\EntidadesSnapshotEmitter;
 use App\Infrastructure\Webhook\Listeners\ContactUpdatedListener;
 use App\Infrastructure\Webhook\Listeners\OrganizationCreatedListener;
 use App\Infrastructure\Webhook\Listeners\PaymentCompletedListener;
@@ -41,6 +43,14 @@ class EventServiceProvider extends ServiceProvider
         // DispatchOutboundWebhookJob on the `webhooks` queue (REQ-PSWH-003).
         PersonaChanged::class => [
             PersonasSnapshotEmitter::class,
+        ],
+
+        // Commit 7 — EntidadChanged domain event mirrors PersonaChanged.
+        // The listener queues entidades.snapshot.sync onto the same
+        // `webhooks` queue. Kill-switch + config-prefix mirrors the
+        // personas flow (webhook.entidades_snapshot.*).
+        EntidadChanged::class => [
+            EntidadesSnapshotEmitter::class,
         ],
     ];
 }
