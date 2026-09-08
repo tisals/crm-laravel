@@ -75,7 +75,7 @@ Branch: `feat/iter4-persona-tracker`, HEAD al cierre de la sesión.
 
 ## Próximo commit (luego de cerrar Commit 5.6)
 - ✅ **Commit 6**: CQRS depth projection (ProjectionLevel enum, query param ?depth=1|2|3) — DONE
-- **Commit 7**: entidad snapshot a Mercurio
+- ✅ **Commit 7**: entidad snapshot a Mercurio — DONE
 - **Commit 8**: finalizar código de aplicación para escribir a las nuevas tablas (drop definitivo de legacy columns)
 
 ## Commit 6 — CQRS-Lite depth projection
@@ -155,5 +155,129 @@ Branch: `feat/iter4-persona-tracker`, HEAD al cierre de la sesión.
   Eloquent Model or a domain entity (defensive against PHP 8.2 dynamic-property warnings).
 - `BaseResource::isRelationLoaded()` guards `$this->relationLoaded()` against domain
   entities that don't expose the relation-tracking method.
-- DodTruncateTest failure is PRE-EXISTING and unrelated — the test seeds
-  `personas.email_principal` which Commit 4 dropped.
+
+## Commit 7 — entidad snapshot a Mercurio
+
+### Estado al cierre
+
+| | Antes Commit 7 | Después Commit 7 |
+|---|---|---|
+| Passing (Feature/API) | ~434 | ~450 |
+| Passing (Unit) | 143 | 143 |
+| Failing (commit-related) | 0 | 0 |
+| Failing (pre-existing, unrelated) | DodTruncateTest::contacto_seeder_truncates_to_10_oldest_removed | same — pre-Commit-4 seeder references dropped `personas.email_principal` |
+
+### Production surface
+
+- `app/Domain/Events/EntidadChanged.php` — `EntidadChanged` event class (sealed)
+  carrying `action`, `entidad_id`, `snapshot`, `occurred_at`, **`event_id`
+  UUIDv4** (Mercurio replay dedup, mirrors the persona event shape).
+- `app/Infrastructure/Webhook/EntidadesSnapshotEmitter.php` — listener that
+  routes `EntidadChanged` to the `webhooks` queue via
+  `DispatchOutboundWebhookJob` with `configPrefix='entidades_snapshot'`,
+  `flat=true`. Honours `webhook.entidades_snapshot.enabled` kill-switch
+  (mirrors the personas kill-switch pattern). Never throws on misconfig
+  (R-3).
+- `app/Infrastructure/Webhook/EntidadSnapshotBuilder.php` — projects a raw
+  `entidad` row to the receiver-facing snapshot Mercurio's CQRS mirror
+  consumes: `id`, `nombre`, `nombre_comercial`, `tipo_persona`,
+  `identificacion`, principal-row lookups (`email_principal`,
+  `telefono_principal`, `direccion_principal`, `dominio`), `is_active`
+  bool (derived from the open pivot row — `entidad.estado` was dropped in
+  Commit 5.5), `relaciones_count`, `contactos_count`,
+  `oportunidades_count`, `usuarios_count`, and `deleted_at` (for
+  delete events).
+- `app/Observers/EntidadRelacionObserver.php` — Eloquent observer on
+  `EntidadRelacion` that emits `EntidadChanged(action='updated')` on
+  created/updated (when `effective_to` changes)/deleted. Raw
+  `DB::table('entidad_relacion')` writes are intentionally bypassed
+  (the inversion / factory / seeder paths use raw inserts and emit
+  their own `EntidadChanged` event from the use case).
+- `app/Application/UseCases/Entidad/StoreEntidadUseCase.php` — dispatches
+  `EntidadChanged(action='created')` after the repository call.
+- `app/Application/UseCases/Entidad/UpdateEntidadUseCase.php` — applies
+  the persona-style `array_diff_assoc` "no effective change" rule
+  (REQ-PSWH-006 mirror), then dispatches `EntidadChanged(action='updated')`.
+- `app/Application/UseCases/Entidad/DestroyEntidadUseCase.php` — captures
+  pre-delete snapshot, stamps `deleted_at`, then dispatches
+  `EntidadChanged(action='deleted')`.
+- `app/Providers/EventServiceProvider.php` — registers
+  `EntidadChanged → EntidadesSnapshotEmitter` (parallel to the persona
+  mapping).
+- `app/Providers/AppServiceProvider.php` — registers
+  `EntidadRelacion::observe(EntidadRelacionObserver::class)`.
+- `app/Infrastructure/Webhook/CrmWebhookSender.php` — extends the
+  outbound-secret fallback to `entidades_snapshot` (parallel to
+  `personas_snapshot`).
+- `config/webhook.php` — adds `entidades_snapshot` section with
+  `enabled` / `url` / `secret` keys (env: `EMIT_ENTIDADES_SNAPSHOT_WEBHOOK`,
+  `ENTIDADES_SNAPSHOT_WEBHOOK_URL`, `ENTIDADES_SNAPSHOT_WEBHOOK_SECRET`).
+  Elvis fallback to `WEBHOOK_OUTBOUND_SECRET` mirrors the personas config.
+- `.env.example` — documents the three new env vars.
+
+### Tests
+
+- `tests/Feature/API/EntidadWebhookEmitterTest.php` — 10 tests:
+  - POST dispatches `EntidadChanged` with `action='created'` and full
+    snapshot (incl. `is_active=false` since the pivot doesn't exist yet)
+  - PATCH with real change dispatches `action='updated'`; `is_active=true`
+    when the pivot is open
+  - PATCH with no effective change emits NO event (mirrors REQ-PSWH-006)
+  - DELETE emits pre-delete snapshot with `deleted_at` stamped and all
+    principal-row lookups populated
+  - Listener pushes `DispatchOutboundWebhookJob` with
+    `event='entidades.snapshot.sync'`, `configPrefix='entidades_snapshot'`,
+    `queue='webhooks'`
+  - Kill-switch (`enabled=false`) → no job, `entidades_snapshot.skipped`
+    log
+  - URL/secret resolve from `webhook.entidades_snapshot.*` (override test)
+  - Secret falls back to `webhook.outbound.secret` when the dedicated
+    env var is unset (mirrors REQ-PSWH-004)
+  - Wire envelope carries a UUIDv4 `event_id` for Mercurio's replay dedup
+  - Lifecycle test: exactly one event per effective write (PATCH with
+    no change does not double-dispatch)
+- `tests/Feature/API/EntidadRelacionObserverTest.php` — 6 tests:
+  - `created` on a pivot row flips `is_active` from false → true
+  - `updated` on a pivot's `effective_to` field emits a snapshot
+  - `updated` on unrelated fields (e.g. `recurrencia_cada_meses`) emits
+    NO snapshot (pure audit-stamp advances stay silent)
+  - `deleted` on a pivot row flips `is_active` from true → false
+  - Three pivot mutations produce three distinct UUIDv4 `event_id`s
+    (idempotency check via `Queue::fake()` + job introspection)
+  - Raw `DB::table('entidad_relacion')->insert()` does NOT emit
+    (proves the observer bypass for inversion / factory / seeder paths)
+
+### Hallazgos (gotchas)
+
+- `Event::fake()` (blanket) blocks Eloquent's `eloquent.*` lifecycle
+  events, which prevents the observer from firing. The observer tests
+  use `Event::fake([EntidadChanged::class])` — partial fake — so model
+  events flow normally to the observer, but `EntidadChanged` dispatches
+  are captured. The uniqueness check for `event_id` was implemented
+  via `Queue::fake()` because the captured `dispatched()` array's
+  element type is brittle across Laravel minor versions.
+- `entidad_relacion.frecuencia` is a strict ENUM(`'unica','recurrente'`)
+  with a CHECK constraint: `frecuencia='recurrente'` requires
+  `recurrencia_cada_meses BETWEEN 1 AND 12`. Tests must respect this.
+- Routes for the entidad REST surface are `/api/v1/entidad` (SINGULAR),
+  not `/api/v1/entidades`. PUT is the update verb (`Route::put`, not
+  `Route::patch`).
+- `EntidadRequest::rules()` makes `tipo_persona` REQUIRED on PUT, so
+  update tests must echo the existing value or the request returns 422.
+- The observer's `updated()` method intentionally checks
+  `$model->wasChanged('effective_to')` so audit-stamp-only writes
+  (`created_by`, `updated_by`) do NOT emit. The flag Mercurio's
+  `is_active` derives from is `effective_to IS NULL`; pure audit-stamp
+  updates don't move it.
+- The inversion path (`StorePersonaUseCase::createEntidadForNaturalPersona`)
+  uses raw `DB::table('entidad_relacion')->insert()` — bypassing the
+  observer intentionally so the create flow emits ONE
+  `EntidadChanged(created)`, not two.
+- `EntidadFactory::configure()` does the same raw insert for tests'
+  fast-path — the observer stays silent, the use case (in production)
+  emits the snapshot.
+- `EntidadesSnapshotEmitter` reuses `CrmWebhookSender` + `DispatchOutboundWebhookJob`
+  — no new outbound-webhook infra layer was added (per the constraints).
+- The `flat=true` flag on the listener means `CrmWebhookSender` signs
+  the payload AS-IS (the listener built the envelope) — same pattern
+  as `PersonasSnapshotEmitter`.
