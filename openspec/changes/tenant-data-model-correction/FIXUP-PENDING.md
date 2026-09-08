@@ -74,6 +74,86 @@ Fix futuro: testear el migration class directamente via `Artisan::call('migrate:
 Branch: `feat/iter4-persona-tracker`, HEAD al cierre de la sesión.
 
 ## Próximo commit (luego de cerrar Commit 5.6)
-- **Commit 6**: CQRS depth projection (ProjectionLevel enum, query param ?depth=1|2|3)
+- ✅ **Commit 6**: CQRS depth projection (ProjectionLevel enum, query param ?depth=1|2|3) — DONE
 - **Commit 7**: entidad snapshot a Mercurio
 - **Commit 8**: finalizar código de aplicación para escribir a las nuevas tablas (drop definitivo de legacy columns)
+
+## Commit 6 — CQRS-Lite depth projection
+
+### Estado al cierre
+
+| | Antes Commit 6 | Después Commit 6 |
+|---|---|---|
+| Passing (Feature/API) | ~321 | ~321 + 26 nuevos depth tests |
+| Passing (Unit) | ~143 | 143 (incluye BaseResourceTest) |
+| Failing (depth-related) | n/a | 0 |
+| Failing (pre-existing, unrelated) | DodTruncateTest::contacto_seeder_truncates_to_10_oldest_removed | same — pre-Commit-4 seeder references dropped `personas.email_principal` |
+
+### Production surface
+
+- `app/Enums/ProjectionLevel.php` — enum `Shallow=1`, `Default=2`, `Deep=3` + `fromRequest(Request)` helper.
+  Unknown / out-of-range / negative values clamp to `Default` (no 4xx).
+- `app/Http/Resources/BaseResource.php` — exposes `depth(Request)`, `whenDepthAtLeast(...)`,
+  `whenShallow(...)`, `isRelationLoaded(string)`, `prop(string)`. Backward compatible with the
+  pre-Commit-6 `BaseResource` (still delegates to `$this->resource->toArray()`).
+- `app/Http/Resources/OportunidadResource.php` — depth-aware `toArray()`. Shallow strips
+  `detalles[]`, `valor`, nested `entidad`. Deep adds `detalles[].producto` and nested
+  `entidad` object.
+- `app/Http/Resources/PersonaResource.php` — depth-aware. Shallow skips `relations`,
+  `email_principal`, `telefono_principal`, `direccion`, `ciudad`, `pais`. Deep adds nested
+  `entidad` snapshot.
+- `app/Http/Resources/EntidadResource.php` — depth-aware. Shallow returns 6 identity
+  fields. Default adds principal-row lookups (direccion/email/telefono/dominio/ciudad_cod).
+  Deep surfaces nested `direcciones[]`, `emails[]`, `telefonos[]`, `presenciaOnline[]`,
+  `documentos[]`, `relaciones[]`.
+- `app/Http/Resources/SeguimientoResource.php` — depth-aware. Shallow skips the four
+  `*_nombre` / `*_codigo` accessors. Default adds them. Deep adds nested `persona` +
+  `oportunidad.detalles[]` snapshots.
+- `app/Http/Resources/ContactoResource.php` — depth-aware. Shallow skips the
+  `entidad_persona` pivot lookup and `entidad_nombre` accessor. Default resolves both.
+  Deep adds nested `persona` + `entidad` objects.
+
+### Controller wiring
+
+- `app/Http/Controllers/API/OportunidadController.php` — `index()` skips eager-load at
+  Shallow (no N+1 on `entidad` / `detalles.producto`). `show()` routes through
+  `Oportunidad::with([...])` matched to the depth level.
+- `app/Http/Controllers/API/EntidadController.php` — `index()` + `show()` now apply
+  `EntidadResource` so `?depth=` is honoured per item.
+- `app/Http/Controllers/API/SeguimientoController.php` — `index()` + `show()` now apply
+  `SeguimientoResource`.
+- `Modules/CRM/app/Http/Controllers/ContactoController.php` — `index()` + `show()` now
+  apply `ContactoResource`.
+- `Modules/CRM/app/Http/Controllers/PersonaController.php` — already used
+  `PersonaResource`; no controller change required (the resource reads depth directly).
+
+### Tests
+
+- `tests/Feature/API/DepthProjectionTest.php` — 26 tests across all 5 endpoints:
+  - Shallow / Default / Deep for each endpoint
+  - Missing `?depth=` defaults to Default
+  - Invalid `?depth=99` clamps to Default (no 4xx)
+  - Index endpoints strip eager-loaded relations at Shallow
+
+### Hallazgos (gotchas)
+
+- `contacto.entidad_id` was dropped by Commit 4. The legacy field is now resolved from
+  the `entidad_persona` pivot in ContactoResource::toArray() (depth ≥ 2 only).
+- `personas.tipo_persona` was dropped by Commit 5 — it lives on `entidad` now. The
+  ContactoResource's nested persona snapshot reads `tipo_persona` from the linked
+  entidad, falling back to `'Natural'`.
+- `documentos.tipo` was renamed to `documentos.tipo_documento` by Commit 3. The
+  EntidadResource depth=3 SELECT reflects this.
+- `entidad_relacion` doesn't have `entidad_id_relacionada` (it was always self-ref via
+  `entidad_id`). The Deep SELECT now reads `tipo_relacion` + the `effective_from/to`
+  window.
+- `direcciones.tipo` is a strict ENUM (`casa`/`oficina`/`sucursal`/`facturacion`/`otro`).
+  Tests must use one of those values; `'principal'` is invalid.
+- `Oportunidad.codigo` is `VARCHAR(20)`. Test fixtures should keep codigos short
+  (e.g. `GD-{uniqid()}`).
+- `BaseResource::prop()` is the canonical way to read fields that may live on either an
+  Eloquent Model or a domain entity (defensive against PHP 8.2 dynamic-property warnings).
+- `BaseResource::isRelationLoaded()` guards `$this->relationLoaded()` against domain
+  entities that don't expose the relation-tracking method.
+- DodTruncateTest failure is PRE-EXISTING and unrelated — the test seeds
+  `personas.email_principal` which Commit 4 dropped.
