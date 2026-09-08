@@ -12,6 +12,7 @@ use App\Application\UseCases\Seguimiento\UpdateSeguimientoUseCase;
 use App\Http\Controllers\API\Concerns\ApiResponse;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\SeguimientoRequest;
+use App\Http\Resources\SeguimientoResource;
 use App\Models\Seguimiento;
 use Carbon\Carbon;
 use Illuminate\Http\JsonResponse;
@@ -53,7 +54,15 @@ class SeguimientoController extends Controller
 
         $result = $this->indexUseCase->execute($perPage, null, $filters);
 
-        return $this->successResponse($result);
+        // Commit 6: wrap paginated items with SeguimientoResource so the
+        // `?depth=` query param is honoured per item.
+        return $this->successResponse([
+            'data' => SeguimientoResource::collection($result->items()),
+            'total' => $result->total(),
+            'current_page' => $result->currentPage(),
+            'last_page' => $result->lastPage(),
+            'per_page' => $result->perPage(),
+        ]);
     }
 
     /**
@@ -144,7 +153,8 @@ class SeguimientoController extends Controller
             return $this->errorResponse('Seguimiento no encontrado.', 404);
         }
 
-        return $this->successResponse($result);
+        // Commit 6: wrap with SeguimientoResource so `?depth=` is honoured.
+        return $this->successResponse(new SeguimientoResource($result));
     }
 
     public function update(SeguimientoRequest $request, int $id): JsonResponse

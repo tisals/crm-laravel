@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources;
 
+use App\Enums\ProjectionLevel;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 use Illuminate\Support\Facades\DB;
@@ -11,19 +12,31 @@ use Illuminate\Support\Facades\DB;
  * `entidad_id`, and a `relations` block (contacto_id, colaborador_id,
  * proveedor_id, entidad_id) per REQ-PRAPI-003.
  *
- * The `relations` block is computed at serialization time using small,
- * index-friendly queries against the three role tables. Each lookup picks
- * the most recent row by primary key DESC that links back to the persona
- * (a persona can have multiple role rows; we surface the newest as the
- * "current" one). When no relation exists, the field is null.
+ * Commit 6 (tenant-data-model-correction) — depth-aware projection:
+ * the resource honours the `?depth=` query param:
+ *
+ *   - Shallow (depth=1): bare identity fields. NO `relations` block,
+ *     NO primary-email/telefono/direccion lookups. This is the cheap
+ *     path for list endpoints (dropdowns, infinite scroll pages).
+ *   - Default (depth=2): identity + primary email/telefono/direccion
+ *     + the `relations` block. Canonical detail shape.
+ *   - Deep    (depth=3): + a flat `entidad` snapshot with the linked
+ *     entidad's `nombre` / `identificacion`, so downstream consumers
+ *     (Mercury mirror, webhook snapshots) don't need a second roundtrip.
+ *
+ * The `relations` block uses small, index-friendly queries against the
+ * three role tables when active. Each lookup picks the most recent row
+ * by primary key DESC that links back to the persona (a persona can
+ * have multiple role rows; we surface the newest as the "current" one).
+ * When no relation exists, the field is null.
  *
  * Why not `whenLoaded`? The repository hands us a domain entity, not an
  * Eloquent model, so eager-loading would require a wider repository refactor.
- * The three extra selects are negligible (each is `WHERE persona_id = ?
- * ORDER BY id DESC LIMIT 1` over an indexed column), and the test was written
- * expecting them inline.
+ * The extra selects are negligible (each is `WHERE persona_id = ?
+ * ORDER BY id DESC LIMIT 1` over an indexed column), and the test was
+ * written expecting them inline.
  */
-class PersonaResource extends JsonResource
+class PersonaResource extends BaseResource
 {
     public function toArray(Request $request): array
     {
@@ -32,17 +45,19 @@ class PersonaResource extends JsonResource
         // shared `emails` / `telefonos` / `direcciones` tables. The
         // `relations` block below surfaces them via sub-queries that
         // pick the primary row per contact table (es_principal=true).
-        return [
+        //
+        // Commit 6 — at Shallow projection we strip the primary-row
+        // lookups AND the role-table joins to keep list responses cheap.
+        $level = $this->depth($request);
+        $isDeep = $level === ProjectionLevel::Deep;
+        $isShallow = $level === ProjectionLevel::Shallow;
+
+        $base = [
             'id' => $this->id,
             'identificacion_tipo' => $this->identificacion_tipo,
             'identificacion_numero' => $this->identificacion_numero,
             'nombres' => $this->nombres,
             'apellidos' => $this->apellidos,
-            'email_principal' => $this->primaryEmail($this->id),
-            'telefono_principal' => $this->primaryTelefono($this->id),
-            'direccion' => $this->primaryDireccion($this->id)['direccion_principal'] ?? null,
-            'ciudad' => $this->primaryDireccion($this->id)['nombre_sede'] ?? null,
-            'pais' => $this->primaryDireccion($this->id)['pais'] ?? null,
             // PR-A / PR-I: the iter4 fields show up in the response so
             // downstream (Mercury) can serialize the full person shape.
             'tipo_persona' => $this->tipo_persona ?? 'Natural',
@@ -50,8 +65,28 @@ class PersonaResource extends JsonResource
             'nombre_completo' => trim("{$this->nombres} {$this->apellidos}"),
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
-            'relations' => $this->resolveRelations(),
         ];
+
+        // Identity-only payload: list endpoints use this.
+        if ($isShallow) {
+            return $base;
+        }
+
+        $base['email_principal'] = $this->primaryEmail((int) $this->id);
+        $base['telefono_principal'] = $this->primaryTelefono((int) $this->id);
+        $base['direccion'] = $this->primaryDireccion((int) $this->id)['direccion_principal'] ?? null;
+        $base['ciudad'] = $this->primaryDireccion((int) $this->id)['nombre_sede'] ?? null;
+        $base['pais'] = $this->primaryDireccion((int) $this->id)['pais'] ?? null;
+        $base['relations'] = $this->resolveRelations();
+
+        // Deep projection: include the linked entidad's identity so the
+        // Mercury mirror doesn't have to roundtrip. We resolve via the
+        // pivot (entidad_persona) because persona.entidad_id may be null.
+        if ($isDeep) {
+            $base['entidad'] = $this->resolveEntidadSnapshot();
+        }
+
+        return $base;
     }
 
     /** Primary email row (es_principal=true) for a persona, or null. */
@@ -149,6 +184,44 @@ class PersonaResource extends JsonResource
             'colaborador_id' => $colaboradorId ? (int) $colaboradorId : null,
             'proveedor_id' => $proveedorId ? (int) $proveedorId : null,
             'entidad_id' => $entidadId !== null ? (int) $entidadId : null,
+        ];
+    }
+
+    /**
+     * Flat entidad snapshot for deep projection. Resolves the effective
+     * entidad_id (persona.entidad_id, falling back to the first pivot
+     * row in `entidad_persona`), then fetches the canonical name +
+     * identificacion. Returns `null` if the persona is not bound to any
+     * entidad — never throws.
+     *
+     * @return array{id: int, nombre: string, identificacion: ?string, tipo_persona: string}|null
+     */
+    private function resolveEntidadSnapshot(): ?array
+    {
+        $entidadId = $this->entidad_id !== null
+            ? (int) $this->entidad_id
+            : DB::table('entidad_persona')
+                ->where('persona_id', (int) $this->id)
+                ->orderBy('entidad_id')
+                ->value('entidad_id');
+
+        if ($entidadId === null) {
+            return null;
+        }
+
+        $row = DB::table('entidad')
+            ->where('id', (int) $entidadId)
+            ->first(['id', 'nombre', 'identificacion', 'tipo_persona']);
+
+        if (! $row) {
+            return null;
+        }
+
+        return [
+            'id' => (int) $row->id,
+            'nombre' => (string) $row->nombre,
+            'identificacion' => $row->identificacion,
+            'tipo_persona' => (string) $row->tipo_persona,
         ];
     }
 }

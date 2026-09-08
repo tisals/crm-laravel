@@ -8,6 +8,7 @@ use App\Application\UseCases\Persona\IndexPersonaUseCase;
 use App\Application\UseCases\Persona\ShowPersonaUseCase;
 use App\Application\UseCases\Persona\StorePersonaUseCase;
 use App\Application\UseCases\Persona\UpdatePersonaUseCase;
+use App\Enums\ProjectionLevel;
 use App\Http\Controllers\API\Concerns\ApiResponse;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\PersonaStoreRequest;

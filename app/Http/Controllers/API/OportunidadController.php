@@ -10,6 +10,7 @@ use App\Application\UseCases\Oportunidad\IndexOportunidadUseCase;
 use App\Application\UseCases\Oportunidad\ShowOportunidadUseCase;
 use App\Application\UseCases\Oportunidad\StoreOportunidadUseCase;
 use App\Application\UseCases\Oportunidad\UpdateOportunidadUseCase;
+use App\Enums\ProjectionLevel;
 use App\Http\Controllers\API\Concerns\ApiResponse;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\OportunidadRequest;
@@ -52,11 +53,22 @@ class OportunidadController extends Controller
 
         $result = $this->indexUseCase->execute($perPage, $search, $filters, $sortBy, $sortOrder);
 
-        // Eager-load relationships for each item
-        $result->getCollection()->transform(fn ($item) => $item->load(['entidad', 'detalles.producto']));
+        // Commit 6 (depth projection): at Shallow projection we skip the
+        // eager-load entirely. List endpoints default to Default, but the
+        // caller can opt into Shallow via `?depth=1` to keep the response
+        // cheap (no N+1 on `entidad` / `detalles.producto`).
+        $depth = ProjectionLevel::fromRequest($request);
+        if ($depth->atLeast(ProjectionLevel::Default)) {
+            // Eager-load relationships for each item. Deep projection adds
+            // `producto` to each detalle (second-degree relation).
+            $relations = $depth === ProjectionLevel::Deep
+                ? ['entidad', 'detalles.producto']
+                : ['entidad', 'detalles'];
+            $result->getCollection()->transform(fn ($item) => $item->load($relations));
+        }
 
         $resource = OportunidadResource::collection($result);
-        $serialized = $resource->toArray(request());
+        $serialized = $resource->toArray($request);
         $paginator = $result->toArray();
 
         return $this->successResponse([
@@ -88,9 +100,21 @@ class OportunidadController extends Controller
         return $this->successResponse(new OportunidadResource($model), 201, 'Oportunidad creada exitosamente.');
     }
 
-    public function show(int $id): JsonResponse
+    public function show(Request $request, int $id): JsonResponse
     {
-        $oportunidad = Oportunidad::with(['entidad', 'detalles'])->find($id);
+        // Commit 6: respect `?depth=` for eager-load cost. Shallow keeps
+        // the query to the bare `oportunidad` row; Default eager-loads
+        // `entidad` + `detalles`; Deep also pulls `detalles.producto`.
+        $depth = ProjectionLevel::fromRequest($request);
+        $relations = match (true) {
+            $depth === ProjectionLevel::Shallow => [],
+            $depth === ProjectionLevel::Deep => ['entidad', 'detalles.producto'],
+            default => ['entidad', 'detalles'],
+        };
+
+        $oportunidad = $relations === []
+            ? Oportunidad::find($id)
+            : Oportunidad::with($relations)->find($id);
 
         if (! $oportunidad) {
             return $this->errorResponse('Oportunidad no encontrada.', 404);

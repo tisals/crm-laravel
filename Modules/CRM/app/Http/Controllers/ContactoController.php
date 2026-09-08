@@ -11,6 +11,7 @@ use App\Application\UseCases\Contacto\UpdateContactoUseCase;
 use App\Http\Controllers\API\Concerns\ApiResponse;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\ContactoRequest;
+use App\Http\Resources\ContactoResource;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -34,7 +35,15 @@ class ContactoController extends Controller
 
         $result = $this->indexUseCase->execute($perPage, $search, $filters);
 
-        return $this->successResponse($result);
+        // Commit 6: wrap paginated items with ContactoResource so the
+        // `?depth=` query param is honoured per item.
+        return $this->successResponse([
+            'data' => ContactoResource::collection($result->items()),
+            'total' => $result->total(),
+            'current_page' => $result->currentPage(),
+            'last_page' => $result->lastPage(),
+            'per_page' => $result->perPage(),
+        ]);
     }
 
     public function store(ContactoRequest $request): JsonResponse
@@ -52,7 +61,8 @@ class ContactoController extends Controller
             return $this->errorResponse('Contacto no encontrado.', 404);
         }
 
-        return $this->successResponse($result);
+        // Commit 6: wrap with ContactoResource so `?depth=` is honoured.
+        return $this->successResponse(new ContactoResource($result));
     }
 
     public function update(ContactoRequest $request, int $id): JsonResponse

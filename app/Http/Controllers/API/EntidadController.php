@@ -10,6 +10,7 @@ use App\Application\UseCases\Entidad\UpdateEntidadUseCase;
 use App\Http\Controllers\API\Concerns\ApiResponse;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\EntidadRequest;
+use App\Http\Resources\EntidadResource;
 use App\Infrastructure\Services\ActividadLogger;
 use App\Models\Entidad;
 use App\Traits\DispatchesWebhooks;
@@ -88,7 +89,16 @@ class EntidadController extends Controller
 
         $result = $this->indexUseCase->execute($perPage, $search, $filters, $sortBy, $sortOrder);
 
-        return $this->successResponse($result);
+        // Commit 6: honour `?depth=` per item by wrapping the paginator
+        // collection with EntidadResource::collection(). The resource's
+        // toArray() reads the depth from the request directly.
+        return $this->successResponse([
+            'data' => EntidadResource::collection($result->items()),
+            'total' => $result->total(),
+            'current_page' => $result->currentPage(),
+            'last_page' => $result->lastPage(),
+            'per_page' => $result->perPage(),
+        ]);
     }
 
     public function store(EntidadRequest $request): JsonResponse
@@ -108,7 +118,7 @@ class EntidadController extends Controller
         return $this->successResponse($result, 201, 'Entidad creada exitosamente.');
     }
 
-    public function show(int $id): JsonResponse
+    public function show(int $id, Request $request): JsonResponse
     {
         if ($resp = $this->ensureCanAccessEntidad($id)) {
             return $resp;
@@ -120,7 +130,9 @@ class EntidadController extends Controller
             return $this->errorResponse('Entidad no encontrada.', 404);
         }
 
-        return $this->successResponse($result);
+        // Commit 6: wrap with EntidadResource so `?depth=` is honoured.
+        // The resource reads depth from the request directly.
+        return $this->successResponse(new EntidadResource($result));
     }
 
     public function update(EntidadRequest $request, int $id): JsonResponse
