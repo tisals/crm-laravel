@@ -90,8 +90,17 @@ return new class extends Migration
         // `entidad.estado` is NOT NULL with a default of 'Activo'; we
         // drop it without an explicit DROP DEFAULT first because
         // MariaDB ignores the default once the column is gone.
-        DB::statement('ALTER TABLE `entidad` DROP COLUMN `estado`');
-        DB::statement('ALTER TABLE `entidad` DROP COLUMN `cliente_desde`');
+        //
+        // Commit 8: the DROP is now `IF EXISTS` so the migration is
+        // safe to apply AFTER `2026_09_09_120000_drop_legacy_entidad_…`
+        // has already removed the columns. That happens on the live
+        // DB scenario where Commit 8 ships, the operator runs
+        // `migrate`, the new migration drops the columns, and then
+        // this older migration's `up()` (which had been pending on
+        // the live DB) finally gets a chance to run. Without
+        // `IF EXISTS` it would fail with "Unknown column 'estado'".
+        DB::statement('ALTER TABLE `entidad` DROP COLUMN IF EXISTS `estado`');
+        DB::statement('ALTER TABLE `entidad` DROP COLUMN IF EXISTS `cliente_desde`');
     }
 
     public function down(): void

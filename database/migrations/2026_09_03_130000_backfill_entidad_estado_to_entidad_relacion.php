@@ -2,6 +2,7 @@
 
 use Illuminate\Database\Migrations\Migration;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Schema;
 
 /**
  * Commit 5 backfill — populate `entidad_relacion` from the
@@ -41,6 +42,18 @@ return new class extends Migration
 {
     public function up(): void
     {
+        // Commit 8: this migration's source-of-truth (`entidad.estado`
+        // and `entidad.cliente_desde`) was already dropped by the
+        // Commit 8 migration `2026_09_09_120000_drop_legacy_entidad_*`
+        // on the live DB. The backfill is a no-op when the source
+        // columns are gone — skip cleanly instead of throwing.
+        //
+        // On a fresh `migrate:fresh` the columns DO exist (they were
+        // never dropped yet), so the backfill runs as before.
+        if (! Schema::hasColumn('entidad', 'estado')) {
+            return;
+        }
+
         DB::statement(<<<'SQL'
             INSERT INTO `entidad_relacion`
                 (`entidad_id`, `tipo_relacion`, `effective_from`, `effective_to`,
