@@ -199,7 +199,23 @@ class OportunidadCsvSeeder extends Seeder
      */
     private function buildEntityMap(): array
     {
-        $entidades = DB::table('entidad')->get(['id', 'nombre', 'identificacion', 'dominio', 'tipo_id']);
+        // Commit 4 dropped `entidad.dominio`; the canonical replacement
+        // is `presencia_online.url` with tipo='web'. We index by
+        // entidad_id and pick the principal (or most-recent) row.
+        $entidades = DB::table('entidad')->get(['id', 'nombre', 'identificacion', 'tipo_id']);
+        $presencias = DB::table('presencia_online')
+            ->where('tipo', 'web')
+            ->whereNull('deleted_at')
+            ->orderByDesc('es_principal')
+            ->orderByDesc('id')
+            ->get(['entidad_id', 'url']);
+        $dominioByEntidad = [];
+        foreach ($presencias as $po) {
+            if ($po->entidad_id && ! isset($dominioByEntidad[$po->entidad_id])) {
+                $dominioByEntidad[$po->entidad_id] = $po->url;
+            }
+        }
+
         $map = [];
         $count = 0;
 
@@ -220,9 +236,10 @@ class OportunidadCsvSeeder extends Seeder
                 }
             }
 
-            // By domain
-            if ($ent->dominio) {
-                $domain = explode('.', $ent->dominio)[0];
+            // By domain — from presencia_online.
+            $dominio = $dominioByEntidad[$id] ?? null;
+            if ($dominio) {
+                $domain = explode('.', $dominio)[0];
                 $map[strtolower($domain)] = $id;
             }
 
@@ -241,17 +258,39 @@ class OportunidadCsvSeeder extends Seeder
     /**
      * Build contact dedup map from existing contacts.
      *
+     * Commit fe99f70 dropped `contacto.entidad_id`; the canonical
+     * link now lives on the `entidad_persona` pivot keyed on
+     * `persona_id`. We resolve contacto → persona → entidad_persona
+     * to get the dedup key.
+     *
      * @return array<string, true>
      */
     private function buildContactDedupMap(): array
     {
-        $contacts = DB::table('contacto')
-            ->whereNotNull('email_contacto')
-            ->whereNotNull('entidad_id')
-            ->get(['entidad_id', 'email_contacto']);
+        // Resolve (persona_id, email_contacto) pairs from `contacto`,
+        // then attach the pivot-resolved entidad_id. We use a single
+        // correlated subquery against `entidad_persona` to avoid
+        // loading the entire pivot table into PHP.
+        $rows = DB::select('
+            SELECT c.persona_id,
+                   c.email_contacto,
+                   (
+                       SELECT ep.entidad_id
+                       FROM entidad_persona ep
+                       WHERE ep.persona_id = c.persona_id
+                       ORDER BY ep.entidad_id
+                       LIMIT 1
+                   ) AS entidad_id
+            FROM contacto c
+            WHERE c.email_contacto IS NOT NULL
+              AND c.persona_id IS NOT NULL
+        ');
 
         $map = [];
-        foreach ($contacts as $c) {
+        foreach ($rows as $c) {
+            if ($c->entidad_id === null) {
+                continue;
+            }
             $key = $c->entidad_id.':'.$c->email_contacto;
             $map[$key] = true;
         }
