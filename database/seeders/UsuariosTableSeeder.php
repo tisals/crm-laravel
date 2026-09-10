@@ -73,7 +73,19 @@ class UsuariosTableSeeder extends Seeder
         // Asignar por rango de año de oportunidad (basado en la fecha más reciente):
         // - Lorena Bernal (índice 1): 2026
         // - Alejandro, Jaime, Patricia (índices 0,2,3): 2021-2025
-        $propiaIds = Entidad::where('estado', 'Propia')->pluck('id')->toArray();
+        //
+        // Commit 8 dropped `entidad.estado`; "Propia" brands are now
+        // detected via whereExists against `entidad_relacion`.
+        $propiaIds = DB::table('entidad')
+            ->whereExists(function ($sub) {
+                $sub->select(DB::raw(1))
+                    ->from('entidad_relacion')
+                    ->whereColumn('entidad_relacion.entidad_id', 'entidad.id')
+                    ->where('entidad_relacion.tipo_relacion', 'propia')
+                    ->whereNull('entidad_relacion.effective_to');
+            })
+            ->pluck('id')
+            ->toArray();
 
         // Entidades con opp más reciente en 2026 → Lorena
         // Entidades con opp más reciente en 2021-2025 → los otros 3 (round-robin)
