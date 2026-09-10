@@ -40,7 +40,29 @@ class ContactoCsvSeeder extends Seeder
 
     protected function buildEntidadMap(): array
     {
-        $entidades = DB::table('entidad')->get(['id', 'nombre', 'identificacion', 'dominio', 'tipo_id']);
+        // Commit 4 dropped `entidad.dominio` and `entidad.red_social_url`.
+        // The canonical replacement is `presencia_online.url` with
+        // tipo='web' (was `dominio`) or tipo='red_social' (was
+        // `red_social_url`). We load both tables in one round trip and
+        // join by entidad_id in PHP below.
+        $entidades = DB::table('entidad')->get(['id', 'nombre', 'identificacion', 'tipo_id']);
+        // Index presencia_online by entidad_id for the domain lookup
+        // below. We pick the principal row when present, otherwise the
+        // most recent one — same precedence the legacy `dominio`
+        // column carried implicitly.
+        $presencias = DB::table('presencia_online')
+            ->where('tipo', 'web')
+            ->whereNull('deleted_at')
+            ->orderByDesc('es_principal')
+            ->orderByDesc('id')
+            ->get(['entidad_id', 'url']);
+        $dominioByEntidad = [];
+        foreach ($presencias as $po) {
+            if ($po->entidad_id && ! isset($dominioByEntidad[$po->entidad_id])) {
+                $dominioByEntidad[$po->entidad_id] = $po->url;
+            }
+        }
+
         $map = [];
 
         foreach ($entidades as $ent) {
@@ -60,9 +82,10 @@ class ContactoCsvSeeder extends Seeder
                 }
             }
 
-            // Domain lookup
-            if ($ent->dominio) {
-                $domain = explode('.', $ent->dominio)[0];
+            // Domain lookup — comes from presencia_online now.
+            $dominio = $dominioByEntidad[$id] ?? null;
+            if ($dominio) {
+                $domain = explode('.', $dominio)[0];
                 $map[strtolower($domain)] = $id;
             }
 
@@ -264,19 +287,35 @@ class ContactoCsvSeeder extends Seeder
                 }
             }
 
-            // Resolve persona_id by email (PR-E additive column on contacto,
-            // PR-F backfill populated it). For contacts without a persona we
-            // create one inline so the entidad_persona pivot can be written.
-            $personaId = DB::table('personas')
-                ->where('email_principal', $email)
-                ->value('id');
+            // Resolve persona_id by email. Commit 8 dropped
+            // `personas.email_principal` — the canonical lookup is now
+            // the primary row in the `emails` table. For contacts
+            // without a persona we create one inline so the
+            // entidad_persona pivot can be written.
+            //
+            // Note: `personas.tipo_persona` is also dropped (Commit 1),
+            // so we never insert that column — `Persona::getTipoPersona
+            // Attribute()` reads it from the bound entidad when needed.
+            $personaId = DB::table('emails')
+                ->where('email', $email)
+                ->where('es_principal', 1)
+                ->value('persona_id');
 
             if (! $personaId) {
                 $personaId = DB::table('personas')->insertGetId([
-                    'email_principal' => $email,
                     'nombres' => $row['nombres'] ?? '',
                     'apellidos' => $row['apellidos'] ?? '',
-                    'tipo_persona' => 'Natural',
+                    'created_at' => now(),
+                    'updated_at' => now(),
+                ]);
+                // Stamp the primary email row so future lookups succeed
+                // (and so the canonical "primary email" lives on the
+                // `emails` table, not on `personas`).
+                DB::table('emails')->insert([
+                    'persona_id' => $personaId,
+                    'email' => $email,
+                    'tipo' => 'personal',
+                    'es_principal' => 1,
                     'created_at' => now(),
                     'updated_at' => now(),
                 ]);
