@@ -88,6 +88,10 @@ class MergeDuplicateEntitiesSeeder extends Seeder
      */
     private function mergeGroup(array $ids, string $label): void
     {
+        // Commit 4 dropped `entidad.dominio` and `entidad.red_social_url`
+        // from the entidad table; the canonical replacements are rows in
+        // `presencia_online`. We don't need those columns here — the
+        // inheritance helper below reads from `presencia_online` directly.
         $entities = DB::table('entidad')->whereIn('id', $ids)->get();
         if ($entities->count() < 2) {
             return;
@@ -135,17 +139,14 @@ class MergeDuplicateEntitiesSeeder extends Seeder
                     ->where('entidad_id', $loser->id)
                     ->delete();
 
-                // Heredar dominio/red_social si la ganadora no tiene
-                if (empty($winner->dominio) && ! empty($loser->dominio)) {
-                    DB::table('entidad')
-                        ->where('id', $winner->id)
-                        ->update(['dominio' => $loser->dominio]);
-                }
-                if (empty($winner->red_social_url) && ! empty($loser->red_social_url)) {
-                    DB::table('entidad')
-                        ->where('id', $winner->id)
-                        ->update(['red_social_url' => $loser->red_social_url]);
-                }
+                // Heredar dominio/red_social si la ganadora no tiene.
+                // Commit 4 dropped `entidad.dominio` and
+                // `entidad.red_social_url` — the canonical replacements
+                // live on `presencia_online` (tipo='web' for dominio,
+                // tipo='red_social' for the social URL). Re-point any
+                // presencia_online rows from the loser to the winner
+                // when the winner has none of that tipo.
+                $this->inheritPresenciaOnline($winner->id, $loser->id);
 
                 // Borrar entidad huérfana
                 DB::table('entidad')
@@ -241,5 +242,33 @@ class MergeDuplicateEntitiesSeeder extends Seeder
         $name = implode(' ', $words);
 
         return trim(preg_replace('/\s+/', ' ', $name));
+    }
+
+    /**
+     * Re-point presencia_online rows from the loser entidad to the
+     * winner entidad, but only for `tipo` rows the winner does NOT
+     * already have. This preserves the legacy "inherit dominio /
+     * red_social_url" semantics after Commit 4 moved those columns
+     * off `entidad` into `presencia_online`.
+     */
+    private function inheritPresenciaOnline(int $winnerId, int $loserId): void
+    {
+        foreach (['web', 'red_social'] as $tipo) {
+            $winnerHas = DB::table('presencia_online')
+                ->where('entidad_id', $winnerId)
+                ->where('tipo', $tipo)
+                ->exists();
+            if ($winnerHas) {
+                continue;
+            }
+
+            DB::table('presencia_online')
+                ->where('entidad_id', $loserId)
+                ->where('tipo', $tipo)
+                ->update([
+                    'entidad_id' => $winnerId,
+                    'updated_at' => now(),
+                ]);
+        }
     }
 }
