@@ -189,6 +189,12 @@ class EntidadCsvSeeder extends Seeder
 
         $cityMap = $this->buildCityMap();
         $rows = [];
+        // Per-NIT sidecar so the post-insert pivot step can stamp
+        // `entidad_relacion` with the same effective_from date the legacy
+        // `entidad.cliente_desde` carried. Keyed by `identificacion`
+        // because `id` is only known after the bulk insert.
+        $estadoByIdent = [];
+        $clienteDesdeByIdent = [];
         $skipped = 0;
         $cityLookups = 0;
 
@@ -230,21 +236,33 @@ class EntidadCsvSeeder extends Seeder
             $fechaCreacion = $this->parseExcelDate($row['fecha_creacion'] ?? null) ?? now();
             $clienteDesde = $isClient ? $fechaCreacion : null;
 
+            // Commit 8 of tenant-data-model-correction dropped:
+            //   - entidad.estado        → derived from `entidad_relacion` pivot
+            //   - entidad.cliente_desde → `entidad_relacion.effective_from`
+            //   - entidad.ciudad_cod    → `direcciones.ciudad_id` FK
+            //   - entidad.direccion     → `direcciones.direccion_principal`
+            //   - entidad.dominio       → `presencia_online.url` (tipo=web)
+            //   - entidad.red_social_url → `presencia_online.url` (tipo=red_social)
+            //
+            // `tipo_persona` is alive on `entidad` (the personas.tipo_persona
+            // column is the one that was dropped). The estado / cliente_desde
+            // values are captured in the sidecars below and stamped as
+            // entidad_relacion rows after the bulk insert.
             $rows[] = [
                 'identificacion' => $identificacion,
                 'tipo_persona' => $this->mapTipoPersona($row['tipo_persona'] ?? null),
                 'tipo_id' => $this->mapTipoId($row['tipo_id'] ?? null),
                 'nombre' => $row['nombre'] ?? 'Sin nombre',
                 'nombre_comercial' => $row['nombre_comercial'] ?? null,
-                'direccion' => $row['direccion'] ?? null,
-                'ciudad_cod' => $ciudadCod,
-                'dominio' => $row['dominio'] ?? null,
                 'logo' => $row['logo'] ?? null,
-                'estado' => $estado,
-                'cliente_desde' => $clienteDesde,
                 'created_at' => $fechaCreacion,
                 'updated_at' => $this->parseExcelDate($row['fecha_actualizacion'] ?? null) ?? now(),
             ];
+
+            $estadoByIdent[$identificacion] = $estado;
+            $clienteDesdeByIdent[$identificacion] = $clienteDesde
+                ? ($clienteDesde instanceof \DateTimeInterface ? $clienteDesde->format('Y-m-d') : substr((string) $clienteDesde, 0, 10))
+                : null;
         }
 
         if (empty($rows)) {
@@ -253,18 +271,36 @@ class EntidadCsvSeeder extends Seeder
             return;
         }
 
-        DB::transaction(function () use ($rows) {
+        DB::transaction(function () use ($rows, $estadoByIdent, $clienteDesdeByIdent) {
             $identificaciones = array_column($rows, 'identificacion');
 
-            // Delete existing entities matching CSV data (by identification), but PRESERVE "Propia" brand entities
+            // Commit 8 dropped `entidad.estado`; the canonical "Propia"
+            // brand marker now lives on `entidad_relacion` (tipo_relacion
+            // = 'propia', effective_to IS NULL). Translate the legacy
+            // `estado != 'Propia'` filter to a `whereNotExists` against
+            // the pivot.
             DB::table('entidad')
-                ->where('estado', '!=', 'Propia')
+                ->whereNotExists(function ($sub) {
+                    $sub->select(DB::raw(1))
+                        ->from('entidad_relacion')
+                        ->whereColumn('entidad_relacion.entidad_id', 'entidad.id')
+                        ->where('entidad_relacion.tipo_relacion', 'propia')
+                        ->whereNull('entidad_relacion.effective_to');
+                })
                 ->whereIn('identificacion', $identificaciones)
                 ->delete();
 
-            // Skip CSV rows that would conflict with existing Propia entities (by NIT)
+            // Skip CSV rows that would conflict with existing Propia
+            // entities (by NIT). Same translation: whereExists against
+            // the pivot.
             $propiaNits = DB::table('entidad')
-                ->where('estado', 'Propia')
+                ->whereExists(function ($sub) {
+                    $sub->select(DB::raw(1))
+                        ->from('entidad_relacion')
+                        ->whereColumn('entidad_relacion.entidad_id', 'entidad.id')
+                        ->where('entidad_relacion.tipo_relacion', 'propia')
+                        ->whereNull('entidad_relacion.effective_to');
+                })
                 ->pluck('identificacion')
                 ->all();
 
@@ -272,7 +308,52 @@ class EntidadCsvSeeder extends Seeder
                 ! in_array($r['identificacion'], $propiaNits)
             ));
 
+            if (empty($rows)) {
+                return;
+            }
+
             DB::table('entidad')->insert($rows);
+
+            // Stamp `entidad_relacion` rows. tipo_relacion = 'cliente'
+            // when the CSV classified the row as Cliente, 'prospecto'
+            // otherwise. effective_from comes from the legacy
+            // `cliente_desde` date (when cliente) or the entidad's
+            // created_at (when prospecto).
+            $inserted = DB::table('entidad')
+                ->whereIn('identificacion', array_column($rows, 'identificacion'))
+                ->get(['id', 'identificacion']);
+
+            $byIdent = [];
+            foreach ($inserted as $row) {
+                $byIdent[$row->identificacion] = (int) $row->id;
+            }
+
+            $nowStamp = now();
+            $pivotRows = [];
+            foreach ($rows as $r) {
+                $ident = $r['identificacion'];
+                $entidadId = $byIdent[$ident] ?? null;
+                if (! $entidadId) {
+                    continue;
+                }
+                $tipoRelacion = ($estadoByIdent[$ident] ?? null) === 'Cliente' ? 'cliente' : 'prospecto';
+                $effectiveFrom = $clienteDesdeByIdent[$ident]
+                    ?? ($r['created_at'] instanceof \DateTimeInterface ? $r['created_at']->format('Y-m-d') : substr((string) $r['created_at'], 0, 10));
+                $pivotRows[] = [
+                    'entidad_id' => $entidadId,
+                    'tipo_relacion' => $tipoRelacion,
+                    'effective_from' => $effectiveFrom,
+                    'effective_to' => null,
+                    'frecuencia' => 'unica',
+                    'recurrencia_cada_meses' => null,
+                    'vigencia_meses' => null,
+                    'created_at' => $nowStamp,
+                    'updated_at' => $nowStamp,
+                ];
+            }
+            if (! empty($pivotRows)) {
+                DB::table('entidad_relacion')->insert($pivotRows);
+            }
         });
 
         $this->command->info('Entidades seeded: '.count($rows)." rows ({$skipped} skipped, {$cityLookups} city lookups).");
