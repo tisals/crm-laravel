@@ -134,8 +134,18 @@ class MergeDuplicateEntitiesSeeder extends Seeder
                     ->where('entidad_id', $loser->id)
                     ->update(['entidad_id' => $winner->id, 'updated_at' => now()]);
 
-                // Borrar contactos de la huérfana
-                $contacts = DB::table('contacto')
+                // Borrar contactos de la huérfana.
+                // Commit fe99f70 dropped `contacto.entidad_id`; the
+                // canonical link is `contacto.persona_id → entidad_persona`.
+                // Delete every contacto whose persona is bound to the
+                // loser entidad via the pivot.
+                DB::statement('
+                    DELETE c FROM contacto c
+                    INNER JOIN entidad_persona ep ON ep.persona_id = c.persona_id
+                    WHERE ep.entidad_id = ?
+                ', [$loser->id]);
+                // Also drop the orphan pivot rows pointing at the loser.
+                DB::table('entidad_persona')
                     ->where('entidad_id', $loser->id)
                     ->delete();
 
