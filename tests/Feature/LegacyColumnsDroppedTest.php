@@ -1,6 +1,6 @@
 <?php
 
-namespace Tests\Feature\Database;
+namespace Tests\Feature;
 
 use App\Models\Entidad as EloquentEntidad;
 use Illuminate\Database\QueryException;
@@ -39,8 +39,13 @@ use Tests\TestCase;
  *      replacement and is queryable end-to-end via the existing
  *      `Entidad::getEstadoAttribute()` accessor.
  *
- * The class lives under `tests/Feature/Database/` (new namespace)
- * because it is a schema-level smoke test, not an endpoint test.
+ * Originally placed under `tests/Feature/Database/` (a new sub-namespace
+ * dedicated to schema-level smoke tests, not endpoint tests). The
+ * sub-namespace caused a `RefreshDatabase` setUp() hang in the local
+ * Docker dev environment, so it lives flat under `tests/Feature/` like
+ * the rest of the suite. The smoke-test framing in the docblock above
+ * still applies — these assertions exercise the schema (information_schema,
+ * SHOW COLUMNS, raw SELECT) rather than any controller endpoint.
  */
 class LegacyColumnsDroppedTest extends TestCase
 {
