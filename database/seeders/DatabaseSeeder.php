@@ -15,6 +15,7 @@ class DatabaseSeeder extends Seeder
             AppsCatalogSeeder::class,           // Catálogo de apps (minerva, mercurio, fama, wp-plugin, concordia, janus, numeria, tempus, vesta, labor, sailus)
             RealDataSeeder::class,         // Datos CSV primero (crea entidades id=1,2 como Prospecto/Cliente)
             BrandPermissionsSeeder::class, // DESPUÉS: sobreescribe id=1 y id=2 como Propia (marca propia)
+            MultiTenantPivotSeeder::class, // DESPUÉS: app_entidad + usuario_app_permisos para que /me/apps y /me/identity tengan datos
             PipelineSeeder::class,              // Pipelines y etapas predefinidas
             DodCapSeeder::class,                // Trunca a máx 10 ops y 10 contactos por entidad
             MergeDuplicateEntitiesSeeder::class, // FUSIONA duplicados generados durante OportunidadCsvSeeder
