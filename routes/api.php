@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\API\Auth\TokenExchangeController;
+use App\Http\Controllers\API\OrgPlanController;
 use App\Http\Controllers\API\AuthController;
 use App\Http\Controllers\API\BrandPermissionController;
 use App\Http\Controllers\API\CiudadController;
@@ -38,6 +39,16 @@ Route::prefix('v1')->group(function () {
     // Public endpoints
     Route::get('/health', fn () => response()->json(['status' => 'ok']));
     Route::get('/plans', [PlanController::class, 'index']);
+
+    // Org plan lookup — Mercurio queries this to learn the active
+    // tier for an org (billing source of truth). Sanctum-protected;
+    // only the mercurio-bridge service-account token may call it.
+    Route::middleware('auth:sanctum')->group(function () {
+        Route::get('/admin/orgs/{tenant_id}/plan', [OrgPlanController::class, 'show']);
+        // Cache invalidation: hit after contract change so Mercurio
+        // stops using the stale cached plan.
+        Route::post('/internal/billing/invalidate', [\App\Http\Controllers\API\OrgPlanController::class, 'invalidate']);
+    });
     // Moved to Modules/CRM:
     // Route::post('/webhook/registration', [SailusWebhookController::class, 'registration'])
     //     ->middleware('auth:sanctum')
