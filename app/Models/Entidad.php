@@ -5,6 +5,7 @@ namespace App\Models;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
+use Illuminate\Database\Eloquent\Relations\HasOne;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Modules\CRM\Models\Oportunidad;
 
@@ -114,5 +115,41 @@ class Entidad extends Model
     public function ciudad()
     {
         return $this->belongsTo(Ciudad::class, 'ciudad_cod', 'cod_municipio');
+    }
+
+    // ── PR1 of `complementar-entidad` ───────────────────────────────────
+
+    /**
+     * 1:1 annex that holds enrichment data from the Python FastMCP
+     * server (PR2) and the Decreto 768/2022 lookup (PR1). One row
+     * per `entidad` — see `entidad_enriquecimiento` table.
+     */
+    public function enriquecimiento(): HasOne
+    {
+        return $this->hasOne(EntidadEnriquecimiento::class, 'entidad_id');
+    }
+
+    /**
+     * Derive the enrichment lifecycle for `EntidadResource` (PR5).
+     *
+     *   - 'pending'           — no annex row yet (default before first job runs)
+     *   - 'enriched'          — annex row carries a non-null `enriquecido_at`
+     *   - 'failed'            — annex row exists with `enrichment_status='failed'`
+     *   - 'skipped'           — Habeas Data exclude mode returned null
+     *   - 'needs_selection'   — homonimia, awaiting user pick
+     */
+    public function getEnrichmentStatusAttribute(): string
+    {
+        $annex = $this->enriquecimiento;
+
+        if ($annex === null) {
+            return 'pending';
+        }
+
+        if ($annex->enriquecido_at !== null) {
+            return 'enriched';
+        }
+
+        return $annex->enrichment_status ?: 'pending';
     }
 }
