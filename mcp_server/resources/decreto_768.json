@@ -1,0 +1,9 @@
+{
+    "_meta": {
+        "source": "Decreto 768/2022 (Mintrabajo Colombia)",
+        "shape": "ciiu_4digit -> { clase_riesgo_ul_num:int, clase_riesgo_ul_desc:string, sector_economico:string, fuente:string }",
+        "mirror": "config/decreto_768.php (Laravel-side). MUST stay byte-identical in semantic content; CI SHA256 drift check enforces this.",
+        "pr": "PR1 ships an empty matrix. PR6 fills both files with the canonical Decreto 768/2022 rows."
+    },
+    "entries": {}
+}

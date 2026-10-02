@@ -9,13 +9,17 @@ use Tests\TestCase;
  * PR1 of `complementar-entidad` — work-unit 1.5.
  *
  * The Decreto 768/2022 risk matrix lives in two places:
- *   - Laravel:  config/decreto_768.php       (PHP array)
- *   - Python:   mcp_server/resources/decreto_768.json (JSON)
+ *   - Laravel:  config/decreto_768.php       (PHP array; `entries` key)
+ *   - Python:   mcp_server/resources/decreto_768.json (JSON; `entries` key)
  *
- * This test mirrors the CI SHA256 drift check: if both files exist, their
- * normalised content SHA256 MUST match. PR1 ships both as empty placeholders
- * (PHP returns []; JSON is `{}`) so the SHA256s match trivially; PR6 will
- * fill them and the test must keep matching.
+ * This test mirrors the CI SHA256 drift check. We compare NORMALISED
+ * content (the canonical `entries` map, JSON-encoded for byte-identity)
+ * so unrelated formatting changes (comments, whitespace, key order in
+ * the JSON `_meta` block) don't trigger drift.
+ *
+ * PR1 ships both files with empty `entries` → trivially matches.
+ * PR6 will fill both with the canonical Decreto 768/2022 rows and the
+ * normalised SHA256 must keep matching.
  */
 class Decreto768DriftTest extends TestCase
 {
@@ -40,21 +44,36 @@ class Decreto768DriftTest extends TestCase
     #[Test]
     public function both_matrix_files_have_matching_normalised_sha256(): void
     {
-        // PR1: both files are empty placeholders so SHA256 matches.
-        // PR6: both files carry the canonical matrix; the SHA256 must still match.
-        $phpPath = base_path('config/decreto_768.php');
-        $jsonPath = base_path('mcp_server/resources/decreto_768.json');
+        // Normalise each file to its canonical `entries` map, JSON-encoded
+        // with sorted keys, so SHA256 (and semantic content) match exactly.
+        $phpEntries = (array) config('decreto_768.entries', []);
+        $jsonEntries = json_decode(
+            (string) file_get_contents(base_path('mcp_server/resources/decreto_768.json')),
+            true
+        )['entries'] ?? [];
 
-        $this->assertFileExists($phpPath);
-        $this->assertFileExists($jsonPath);
-
-        $phpSha = hash_file('sha256', $phpPath);
-        $jsonSha = hash_file('sha256', $jsonPath);
+        $phpCanonical = self::canonicalJsonEncode($phpEntries);
+        $jsonCanonical = self::canonicalJsonEncode($jsonEntries);
 
         $this->assertSame(
-            $phpSha,
-            $jsonSha,
-            "Decreto matrix drift detected.\n  PHP SHA256:  {$phpSha}\n  JSON SHA256: {$jsonSha}"
+            $phpCanonical,
+            $jsonCanonical,
+            "Decreto matrix drift detected.\n  PHP canonical:  {$phpCanonical}\n  JSON canonical: {$jsonCanonical}"
         );
+    }
+
+    /**
+     * Deterministic JSON encode (sorted keys, no slashes escaped) so two
+     * equal associative arrays always produce the same byte string.
+     */
+    private static function canonicalJsonEncode(array $value): string
+    {
+        ksort($value);
+        foreach ($value as $k => $v) {
+            if (is_array($v)) {
+                $value[$k] = self::canonicalJsonEncode($v);
+            }
+        }
+        return json_encode($value, JSON_UNESCAPED_SLASHES | JSON_UNESCAPED_UNICODE);
     }
 }
