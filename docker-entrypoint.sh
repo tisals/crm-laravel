@@ -107,8 +107,6 @@ fi
 # Descubrir paquetes (reemplaza post-autoload-dump)
 php artisan package:discover --ansi 2>/dev/null || true
 
-# PHP-FPM en background
-php-fpm -D
-
-# Nginx en foreground (PID 1)
-exec nginx -g "daemon off;"
+# Supervisord en foreground (PID 1) — gestiona php-fpm, nginx, y el
+# laravel-worker (queue:work para `webhooks` queue). Ver /etc/supervisord.conf.
+exec /usr/bin/supervisord -c /etc/supervisord.conf

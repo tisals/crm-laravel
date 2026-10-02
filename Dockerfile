@@ -28,8 +28,9 @@ RUN composer install \
 # ========================================================
 FROM php:8.2-fpm-alpine
 
-# Nginx
-RUN apk add --no-cache nginx
+# Nginx + supervisor (supervisord gestiona php-fpm, nginx, y el queue worker
+# que faltaba en el entrypoint anterior — ver docker/supervisord.conf)
+RUN apk add --no-cache nginx supervisor
 
 # Extensiones PHP (pre-compiladas, no desde fuente)
 COPY --from=mlocati/php-extension-installer /usr/bin/install-php-extensions /usr/local/bin/
@@ -50,6 +51,10 @@ COPY docker/opcache-tune.ini /usr/local/etc/php/conf.d/zz-opcache-tune.ini
 COPY --from=vendor /app/vendor /var/www/html/vendor
 COPY . /var/www/html
 COPY nginx.conf /etc/nginx/http.d/default.conf
+
+# Supervisord — gestor de procesos (php-fpm + nginx + queue worker).
+# El entrypoint lo invoca como PID 1.
+COPY docker/supervisord.conf /etc/supervisord.conf
 
 # Permisos
 RUN mkdir -p /var/www/html/storage/framework/{sessions,views,cache} \
