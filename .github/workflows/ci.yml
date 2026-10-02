@@ -76,6 +76,41 @@ jobs:
       run: php artisan test --ansi
 
     # --------------------------------------------------
+    # Decreto 768 dual-file drift check (PR1 of `complementar-entidad`)
+    # Compares normalised SHA256 of config/decreto_768.php and
+    # mcp_server/resources/decreto_768.json. PR1 ships both as empty
+    # placeholders so SHA256s match trivially; PR6 fills them with the
+    # canonical Decreto 768/2022 rows. The step currently LOGS only
+    # (warns on mismatch); it will FAIL on real drift once PR6 lands.
+    # --------------------------------------------------
+    - name: Decreto 768 dual-file drift check (PR1 — warns only)
+      run: |
+        set +e
+        PHP_SHA=$(php -r 'require "config/decreto_768.php"; echo hash("sha256", json_encode($config["decreto_768"]["entries"] ?? [], JSON_UNESCAPED_SLASHES));' 2>/dev/null)
+        if [ -z "$PHP_SHA" ]; then
+          echo "::warning::decreto_768: PHP matrix file unreadable — drift check skipped"
+          exit 0
+        fi
+        JSON_SHA=""
+        if command -v jq >/dev/null 2>&1; then
+          JSON_SHA=$(jq -S '.entries // {}' mcp_server/resources/decreto_768.json 2>/dev/null | sha256sum | awk '{print $1}')
+        else
+          JSON_SHA=$(php -r '$j = json_decode(file_get_contents("mcp_server/resources/decreto_768.json"), true); echo hash("sha256", json_encode($j["entries"] ?? [], JSON_UNESCAPED_SLASHES));' 2>/dev/null)
+        fi
+        if [ -z "$JSON_SHA" ]; then
+          echo "::warning::decreto_768: JSON matrix file unreadable — drift check skipped"
+          exit 0
+        fi
+        echo "decreto_768.php   SHA256: $PHP_SHA"
+        echo "decreto_768.json  SHA256: $JSON_SHA"
+        if [ "$PHP_SHA" = "$JSON_SHA" ]; then
+          echo "decreto_768: drift: detected=false — OK"
+        else
+          echo "::warning::decreto_768: drift: detected=true — PHP and JSON matrix entries diverge. Update both files in the same commit (PR1 scaffold: WARN only)."
+        fi
+        exit 0
+
+    # --------------------------------------------------
     # OpenAPI lint (AC10/AC11 from ADD-AUTH-001)
     # Detects breaking changes in Docs/openapi/auth.yaml
     # Fails the build if paths removed, required[] entries removed, etc.

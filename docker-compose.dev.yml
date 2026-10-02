@@ -48,6 +48,12 @@ services:
       - ./vendor:/var/www/html/vendor
       - ./Modules:/var/www/html/Modules
       - ./modules_statuses.json:/var/www/html/modules_statuses.json
+      # PR1 of `complementar-entidad`: mcp_server/ holds the Python FastMCP
+      # server (PR2) and the Decreto 768 dual-file matrix mirror
+      # (config/decreto_768.php ↔ mcp_server/resources/decreto_768.json).
+      # The bind mount lets the Laravel-side drift test read the JSON file
+      # directly from inside the container without requiring a build step.
+      - ./mcp_server:/var/www/html/mcp_server
     networks:
       - dev
       - sailus-shared
