@@ -47,11 +47,13 @@ class EntidadEnriquecimiento extends Model
         'enriquecido_at',
         'enriquecimiento_hash',
         'enrichment_status',
+        'candidatos_json',
     ];
 
     protected $casts = [
         'enriquecido_at' => 'datetime',
         'clase_riesgo_ul_num' => 'integer',
+        'candidatos_json' => 'array',
     ];
 
     /**
