@@ -127,14 +127,35 @@ class GetMyIdentityUseCase
             return null;
         }
 
-        // Apps the user has access to (transitively via entidad).
-        $apps = $conn
-            ->table('entidad_usuario')
-            ->join('app_entidad', 'entidad_usuario.entidad_id', '=', 'app_entidad.entidad_id')
-            ->join('apps', 'app_entidad.app_id', '=', 'apps.id')
-            ->where('entidad_usuario.usuario_id', $userId)
-            ->where('app_entidad.estado', 'Activo')
-            ->whereNull('apps.deleted_at')
+        // Apps the user has access to. Two access models:
+        //   - rol_id=1 (admin): sees ALL apps in the catalog (apps table
+        //     WHERE deleted_at IS NULL), regardless of whether any entity
+        //     contracts them. entidades_count = how many entities have
+        //     the app via app_entidad.
+        //   - Non-admin: sees apps reachable via tenant membership
+        //     (entidad_usuario → app_entidad → apps), filtered to apps
+        //     with at least one active app_entidad row.
+        $isAdmin = ((int) $user->rol_id === 1);
+
+        if ($isAdmin) {
+            $appsQuery = $conn
+                ->table('apps')
+                ->leftJoin('app_entidad', function ($join) {
+                    $join->on('app_entidad.app_id', '=', 'apps.id')
+                        ->where('app_entidad.estado', 'Activo');
+                })
+                ->whereNull('apps.deleted_at');
+        } else {
+            $appsQuery = $conn
+                ->table('entidad_usuario')
+                ->join('app_entidad', 'entidad_usuario.entidad_id', '=', 'app_entidad.entidad_id')
+                ->join('apps', 'app_entidad.app_id', '=', 'apps.id')
+                ->where('entidad_usuario.usuario_id', $userId)
+                ->where('app_entidad.estado', 'Activo')
+                ->whereNull('apps.deleted_at');
+        }
+
+        $apps = $appsQuery
             ->groupBy('apps.id', 'apps.slug', 'apps.nombre', 'apps.tipo', 'apps.auth_type')
             ->select(
                 'apps.id',
@@ -142,7 +163,7 @@ class GetMyIdentityUseCase
                 'apps.nombre',
                 'apps.tipo',
                 'apps.auth_type',
-                DB::raw('COUNT(DISTINCT entidad_usuario.entidad_id) as entidades_count')
+                DB::raw('COUNT(DISTINCT app_entidad.entidad_id) as entidades_count')
             )
             ->orderBy('apps.nombre')
             ->get()
@@ -166,6 +187,20 @@ class GetMyIdentityUseCase
                     'permisos' => $permisos,
                 ];
             })
+            ->all();
+
+        // Entities (tenants) the user belongs to. In the current schema
+        // (entidad_usuario, no `categoria` column), every row IS a
+        // membership. Future schema with `categoria` will filter by
+        // dependencia + delegacion (excluding comercial asignacion).
+        $entities = $conn
+            ->table('entidad_usuario as eu')
+            ->join('entidad as e', 'e.id', '=', 'eu.entidad_id')
+            ->where('eu.usuario_id', $userId)
+            ->whereNull('e.deleted_at')
+            ->orderBy('e.nombre')
+            ->get(['e.id', 'e.nombre'])
+            ->map(fn ($r) => ['id' => (int) $r->id, 'nombre' => $r->nombre])
             ->all();
 
         // Deduped union of core rol permissions + all scoped permissions
@@ -205,6 +240,7 @@ class GetMyIdentityUseCase
                 'nombre' => $user->rol_nombre,
             ],
             'apps' => $apps,
+            'entities' => $entities,
             'permisos' => $permisos,
             'scope_label' => 'v1',
             'snapshot_at' => Carbon::now()->toIso8601String(),
