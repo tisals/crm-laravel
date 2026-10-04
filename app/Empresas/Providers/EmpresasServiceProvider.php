@@ -3,28 +3,34 @@
 namespace App\Empresas\Providers;
 
 use App\Empresas\Application\Filters\HabeasDataFilter;
+use App\Empresas\Application\Listeners\EmpresaEnriquecidaLogger;
+use App\Empresas\Application\Listeners\EmpresaEnriquecimientoFailedLogger;
 use App\Empresas\Application\Services\EnriquecerEmpresaService;
 use App\Empresas\Application\Support\CacheKeyDeriver;
+use App\Empresas\Domain\Events\EmpresaEnriquecida;
+use App\Empresas\Domain\Events\EmpresaEnriquecimientoFailed;
 use App\Empresas\Domain\Ports\EnriquecimientoRepository;
 use App\Empresas\Domain\Ports\McpEmpresaClient;
 use App\Empresas\Infrastructure\Mcp\McpEmpresaClientHttp;
 use App\Empresas\Infrastructure\Mcp\McpEmpresaClientRestFake;
 use App\Empresas\Infrastructure\Persistence\EloquentEnriquecimientoRepository;
 use Illuminate\Contracts\Container\BindingResolutionException;
+use Illuminate\Support\Facades\Event;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\ServiceProvider;
 use Psr\Log\LoggerInterface;
 
 /**
- * PR3 of `complementar-entidad` — EmpresasServiceProvider.
+ * PR4 of `complementar-entidad` — EmpresasServiceProvider.
  *
  * Wires the `app/Empresas/` 4-layer module into the Laravel
  * service container. The container resolution follows the spec:
  *   - production → `McpEmpresaClientHttp` (real HTTP/SSE adapter)
  *   - testing    → `McpEmpresaClientRestFake` (in-memory test adapter)
  *
- * PR3 ships only the bindings (no listeners, no routes). PR4 wires
- * the queue job + listeners; PR5 wires the controllers + routes.
+ * PR3 shipped only the bindings (no listeners, no routes).
+ * PR4 wires the observability listeners in `boot()`; PR5 wires the
+ * controllers + routes.
  */
 class EmpresasServiceProvider extends ServiceProvider
 {
@@ -56,7 +62,10 @@ class EmpresasServiceProvider extends ServiceProvider
             });
         }
 
-        // Habeas filter — bound to the default 'mask' mode.
+        // Habeas filter — bound to the default 'mask' mode. The PR4
+        // extension added audit logging via the 'empresas' channel;
+        // when the container is bootstrapped the filter pulls the
+        // logger from Log::channel('empresas') automatically.
         $this->app->bind(HabeasDataFilter::class, function ($app) {
             return new HabeasDataFilter(
                 defaultMode: (string) config('empresas.habeas_data_mode', 'mask'),
@@ -85,8 +94,10 @@ class EmpresasServiceProvider extends ServiceProvider
 
     public function boot(): void
     {
-        // No listeners / observers registered in PR3. Event emission
-        // still happens — Laravel's default synchronous dispatcher
-        // captures them via Event::fake() in tests.
+        // PR4 — Observability listeners for the enrichment pipeline.
+        // Registered here so feature tests can assert via Event::fake()
+        // and so production emits structured logs out-of-the-box.
+        Event::listen(EmpresaEnriquecida::class, [EmpresaEnriquecidaLogger::class, 'handle']);
+        Event::listen(EmpresaEnriquecimientoFailed::class, [EmpresaEnriquecimientoFailedLogger::class, 'handle']);
     }
 }

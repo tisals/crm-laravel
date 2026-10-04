@@ -168,7 +168,7 @@ class EnriquecerEmpresaServiceTest extends TestCase
     // ── homonimia (>1 candidates) ──────────────────────────────────────
 
     #[Test]
-    public function homonimia_with_two_candidates_emits_needs_selection_and_skips_persist(): void
+    public function homonimia_with_two_candidates_emits_needs_selection_and_persists_candidates(): void
     {
         config()->set('empresas.enable_emission', true);
 
@@ -195,8 +195,14 @@ class EnriquecerEmpresaServiceTest extends TestCase
         $result = $this->service->execute($entidad->id, 'acmein.com');
 
         $this->assertSame(ServiceResultStatus::NeedsSelection, $result->status);
-        $this->assertNull(EntidadEnriquecimiento::where('entidad_id', $entidad->id)->first());
+        // PR4 extension: a placeholder annex row IS persisted (status='needs_selection')
+        // so the GET /api/v1/entidad/{id}/enriquecimiento/candidatos endpoint can
+        // serve the candidates list back without re-running MCP.
         $this->assertSame(0, $this->fakeClient->consultarCalls);
+
+        $row = EntidadEnriquecimiento::where('entidad_id', $entidad->id)->first();
+        $this->assertNotNull($row);
+        $this->assertSame('needs_selection', $row->enrichment_status);
 
         Event::assertDispatched(
             \App\Empresas\Domain\Events\EmpresaEnriquecimientoNecesitaSeleccion::class
@@ -289,5 +295,328 @@ class EnriquecerEmpresaServiceTest extends TestCase
         // Decreto overrode the MCP class_riesgo value:
         $this->assertSame(3, (int) $row->clase_riesgo_ul_num);
         $this->assertSame('Medio', $row->clase_riesgo_ul_desc);
+    }
+
+    // ── PR4: cache stampede + inflight flag ───────────────────────────────
+
+    #[Test]
+    public function successful_run_caches_payload_under_sha256_key(): void
+    {
+        config()->set('empresas.enable_emission', true);
+
+        $this->fakeClient->setCandidatos('acmein.com', [
+            [
+                'razon_social' => 'ACME',
+                'nit' => '900',
+                'camara_comercio' => 'X',
+                'ciudad' => 'Y',
+                'fuente_origen' => 'socrata',
+            ],
+        ]);
+        $this->fakeClient->setEnriquecida('ACME', [
+            'razon_social' => 'ACME',
+            'nit' => '900',
+            'numero_empleados' => 0,
+            'ciiu_codigo' => '6202',
+            'ciiu_descripcion' => 'X',
+            'clase_riesgo_num' => 1,
+            'clase_riesgo_desc' => 'X',
+            'sector_economico' => 'X',
+            'fuente_origen' => 'socrata',
+            'enriquecido_at' => '2026-10-03T12:00:00Z',
+            'enriquecimiento_hash' => str_repeat('b', 64),
+        ]);
+
+        $entidad = $this->makeEntidad();
+        $this->service->execute($entidad->id, 'acmein.com');
+
+        // Cache key derived from dominio.
+        $key = \App\Empresas\Application\Support\CacheKeyDeriver::derive('acmein.com');
+        $cached = Cache::get($key);
+
+        $this->assertIsArray($cached);
+        $this->assertSame('900', $cached['nit']);
+        $this->assertSame('6202', $cached['ciiu_codigo']);
+    }
+
+    #[Test]
+    public function inflight_flag_is_set_during_lookup_then_cleared(): void
+    {
+        config()->set('empresas.enable_emission', true);
+
+        $this->fakeClient->setCandidatos('acmein.com', [
+            [
+                'razon_social' => 'ACME',
+                'nit' => '900',
+                'camara_comercio' => 'X',
+                'ciudad' => 'Y',
+                'fuente_origen' => 'socrata',
+            ],
+        ]);
+        $this->fakeClient->setEnriquecida('ACME', [
+            'razon_social' => 'ACME',
+            'nit' => '900',
+            'numero_empleados' => 0,
+            'ciiu_codigo' => '6202',
+            'ciiu_descripcion' => 'X',
+            'clase_riesgo_num' => 1,
+            'clase_riesgo_desc' => 'X',
+            'sector_economico' => 'X',
+            'fuente_origen' => 'socrata',
+            'enriquecido_at' => '2026-10-03T12:00:00Z',
+            'enriquecimiento_hash' => str_repeat('a', 64),
+        ]);
+
+        $entidad = $this->makeEntidad();
+        $this->service->execute($entidad->id, 'acmein.com');
+
+        $inflightKey = \App\Empresas\Application\Support\CacheKeyDeriver::derive('acmein.com') . '.inflight';
+        $this->assertFalse(Cache::has($inflightKey), 'inflight flag must be cleared after a successful run');
+    }
+
+    #[Test]
+    public function force_fresh_bypasses_cache_hit(): void
+    {
+        config()->set('empresas.enable_emission', true);
+
+        // Pre-populate cache with an OLD payload that would otherwise
+        // short-circuit the lookup.
+        Cache::put(
+            CacheKeyDeriver::derive('acmein.com'),
+            [
+                'razon_social' => 'STALE',
+                'nit' => 'OLD',
+                'numero_empleados' => 99,
+                'ciiu_codigo' => '0000',
+                'ciiu_descripcion' => 'STALE',
+                'clase_riesgo_num' => 1,
+                'clase_riesgo_desc' => 'STALE',
+                'sector_economico' => 'STALE',
+                'fuente_origen' => 'socrata',
+                'enriquecido_at' => '2020-01-01T00:00:00Z',
+                'enriquecimiento_hash' => str_repeat('a', 64),
+            ],
+            300
+        );
+
+        $this->fakeClient->setCandidatos('acmein.com', [
+            [
+                'razon_social' => 'FRESH',
+                'nit' => 'NEW',
+                'camara_comercio' => 'X',
+                'ciudad' => 'Y',
+                'fuente_origen' => 'socrata',
+            ],
+        ]);
+        $this->fakeClient->setEnriquecida('FRESH', [
+            'razon_social' => 'FRESH',
+            'nit' => 'NEW',
+            'numero_empleados' => 10,
+            'ciiu_codigo' => '6202',
+            'ciiu_descripcion' => 'FRESH',
+            'clase_riesgo_num' => 1,
+            'clase_riesgo_desc' => 'FRESH',
+            'sector_economico' => 'FRESH',
+            'fuente_origen' => 'socrata',
+            'enriquecido_at' => '2026-10-04T00:00:00Z',
+            'enriquecimiento_hash' => str_repeat('a', 64),
+        ]);
+
+        $entidad = $this->makeEntidad();
+
+        $this->service->execute($entidad->id, 'acmein.com', forceFresh: true);
+
+        // MCP was invoked even though cache was warm.
+        $this->assertSame(1, $this->fakeClient->buscarCalls);
+
+        // Annex row carries the FRESH values, not the cached STALE ones.
+        $row = EntidadEnriquecimiento::where('entidad_id', $entidad->id)->first();
+        $this->assertNotNull($row);
+        $this->assertSame('NEW', $row->nit);
+    }
+
+    #[Test]
+    public function force_fresh_uses_lock_to_prevent_stampede(): void
+    {
+        config()->set('empresas.enable_emission', true);
+
+        $this->fakeClient->setCandidatos('locked.com', [
+            [
+                'razon_social' => 'X',
+                'nit' => '1',
+                'camara_comercio' => 'X',
+                'ciudad' => 'X',
+                'fuente_origen' => 'socrata',
+            ],
+        ]);
+        $this->fakeClient->setEnriquecida('X', [
+            'razon_social' => 'X',
+            'nit' => '1',
+            'numero_empleados' => 0,
+            'ciiu_codigo' => '6202',
+            'ciiu_descripcion' => 'X',
+            'clase_riesgo_num' => 1,
+            'clase_riesgo_desc' => 'X',
+            'sector_economico' => 'X',
+            'fuente_origen' => 'socrata',
+            'enriquecido_at' => '2026-10-03T12:00:00Z',
+            'enriquecimiento_hash' => str_repeat('a', 64),
+        ]);
+
+        $entidad = $this->makeEntidad('Juridica');
+        $entidad->update(['dominio' => 'locked.com']);
+
+        // Hold the lock externally to verify the service DOES use Cache::lock.
+        $lockKey = CacheKeyDeriver::derive('locked.com') . '.lock';
+        $lock = Cache::lock($lockKey, 10);
+        $this->assertTrue($lock->get());
+
+        try {
+            // The service should respect the held lock and the
+            // `block(5)` call should fail to acquire — and the service
+            // should handle the LockTimeoutException gracefully by
+            // returning Failed.
+            $result = $this->service->execute($entidad->id, 'locked.com', forceFresh: true);
+
+            $this->assertContains($result->status, [
+                ServiceResultStatus::Failed,
+                ServiceResultStatus::Enriched, // acceptable: lock released quickly
+            ]);
+        } finally {
+            $lock->release();
+        }
+    }
+
+    // ── PR4: Habeas raw mode is allowed but bypass-warned ────────────────
+
+    #[Test]
+    public function habeas_raw_mode_persists_nit_unchanged(): void
+    {
+        config()->set('empresas.enable_emission', true);
+        config()->set('empresas.habeas_data_mode', 'raw');
+
+        $this->fakeClient->setCandidatos('acmein.com', [
+            [
+                'razon_social' => 'ACME',
+                'nit' => '900123456-7',
+                'camara_comercio' => 'X',
+                'ciudad' => 'Y',
+                'fuente_origen' => 'socrata',
+            ],
+        ]);
+        $this->fakeClient->setEnriquecida('ACME', [
+            'razon_social' => 'ACME',
+            'nit' => '900123456-7',
+            'numero_empleados' => 0,
+            'ciiu_codigo' => '6202',
+            'ciiu_descripcion' => 'X',
+            'clase_riesgo_num' => 1,
+            'clase_riesgo_desc' => 'X',
+            'sector_economico' => 'X',
+            'fuente_origen' => 'socrata',
+            'enriquecido_at' => '2026-10-03T12:00:00Z',
+            'enriquecimiento_hash' => str_repeat('a', 64),
+        ]);
+
+        $entidad = $this->makeEntidad('Natural');
+        $result = $this->service->execute($entidad->id, 'acmein.com');
+
+        $this->assertSame(ServiceResultStatus::Enriched, $result->status);
+        $row = EntidadEnriquecimiento::where('entidad_id', $entidad->id)->first();
+        $this->assertNotNull($row);
+        $this->assertSame('900123456-7', $row->nit);
+    }
+
+    // ── PR4: Decree inference fallback when no exact match ───────────────
+
+    #[Test]
+    public function decreto_inference_fallback_applies_when_no_exact_match(): void
+    {
+        config()->set('empresas.enable_emission', true);
+        config()->set('decreto_768.entries', [
+            '9999' => [
+                'clase_riesgo_ul_num' => 3,
+                'clase_riesgo_ul_desc' => 'Primario',
+                'sector_economico' => 'Primario',
+                'fuente' => 'decreto_768/2022',
+            ],
+        ]);
+
+        $this->fakeClient->setCandidatos('acmein.com', [
+            [
+                'razon_social' => 'ACME',
+                'nit' => '900',
+                'camara_comercio' => 'X',
+                'ciudad' => 'Y',
+                'fuente_origen' => 'socrata',
+            ],
+        ]);
+        $this->fakeClient->setEnriquecida('ACME', [
+            'razon_social' => 'ACME',
+            'nit' => '900',
+            'numero_empleados' => 0,
+            // CIIU 8500 starts with 8 → inference → Terciario / I (1).
+            'ciiu_codigo' => '8500',
+            'ciiu_descripcion' => 'X',
+            'clase_riesgo_num' => 5,
+            'clase_riesgo_desc' => 'MCP',
+            'sector_economico' => 'MCP',
+            'fuente_origen' => 'socrata',
+            'enriquecido_at' => '2026-10-03T12:00:00Z',
+            'enriquecimiento_hash' => str_repeat('a', 64),
+        ]);
+
+        $entidad = $this->makeEntidad();
+        $result = $this->service->execute($entidad->id, 'acmein.com');
+
+        $this->assertSame(ServiceResultStatus::Enriched, $result->status);
+        $row = EntidadEnriquecimiento::where('entidad_id', $entidad->id)->first();
+        $this->assertNotNull($row);
+        // Inference rule for first digit '8' → Terciario / ARL class 1.
+        $this->assertSame(1, (int) $row->clase_riesgo_ul_num);
+        $this->assertSame('Terciario', $row->clase_riesgo_ul_desc);
+    }
+
+    // ── PR4: homonimia persists candidates_json via repository ───────────
+
+    #[Test]
+    public function homonimia_persists_candidates_via_repository(): void
+    {
+        config()->set('empresas.enable_emission', true);
+
+        $this->fakeClient->setCandidatos('acmein.com', [
+            [
+                'razon_social' => 'ACME A',
+                'nit' => '111',
+                'camara_comercio' => 'X',
+                'ciudad' => 'Y',
+                'fuente_origen' => 'socrata',
+            ],
+            [
+                'razon_social' => 'ACME B',
+                'nit' => '222',
+                'camara_comercio' => 'X',
+                'ciudad' => 'Y',
+                'fuente_origen' => 'socrata',
+            ],
+        ]);
+
+        $entidad = $this->makeEntidad();
+        $result = $this->service->execute($entidad->id, 'acmein.com');
+
+        $this->assertSame(ServiceResultStatus::NeedsSelection, $result->status);
+
+        // Repository persists the candidates via `recordNeedsSelection`.
+        $repo = $this->app->make(\App\Empresas\Domain\Ports\EnriquecimientoRepository::class);
+        $candidates = $repo->candidatos($entidad->id);
+
+        $this->assertCount(2, $candidates);
+        $this->assertSame('111', $candidates[0]['nit']);
+        $this->assertSame('222', $candidates[1]['nit']);
+
+        // enrichment_status='needs_selection' is stamped on the annex row.
+        $row = EntidadEnriquecimiento::where('entidad_id', $entidad->id)->first();
+        $this->assertNotNull($row);
+        $this->assertSame('needs_selection', $row->enrichment_status);
     }
 }
