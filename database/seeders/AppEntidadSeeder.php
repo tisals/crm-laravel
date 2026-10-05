@@ -29,28 +29,42 @@ class AppEntidadSeeder extends Seeder
 {
     public function run(): void
     {
-        // Internal entities that the 5 internal users belong to (per
-        // the multi-tenant persona refactor and the backfill migration
-        // in iter4-persona-tracker). Use a fixed list so the seed is
-        // deterministic regardless of CSV row ordering.
-        $homeEntities = [
-            128    => 'Tecnoinnsoft SAS BIC',
-            2476   => 'Desecurity.net',
-        ];
+        // Look up internal entities BY NAME rather than hardcoding IDs.
+        // Hardcoded IDs break when the seed runs in a different order or
+        // a different DB (the home entities can shift between fresh
+        // seeds — Tecnoinnsoft is normally id=128 but Desecurity has
+        // shifted between id=2476 and id=2438 in observed runs).
+        $homeEntities = DB::table('entidad')
+            ->whereIn('nombre', ['Tecnoinnsoft SAS BIC', 'Desecurity.net'])
+            ->whereNull('deleted_at')
+            ->get()
+            ->keyBy('nombre');
 
-        // Sample client entities to seed contracts against. Picked from
-        // the RealDataSeeder's typical output (id=1, 2 are the marca
-        // propia entities seeded by BrandPermissionsSeeder).
-        $clientEntities = [1, 2];
+        if ($homeEntities->count() < 2) {
+            $this->command?->warn(
+                "AppEntidadSeeder: home entities missing (found {$homeEntities->count()}/2). ".
+                'Run BrandPermissionsSeeder first to create Tecnoinnsoft + Desecurity as Propia.'
+            );
+            return;
+        }
+
+        // Sample client entities (the marca propia entities that
+        // BrandPermissionsSeeder sets up).
+        $clientEntities = DB::table('entidad')
+            ->whereNull('deleted_at')
+            ->whereNotIn('id', $homeEntities->pluck('id'))
+            ->orderBy('id')
+            ->limit(5)
+            ->get();
 
         $now = now();
 
         // 1. All 7 apps contracted by the 2 home entities (Activo).
         $apps = App::whereNull('deleted_at')->orderBy('id')->get();
         foreach ($apps as $app) {
-            foreach ($homeEntities as $entityId => $entityName) {
+            foreach ($homeEntities as $ent) {
                 DB::table('app_entidad')->updateOrInsert(
-                    ['app_id' => $app->id, 'entidad_id' => $entityId],
+                    ['app_id' => $app->id, 'entidad_id' => $ent->id],
                     [
                         'estado' => 'Activo',
                         'fecha_contrato' => $now->copy()->subMonths(rand(1, 12))->toDateString(),
@@ -63,25 +77,13 @@ class AppEntidadSeeder extends Seeder
 
         // 2. A subset contracted by clients, mixed estados (so filters
         // like `app_entidad.estado = 'Activo'` actually do something).
-        $clientContractPlan = [
-            // app_slug  => [entity_id => estado]
-            'crm'        => [1 => 'Activo', 2 => 'Trial'],
-            'sailus'     => [1 => 'Activo'],
-            'mercurio'   => [1 => 'Activo', 2 => 'Suspendido'],
-            'marketing'  => [2 => 'Activo'],
-            'wp-plugin'  => [],
-            'la-llave'   => [1 => 'Suspendido'],
-            'brp'        => [2 => 'Activo'],
-        ];
-
-        foreach ($clientContractPlan as $appSlug => $perEntity) {
-            $app = $apps->firstWhere('slug', $appSlug);
-            if (!$app) {
-                continue;
-            }
-            foreach ($perEntity as $entityId => $estado) {
+        $clientIdx = 0;
+        foreach ($clientEntities as $client) {
+            $appSubset = $apps->slice($clientIdx * 2, 2);
+            foreach ($appSubset as $app) {
+                $estado = ($clientIdx % 2 === 0) ? 'Activo' : 'Trial';
                 DB::table('app_entidad')->updateOrInsert(
-                    ['app_id' => $app->id, 'entidad_id' => $entityId],
+                    ['app_id' => $app->id, 'entidad_id' => $client->id],
                     [
                         'estado' => $estado,
                         'fecha_contrato' => $now->copy()->subMonths(rand(1, 6))->toDateString(),
@@ -90,6 +92,7 @@ class AppEntidadSeeder extends Seeder
                     ]
                 );
             }
+            $clientIdx++;
         }
     }
 }
