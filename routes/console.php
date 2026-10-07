@@ -28,3 +28,9 @@ Schedule::command('crm:refresh-user-identity-snapshot')
     ->withoutOverlapping()
     ->onOneServer()
     ->runInBackground();
+
+// Process the webhook outbox every 30 seconds (janus-apps-canonicalization T4.3).
+// Dispatches pending events to mercurio with exponential backoff on failure.
+Schedule::command('app:process-webhook-outbox')
+    ->everyThirtySeconds()
+    ->withoutOverlapping();

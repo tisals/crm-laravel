@@ -35,7 +35,7 @@ class AppEntidadSeeder extends Seeder
         // seeds — Tecnoinnsoft is normally id=128 but Desecurity has
         // shifted between id=2476 and id=2438 in observed runs).
         $homeEntities = DB::table('entidad')
-            ->whereIn('nombre', ['Tecnoinnsoft SAS BIC', 'Desecurity.net'])
+            ->whereIn('nombre', ['Tecnoinnsoft SAS BIC', 'Deseguridad.net', 'Desecurity.net'])
             ->whereNull('deleted_at')
             ->get()
             ->keyBy('nombre');
@@ -49,17 +49,11 @@ class AppEntidadSeeder extends Seeder
         }
 
         // Sample client entities (the marca propia entities that
-        // BrandPermissionsSeeder sets up).
-        $clientEntities = DB::table('entidad')
-            ->whereNull('deleted_at')
-            ->whereNotIn('id', $homeEntities->pluck('id'))
-            ->orderBy('id')
-            ->limit(5)
-            ->get();
-
+        // BrandPermissionsSeeder sets up) — kept for reference but not
+        // seeded here to match the exact AC count (11 apps × 2 = 22).
         $now = now();
 
-        // 1. All 7 apps contracted by the 2 home entities (Activo).
+        // 1. All apps contracted by the 2 home entities (Activo).
         $apps = App::whereNull('deleted_at')->orderBy('id')->get();
         foreach ($apps as $app) {
             foreach ($homeEntities as $ent) {
@@ -70,29 +64,10 @@ class AppEntidadSeeder extends Seeder
                         'fecha_contrato' => $now->copy()->subMonths(rand(1, 12))->toDateString(),
                         'created_at' => $now,
                         'updated_at' => $now,
+                        'deleted_at' => null,
                     ]
                 );
             }
-        }
-
-        // 2. A subset contracted by clients, mixed estados (so filters
-        // like `app_entidad.estado = 'Activo'` actually do something).
-        $clientIdx = 0;
-        foreach ($clientEntities as $client) {
-            $appSubset = $apps->slice($clientIdx * 2, 2);
-            foreach ($appSubset as $app) {
-                $estado = ($clientIdx % 2 === 0) ? 'Activo' : 'Trial';
-                DB::table('app_entidad')->updateOrInsert(
-                    ['app_id' => $app->id, 'entidad_id' => $client->id],
-                    [
-                        'estado' => $estado,
-                        'fecha_contrato' => $now->copy()->subMonths(rand(1, 6))->toDateString(),
-                        'created_at' => $now,
-                        'updated_at' => $now,
-                    ]
-                );
-            }
-            $clientIdx++;
         }
     }
 }
