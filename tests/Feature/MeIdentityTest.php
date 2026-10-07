@@ -72,4 +72,39 @@ class MeIdentityTest extends TestCase
 
         $this->assertSame($expectedSlugs, $actualSlugs, 'All 11 canonical slugs must be present');
     }
+
+    #[Test]
+    public function http_endpoint_returns_11_canonical_apps_for_admin(): void
+    {
+        // Clear caches so we get a fresh compute.
+        Cache::flush();
+
+        // Resolve the admin by email (more robust than hardcoded id).
+        $admin = Usuario::where('email', 'admin@tecnoinnsoft.dev')
+            ->where('rol_id', 1)
+            ->first();
+
+        $this->assertNotNull($admin, 'Admin user must exist after seed');
+
+        $token = $admin->createToken('test-token')->plainTextToken;
+
+        $response = $this->withHeader('Authorization', 'Bearer '.$token)
+            ->getJson('/api/v1/me/identity');
+
+        $response->assertStatus(200)
+            ->assertJsonPath('success', true);
+
+        $apps = $response->json('data.apps');
+        $this->assertIsArray($apps, 'data.apps must be an array');
+        $this->assertCount(11, $apps, 'HTTP endpoint must return 11 canonical apps');
+
+        $actualSlugs = collect($apps)->pluck('slug')->sort()->values()->toArray();
+
+        $expectedSlugs = collect([
+            'concordia', 'fama', 'janus', 'mercurio', 'minerva',
+            'numeria', 'safe-health', 'tempus', 'tis', 'vesta', 'vigil',
+        ])->sort()->values()->toArray();
+
+        $this->assertSame($expectedSlugs, $actualSlugs, 'HTTP endpoint must return the 11 canonical slugs');
+    }
 }
