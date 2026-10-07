@@ -20,6 +20,7 @@ class DatabaseSeeder extends Seeder
             DodCapSeeder::class,                   // Trunca a máx 10 ops y 10 contactos por entidad
             MergeDuplicateEntitiesSeeder::class,   // FUSIONA duplicados generados durante OportunidadCsvSeeder
             UsuarioAppPermisosSeeder::class,       // Admin wildcard para las 11 apps (janus-apps-canonicalization T1.1)
+            AdminUserUpdatedWebhookSeeder::class,  // janus-apps-canonicalization T1.2 — E7 user.updated dispatch post-seed
         ]);
     }
 }
