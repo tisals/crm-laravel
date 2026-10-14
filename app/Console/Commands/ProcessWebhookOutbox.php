@@ -60,19 +60,30 @@ class ProcessWebhookOutbox extends Command
             }
 
             $payload = json_decode($row->payload_json, true);
-            $body = json_encode([
-                'event' => $row->event_type,
-                'timestamp' => $row->created_at,
-                'data' => $payload,
-            ]);
-            $secret = config('webhook.outbound.secret', env('JANUS_CRM_WEBHOOK_SECRET', ''));
+            // Spread the payload at top-level (NOT nested under `data`).
+            // Mercurio's webhook handlers look for fields like `user_id`,
+            // `event`, etc. at the body root, not inside a `data` envelope.
+            $body = json_encode(array_merge(
+                ['event' => $row->event_type, 'timestamp' => $row->created_at],
+                $payload ?: []
+            ));
+            // Prefer the env var over the config file default. The original
+            // code had this reversed: `config('webhook.outbound.secret', env(...))`
+            // which meant the placeholder `'your-webhook-secret-key'` from
+            // config/webhook.php always won, causing HMAC mismatch with
+            // mercurio (which uses `CRM_WEBHOOK_SECRET=111acdf...`).
+            $secret = env('JANUS_CRM_WEBHOOK_SECRET', config('webhook.outbound.secret', ''));
             $signature = 'sha256='.hash_hmac('sha256', $body, $secret);
 
             try {
+                // Send the EXACT bytes that were signed. Passing an array to
+                // `Http::post()` causes Laravel to re-serialize it, which can
+                // change key order, whitespace, or escape characters — and
+                // those bytes would no longer match the HMAC we computed.
                 $response = Http::withHeaders([
                     'Content-Type' => 'application/json',
                     'X-CRM-Signature' => $signature,
-                ])->timeout(10)->post($url, json_decode($body, true));
+                ])->timeout(10)->withBody($body, 'application/json')->post($url);
 
                 if ($response->successful()) {
                     DB::table('webhook_outbox')->where('id', $row->id)->delete();
