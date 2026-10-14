@@ -29,8 +29,16 @@ class ValidateApiKeyUseCase
             return $cached;
         }
 
+        // Accept any non-Inactivo entity that has a dominio set. The original
+        // filter was `estado = 'Activo'` only, but the BrandPermissionsSeeder
+        // creates the home entities (Tecnoinnsoft, Desecurity) as `Propia`,
+        // not `Activo`. Restricting auth to `Activo` only blocked the home
+        // entities and the mercurio-crm-integration row from authenticating,
+        // which broke the crm-laravel → mercurio → janus flow (empty apps and
+        // tenants in the janus dashboard). Now any non-Inactivo entity with a
+        // dominio can authenticate.
         $entidad = Entidad::where('dominio', $apiKey)
-            ->where('estado', 'Activo')
+            ->where('estado', '!=', 'Inactivo')
             ->first();
 
         if (! $entidad) {
