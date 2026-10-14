@@ -50,6 +50,17 @@ class ProcessWebhookOutbox extends Command
         $this->info("Processing {$rows->count()} outbox row(s).");
 
         foreach ($rows as $row) {
+            // Skip event types that have no consumer in mercurio yet (e.g.
+            // `app.upserted` — mercurio has /user-updated but no /app-upserted
+            // endpoint). Without this filter, every seed run floods the
+            // logs with 404s and burns attempts on events that will never
+            // succeed. If/when mercurio adds an /app-upserted consumer,
+            // remove this filter.
+            if (in_array($row->event_type, ['app.upserted', 'app.deleted'], true)) {
+                $this->line("Row {$row->id}: skipping {$row->event_type} (no consumer in mercurio).");
+                DB::table('webhook_outbox')->where('id', $row->id)->delete();
+                continue;
+            }
             if (empty($url)) {
                 // Local dev: log and skip rather than 5xx.
                 Log::debug('ProcessWebhookOutbox: MERCURIO_WEBHOOK_URL not set, skipping row', [
