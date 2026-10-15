@@ -94,6 +94,12 @@ Route::prefix('v1')->group(function () {
     // Protected endpoints (require Sanctum token)
     // Rate limiting: mutations (POST/PUT/DELETE) → throttle:api; GETs → sin throttle
     Route::middleware(['auth:sanctum', 'throttle-mutations'])->group(function () {
+        // Admin: flat user list for mercurio SnapshotRefresher
+        // (janus-apps-canonicalization D-D3 follow-up, 2026-10-15).
+        // The controller itself enforces rol_id=1 (SuperAdmin) check.
+        Route::get('/admin/users/snapshot', \App\Http\Controllers\API\AdminUserSnapshotController::class)
+            ->name('admin.users.snapshot');
+
         Route::post('/auth/logout', [AuthController::class, 'logout'])->name('auth.logout');
 
         // Dashboard (sin RBAC — todos los usuarios autenticados)
