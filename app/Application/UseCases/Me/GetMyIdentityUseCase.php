@@ -189,14 +189,18 @@ class GetMyIdentityUseCase
             })
             ->all();
 
-        // Entities (tenants) the user belongs to. In the current schema
-        // (entidad_usuario, no `categoria` column), every row IS a
-        // membership. Future schema with `categoria` will filter by
-        // dependencia + delegacion (excluding comercial asignacion).
+        // Entities (tenants) the user belongs to. Filter out commercial
+        // assignments (CRM leads/clients: 'Cliente', 'Prospecto', 'Inactivo')
+        // so that only true organizational/brand memberships ('Propia',
+        // 'Activo') are returned. Without this filter, a Comercial user
+        // with 700+ assigned entities would see all of them in the
+        // bundle — breaking janus dashboard and ballooning JWT size
+        // (mercurio doc cross-team/TENANT-FILTER-COORDINATION.md, 2026-10-16).
         $entities = $conn
             ->table('entidad_usuario as eu')
             ->join('entidad as e', 'e.id', '=', 'eu.entidad_id')
             ->where('eu.usuario_id', $userId)
+            ->whereNotIn('e.estado', ['Cliente', 'Prospecto', 'Inactivo'])
             ->whereNull('e.deleted_at')
             ->orderBy('e.nombre')
             ->get(['e.id', 'e.nombre'])
