@@ -1,0 +1,38 @@
+# Override temporal: salta key:generate que se cuelga en disk-sleep del .env
+# (bug docker-desktop + bind-mount en Windows). Arrancamos PHP-FPM + nginx
+# + ProcessWebhookOutbox loop directamente. La BD ya está migrada y seeded
+# según el último estado conocido.
+# BORRAR este archivo cuando se arregle el bug upstream de docker-desktop.
+services:
+  crm:
+    entrypoint:
+      - /bin/sh
+      - -c
+      - |
+        chown -R www-data:www-data storage/logs storage/framework bootstrap/cache 2>/dev/null || true
+        # Migración idempotente (skip si .migrated flag existe y tablas están pobladas)
+        if [ -f storage/framework/.migrated ]; then
+                    TABLE_COUNT=$$(php -r "try { echo @(new PDO('mysql:host='.getenv('DB_HOST').';port='.getenv('DB_PORT').';dbname='.getenv('DB_DATABASE'), getenv('DB_USERNAME'), getenv('DB_PASSWORD')))->query('SELECT COUNT(*) FROM information_schema.tables WHERE table_schema = DATABASE()')->fetchColumn(); } catch (Exception) { echo '0'; }" 2>/dev/null)
+          if [ "$$TABLE_COUNT" -gt 0 ]; then
+            echo "-> DB already migrated ($$TABLE_COUNT tables). Skipping migrate."
+          else
+            rm -f storage/framework/.migrated storage/framework/.seeded
+            php artisan migrate --force 2>&1 || true
+            touch storage/framework/.migrated
+          fi
+        else
+          php artisan migrate --force 2>&1 || true
+          touch storage/framework/.migrated
+        fi
+        # Arrancar PHP-FPM y nginx
+        php-fpm -D
+        nginx -g 'daemon off;' &
+        NGINX_PID=$$!
+        # Loop ProcessWebhookOutbox cada 30s (en background)
+        # Skippea eventos sin consumer (app.upserted) — ver ProcessWebhookOutbox
+        while true; do
+          php artisan app:process-webhook-outbox 2>&1 || true
+          sleep 30
+        done &
+        # Esperar nginx (mantiene el container vivo)
+        wait $$NGINX_PID
