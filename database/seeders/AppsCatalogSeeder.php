@@ -10,11 +10,18 @@ use Illuminate\Support\Facades\Schema;
 class AppsCatalogSeeder extends Seeder
 {
     /**
-     * Seed the canonical apps catalog (11 slugs).
+     * Seed the canonical apps catalog (12 slugs).
      *
-     * Source: module-manifest.json (9 modules) + janus + mercurio = 11 total.
-     * Legacy slugs (brp, crm, marketing, wp-plugin, la-llave, sailus,
+     * Source: module-manifest.json (9 modules) + janus + mercurio + sailus
+     * = 12 total.
+     * Legacy slugs (brp, crm, marketing, wp-plugin, la-llave,
      * mercurio-dual-write) are soft-deleted for traceability.
+     *
+     * `sailus` is NO LONGER a legacy slug: the name was reclaimed for the
+     * SST manuals module (the pantheon of the hub's apps, read as
+     * "bienestar y salud"). It used to be the platform's own former name,
+     * whose successor is `mercurio` — so the old `sailus -> mercurio`
+     * alias is gone with it.
      *
      * See: janus-apps-canonicalization SDD change.
      */
@@ -32,24 +39,34 @@ class AppsCatalogSeeder extends Seeder
             ['slug' => 'vigil',        'nombre' => 'Vigil'],
             ['slug' => 'janus',        'nombre' => 'Janus Shell (infraestructura)'],
             ['slug' => 'mercurio',     'nombre' => 'Mercurio Gateway (infraestructura)'],
+            [
+                'slug' => 'sailus',
+                'nombre' => 'Sailus (Manuales SST)',
+                'descripcion' => 'Manuales SST: matriz de riesgos GTC 45, plan de trabajo y set documental del SG-SST.',
+            ],
         ];
 
         $now = now();
 
         DB::transaction(function () use ($canonical, $now) {
-            // Upsert 11 canonical rows using Eloquent (handles soft-deletes correctly).
+            // Upsert the canonical rows using Eloquent (handles soft-deletes correctly).
             foreach ($canonical as $row) {
-                App::updateOrCreate(
-                    ['slug' => $row['slug']],
-                    [
-                        'nombre' => $row['nombre'],
-                        'tipo' => 'internal',
-                        'auth_type' => 'sanctum',
-                        'activo' => true,
-                        'descripcion' => null,
-                        'deleted_at' => null,
-                    ]
-                );
+                $payload = [
+                    'nombre' => $row['nombre'],
+                    'tipo' => 'internal',
+                    'auth_type' => 'sanctum',
+                    'activo' => true,
+                    'descripcion' => $row['descripcion'] ?? null,
+                    'deleted_at' => null,
+                ];
+
+                // A reclaimed slug must not keep the alias of its former
+                // owner (the column may not exist on older databases).
+                if (Schema::hasColumn('apps', 'replaced_by')) {
+                    $payload['replaced_by'] = null;
+                }
+
+                App::updateOrCreate(['slug' => $row['slug']], $payload);
 
                 // Insert outbox event for each upserted app (guard: table may not exist yet).
                 $this->insertOutboxEvent('app.upserted', [
@@ -58,9 +75,12 @@ class AppsCatalogSeeder extends Seeder
                 ]);
             }
 
-            // Soft-delete 7 legacy slugs.
+            // Soft-delete the legacy slugs. `sailus` is NOT one of them
+            // anymore: it was reclaimed for the SST manuals module, and a
+            // legacy soft-delete here would take the live app down on
+            // every seed.
             $legacy = [
-                'brp', 'crm', 'marketing', 'wp-plugin', 'la-llave', 'sailus',
+                'brp', 'crm', 'marketing', 'wp-plugin', 'la-llave',
             ];
             foreach ($legacy as $slug) {
                 DB::table('apps')
@@ -90,7 +110,6 @@ class AppsCatalogSeeder extends Seeder
                     'marketing'  => 'fama',
                     'wp-plugin'  => 'tis',
                     'la-llave'   => 'concordia',
-                    'sailus'     => 'mercurio',
                 ];
                 foreach ($aliases as $legacy => $canon) {
                     DB::table('apps')
