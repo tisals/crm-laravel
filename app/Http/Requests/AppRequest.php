@@ -22,6 +22,8 @@ class AppRequest extends FormRequest
             'auth_type' => 'required|in:sanctum,api_key',
             'activo' => 'boolean',
             'descripcion' => 'nullable|string|max:1000',
+            // Absolute http/https URL only — the SSO path is appended to it.
+            'launch_url' => 'nullable|string|max:255|url:http,https',
         ];
     }
 

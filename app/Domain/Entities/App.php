@@ -12,6 +12,7 @@ class App
         public string $auth_type = 'sanctum',
         public bool $activo = true,
         public ?string $descripcion = null,
+        public ?string $launch_url = null,
         public ?string $created_at = null,
         public ?string $updated_at = null,
     ) {}
@@ -26,6 +27,7 @@ class App
             auth_type: $data['auth_type'] ?? 'sanctum',
             activo: (bool) ($data['activo'] ?? true),
             descripcion: $data['descripcion'] ?? null,
+            launch_url: $data['launch_url'] ?? null,
             created_at: $data['created_at'] ?? null,
             updated_at: $data['updated_at'] ?? null,
         );
@@ -41,6 +43,7 @@ class App
             'auth_type' => $this->auth_type,
             'activo' => $this->activo,
             'descripcion' => $this->descripcion,
+            'launch_url' => $this->launch_url,
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
         ];

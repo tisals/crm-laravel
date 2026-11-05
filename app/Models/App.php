@@ -20,6 +20,7 @@ class App extends Model
         'auth_type',
         'activo',
         'descripcion',
+        'launch_url',
     ];
 
     protected $casts = [
