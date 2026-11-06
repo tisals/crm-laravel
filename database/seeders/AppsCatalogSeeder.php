@@ -43,6 +43,17 @@ class AppsCatalogSeeder extends Seeder
                 'slug' => 'sailus',
                 'nombre' => 'Sailus (Manuales SST)',
                 'descripcion' => 'Manuales SST: matriz de riesgos GTC 45, plan de trabajo y set documental del SG-SST.',
+                // El destino del SSO lo declara el CATALOGO (una fila por
+                // ambiente): el hub deriva el manifiesto y Mercury arma el
+                // redirect_uri desde aca. Es por ambiente porque el modulo
+                // se sirve en otro host en cada uno:
+                //   dev  -> http://localhost:8005/sso/callback
+                //   prod -> https://sailus.tecnoinnsoft.com/sso/callback
+                // El operador lo declara con SAILUS_LAUNCH_URL; sin esa
+                // variable la app queda SIN destino (la columna es
+                // nullable y asi sigue funcionando: solo no hay a donde
+                // redirigir el canje).
+                'launch_url' => env('SAILUS_LAUNCH_URL'),
             ],
         ];
 
@@ -64,6 +75,14 @@ class AppsCatalogSeeder extends Seeder
                 // owner (the column may not exist on older databases).
                 if (Schema::hasColumn('apps', 'replaced_by')) {
                     $payload['replaced_by'] = null;
+                }
+
+                // The launch destination lives in the catalog, per
+                // environment. `null` means "not declared here" - and it
+                // must NOT overwrite a destination an operator already
+                // set by hand (the column is nullable on purpose).
+                if (Schema::hasColumn('apps', 'launch_url') && ($row['launch_url'] ?? null) !== null) {
+                    $payload['launch_url'] = $row['launch_url'];
                 }
 
                 App::updateOrCreate(['slug' => $row['slug']], $payload);
